@@ -11,6 +11,11 @@ our $image_dir;
 our $logo_file;
 
 sub get_image_dir {
+no warnings;
+#	print "****************************\n";
+#	print "	return $Scheduler::BinDir/ScheduleLogo.gif\n";
+	return "$Scheduler::BinDir/Tk/Images";
+	
     return $image_dir if $image_dir;
 
     my $pwd = cwd;
@@ -48,6 +53,8 @@ sub get_image_dir {
 }
 
 sub get_logo {
+	
+	return "$Scheduler::BinDir/ScheduleLogo.gif";
     return $logo_file if $logo_file;
 
     my $pwd = cwd;

@@ -7,6 +7,7 @@ package Scheduler;
 # ==================================================================
 use FindBin;
 use lib "$FindBin::Bin/";
+our $BinDir = "$FindBin::Bin/";
 use Schedule::Schedule;
 use GuiSchedule::View;
 use GuiSchedule::GuiSchedule;
@@ -28,6 +29,8 @@ use Tk::ROText;
 use YAML;
 
 use Tk::FindImages; 
+#print "+++++++++++++++++++++++++++++++++++++\n";
+#print $Scheduler::BinDir;
 my $logo_file = Tk::FindImages::get_logo();
 my $image_dir = Tk::FindImages::get_image_dir();
 
