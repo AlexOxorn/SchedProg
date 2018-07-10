@@ -1,0 +1,62 @@
+Requirements for the Schedule
+============================================================
+
+1.  A schedule consists of one or more courses.
+
+2.  A course consists of one or more sections.
+
+3.  A section consists of one or more blocks.
+
+4.  A block has a day, a start time and an end time.
+
+5. Days are Monday-Friday. Blocks occur between 8:30 to 17:30 (should we support 8:00 - 23:00?) and
+are accurate to the half-hour (*:00 or *:30). There are many different block lengths.
+
+6.  A teacher can be assigned to a course, a section or a block. Every block should have a teacher,
+or belong to a section or course with a teacher.
+
+7.  A room can be assigned to a course, a section or a block. Every block should have a room, or
+belong to a section or course with a room.
+
+8.  A stream can be assigned to a section. Not every section has a stream (ex: GenEds).
+
+9.  Each course/section/block can have multiple teachers. This is the case when a course is team taught.
+
+10. Each course/section/block can have multiple rooms. This is the case when a room/lab is
+designated as a "shadow".
+
+11. Each section can have multiple streams. This is the case when a stream shares a course with
+another stream.
+
+12. No two blocks with the same teacher/room/stream can overlap.
+
+13. For each teacher, no combination of blocks should cover the hours of 11:00-13:00 (every teacher has 30 minutes for lunch).
+
+14. For each teacher, the sum of hours between their first block and their last block for all days
+in a week must not exceed 32.5 hours.
+
+15. Some blocks can be independent of courses, for example: meeting times or room reservations.
+
+16. Teachers must have course blocks on 4 different days, unless they have release time (ex:
+chairs).
+
+
+Common Schedule Practices
+============================================================
+
+1.  Courses commonly contain block "pairs", where they are start at the same time and have the same
+duration. Most pairs are on non-consecutive days, ex: (Mon, Wed), (Tue, Thu), (Wed, Fri).
+
+2.  Courses usually have one block per day.
+
+3.  Teachers usually have blocks on 4 different days, not 5.
+
+4. For teachers and streams, schedules with days that start at 8:30 and end at 17:30 should be
+avoided.
+
+5.  For teachers and streams schedules with many days that end at 17:30 followed by an 8:30 start should be
+avoided.
+
+6.  For teachers and streams, schedules with more than 4.5 hours consecutive blocks should be
+avoided.
+

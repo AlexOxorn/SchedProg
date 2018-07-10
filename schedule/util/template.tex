@@ -1,0 +1,150 @@
+\documentclass{article}
+\usepackage{tikz}
+
+\pdfpagewidth=8.5in		%-- Letter
+\pdfpageheight=11in		%-- Letter
+\textwidth=5.0in		%-- Letter
+\textheight=9.5in		%-- Letter
+ 
+\oddsidemargin -15mm
+\evensidemargin -15mm
+
+% solarized colors
+\definecolor{yellow}{rgb}{0.70980392156863,0.53725490196078,0}
+\definecolor{orange}{rgb}{0.796,0.294,0.0862}
+\definecolor{red}{rgb}{0.86274509803922,0.19607843137255, 0.1843137254902}
+\definecolor{magenta}{rgb}{0.82745098039216,0.21176470588235,0.50980392156863}
+\definecolor{violet}{rgb}{0.42352941176471,0.44313725490196,0.76862745098039}
+\definecolor{blue}{rgb}{0.14901960784314,0.54509803921569,0.82352941176471}
+\definecolor{cyan}{rgb}{0.16470588235294,0.63137254901961,0.59607843137255}
+\definecolor{green}{rgb}{0.52156862745098,0.6,0}
+
+\begin{document}
+
+% These set the width of a day and the height of an hour.
+\newcommand*\daywidth{3.3cm}
+\newcommand*\hourheight{3.5em}
+
+% weekdays
+\newcommand{\monday}{1}
+\newcommand{\tuesday}{2}
+\newcommand{\wednesday}{3}
+\newcommand{\thursday}{4}
+\newcommand{\friday}{5}
+
+
+% The entry style will have two options:
+% * the first option sets how many hours the entry will be (i.e. its height);
+% * the second option sets how many overlapping entries there are (thus
+%   determining the width).
+% \tikzset{entry/.style 2 args={
+%     draw,
+%     rectangle,
+%     anchor=north west,
+%     line width=0.4pt,
+%     inner sep=0.3333em,
+%     text width={\daywidth/#2-0.6666em-0.4pt},
+%     minimum height=#1*\hourheight,
+%     align=center
+% }}
+\tikzset{course/.style 2 args={
+    xshift=(0.5334em+0.8pt)/2,
+    yshift=-0.1em,
+    draw,
+    line width=0.8pt,
+    font=\sffamily,
+    rectangle,
+    rounded corners=.2ex,
+    fill=gray!50,
+    fill opacity=0.85,
+    anchor=north west,
+    inner sep=0.3333em,
+    text width={\daywidth/#2-1.2em-1.6pt},
+    minimum height=#1*\hourheight-0.3em,
+    align=center
+}}
+
+\tikzset{office/.style 2 args={
+    xshift=(0.5334em+0.8pt)/2,
+    yshift=-0.1em,
+    draw,
+    line width=0.8pt,
+    font=\sffamily,
+    rectangle,
+    rounded corners=.2ex,
+    fill=gray!20,
+    fill opacity=0.70,
+    anchor=north west,
+    inner sep=0.3333em,
+    text width={\daywidth/#2-1.2em-1.6pt},
+    minimum height=#1*\hourheight-0.3em,
+    align=center
+}}
+
+\begin{center}
+
+\begin{tabular}{ll}
+  \begin{minipage}[l]{2in}
+    \vtop{
+      \textsf{
+      {\huge !!!NAME!!!} \\
+      {\large Schedule - Winter 2017} 
+    }
+    }
+  \end{minipage} 
+  &
+    \begin{minipage}[l]{2in}
+    \vtop{
+    }
+    }
+  \end{minipage} 
+\end{tabular}
+
+\vspace{0.5in}
+
+
+% Start the picture and set the x coordinate to correspond to days and the y
+% coordinate to correspond to hours (y should point downwards).
+\begin{tikzpicture}[y=-\hourheight,x=\daywidth]
+
+    % First print a list of times.
+    \foreach \time/\ustime in {8/8am,9/9am,10/10am,11/11am,12/12pm,13/1pm,14/2pm,15/3pm,16/4pm,17/5pm,18/6pm}
+        \node[anchor=north east] at (1,\time-0.25) {\textsf{\ustime}};
+
+    \foreach \time in {8.5,9.5,10.5,11.5,12.5,13.5,14.5,15.5,16.5,17.5}
+        \node[anchor=north east] at (1, \time-0.25) {\textsf{\tiny{:30}}};
+
+
+    \foreach \a in {8,9,10,11,12,13,14,15,16,17,18}
+      \draw[gray, densely dashed] (1,\a) -- (6, \a);
+
+    \foreach \a in {8.5,9.5,10.5,11.5,12.5,13.5,14.5,15.5,16.5,17.5}
+      \draw[gray, dotted] (1,\a) -- (6, \a);
+
+    % Draw some day dividers.
+    \draw (1,6.5) -- (1,19);
+    \draw (2,6.5) -- (2,19);
+    \draw (3,6.5) -- (3,19);
+    \draw (4,6.5) -- (4,19);
+    \draw (5,6.5) -- (5,19);
+    \draw (6,6.5) -- (6,19);
+
+    % Day labels.
+    \node[anchor=north] at (1.5,6.5) {\textsf{Monday}};
+    \node[anchor=north] at (2.5,6.5) {\textsf{Tuesday}};
+    \node[anchor=north] at (3.5,6.5) {\textsf{Wednesday}};
+    \node[anchor=north] at (4.5,6.5) {\textsf{Thursday}};
+    \node[anchor=north] at (5.5,6.5) {\textsf{Friday}};
+   
+
+    % Write the entries. Note that the x coordinate is 1 (for Monday) plus an
+    % appropriate amount of shifting. The y coordinate is simply the starting
+    % time.
+
+    !!!SCHEDULE!!!
+    
+\end{tikzpicture}
+
+\end{center}
+
+\end{document}
