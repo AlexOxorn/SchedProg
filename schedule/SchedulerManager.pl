@@ -29,8 +29,6 @@ use Tk::ROText;
 use YAML;
 
 use Tk::FindImages; 
-#print "+++++++++++++++++++++++++++++++++++++\n";
-#print $Scheduler::BinDir;
 my $logo_file = Tk::FindImages::get_logo();
 my $image_dir = Tk::FindImages::get_image_dir();
 

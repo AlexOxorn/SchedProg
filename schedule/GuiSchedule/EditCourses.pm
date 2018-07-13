@@ -5,6 +5,7 @@ use warnings;
 package EditCourses;
 use FindBin;
 use Carp;
+use Tk;
 use lib "$FindBin::Bin/..";
 use Tk::DynamicTree;
 use Tk::DragDrop;
@@ -12,7 +13,9 @@ use Tk::DropSite;
 use Tk::ItemStyle;
 use Tk::FindImages;
 use PerlLib::Colours;
-use Tk::FindImages; 
+use Tk::FindImages;
+use Tk::Dialog;
+use Tk::Menu;
 my $image_dir = Tk::FindImages::get_image_dir();
 
 =head1 NAME
@@ -130,6 +133,14 @@ sub new {
     my ( $labs_list, $streams_list, $teachers_list, $trash_label ) =
       create_panel_for_modifying( $Trash1_photo, $tree, $frame );
 
+	#-------------------------------
+	# Alex Code
+	# Right click menu binding
+	#-------------------------------
+	_create_right_click_menu( $trash_label,  $teachers_list, $labs_list,
+                            $streams_list, $tree );
+
+
     # ----------------------------------------------------------------
     # drag and drop bindings
     # ----------------------------------------------------------------
@@ -198,10 +209,16 @@ sub create_panel_for_modifying {
     # ---------------------------------------------------------------
     # buttons
     # ---------------------------------------------------------------
-    my $new_class = $button_row->Button(
-                                    -text    => "New/Modify Course",
-                                    -width   => 20,
-                                    -command => [ \&edit_course, $frame, $tree ]
+    my $new_classNew = $button_row->Button(
+                                    -text    => "New Course",
+                                    -width   => 12,
+                                    -command => [ \&edit_course, $frame, $tree , "New"]
+    )->pack( -side => 'left' );
+    
+    my $new_classEdit = $button_row->Button(
+                                    -text    => "Modify Course",
+                                    -width   => 12,
+                                    -command => [ \&edit_course, $frame, $tree , "Edit" ]
     )->pack( -side => 'left' );
 
     # ---------------------------------------------------------------
@@ -433,6 +450,43 @@ sub set_dirty {
     $GuiSchedule->destroy_all;
 }
 
+
+#==================================================================
+#ALEX CODE
+#create all the right click menu stuff
+#==================================================================
+sub _create_right_click_menu{
+	my $trash_label   = shift;
+    my $teachers_list = shift;
+    my $labs_list     = shift;
+    my $streams_list  = shift;
+    my $tree          = shift;
+	
+	my $teacher_menu = $teachers_list->Menu();
+	my $lab_menu = $labs_list->Menu();
+	my $stream_menu = $streams_list->Menu();
+	
+	$teacher_menu->add('command', -label => 'Bell', -command => sub { $teachers_list->bell });
+	$teachers_list->bind('<Button-3>', [\&_show_teacher_menu,$teachers_list, $tree, $teacher_menu, Ev('x'), Ev('y')]);
+}
+
+#==================================================================
+#ALEX CODE
+#show teacher menu
+#==================================================================
+sub _show_teacher_menu{
+	my ($self,$teachers_list,$tree, $teacher_menu,$x, $y) = @_;
+	print $x;
+	print "+";
+	print $teachers_list->x;
+	print "=";
+	$x += $teachers_list->x;
+	print $x;
+	print "\n";
+	$y += $teachers_list->y;
+  	$teacher_menu->post($x, $y);  # Show the popup menu
+}
+
 # =================================================================
 # create all the drag'n'drop stuff
 # =================================================================
@@ -454,6 +508,12 @@ sub _create_drag_drop_objs {
               -postdropcommand =>
               [\&empty_trash,$trash_label],
     );
+    
+    $teachers_list->DropSite(
+                      -droptypes   => [qw/Local/],
+                      -dropcommand => [ \&_drop_on_trash, $trash_label, $tree ],
+                      -entercommand => [ \&_enter_trash, $trash_label ],
+    );
 
     $labs_list->DragDrop(
                       -event     => '<B1-Motion>',
@@ -461,12 +521,24 @@ sub _create_drag_drop_objs {
                       -startcommand =>
                         [ \&_teacher_lab_start_drag, $labs_list, $tree, 'Lab' ],
     );
+    
+    $labs_list->DropSite(
+                      -droptypes   => [qw/Local/],
+                      -dropcommand => [ \&_drop_on_trash, $trash_label, $tree ],
+                      -entercommand => [ \&_enter_trash, $trash_label ],
+    );
 
     $streams_list->DragDrop(
                 -event     => '<B1-Motion>',
                 -sitetypes => [qw/Local/],
                 -startcommand =>
                   [ \&_teacher_lab_start_drag, $streams_list, $tree, 'Stream' ],
+    );
+    
+    $streams_list->DropSite(
+                      -droptypes   => [qw/Local/],
+                      -dropcommand => [ \&_drop_on_trash, $trash_label, $tree ],
+                      -entercommand => [ \&_enter_trash, $trash_label ],
     );
 
     $tree->DropSite(
@@ -779,7 +851,7 @@ sub _double_click {
     my $path  = shift;
     my $obj   = _what_to_edit( $tree, $path );
     if ( $obj->isa('Course') ) {
-        _edit_course( $frame, $tree, $obj );
+        _edit_course( $frame, $tree, $obj , "Edit");
     }
     elsif ( $obj->isa('Section') ) {
         _edit_section( $frame, $tree, $obj, $path );
@@ -789,9 +861,10 @@ sub _double_click {
 sub edit_course {
     my $frame = shift;
     my $tree  = shift;
+    my $type  = shift;
     my $input = $tree->selectionGet();
     my $obj   = _what_to_edit( $tree, $input );
-    _edit_course( $frame, $tree, $obj );
+    _edit_course( $frame, $tree, $obj , $type );
 }
 
 sub _what_to_edit {
@@ -814,9 +887,10 @@ sub _edit_course {
     my $frame = shift;
     my $tree  = shift;
     my $obj   = shift;
-
+    my $type  = shift;
+	;
     # make dialog box for editing
-    my $edit_dialog = create_edit_dialog( $frame, $tree );
+    my $edit_dialog = create_edit_dialog( $frame, $tree , $type);
 
     # is a course selected?
     my $course_selected = 0;
@@ -826,7 +900,9 @@ sub _edit_course {
     }
 
     # empty dialog box
-    $edit_dialog->{-modify}->configure( -state => 'disabled' );
+    if($type eq "Edit"){
+    		$edit_dialog->{-modify}->configure( -state => 'disabled' );
+    }
     $edit_dialog->{-number}->configure( -text  => '' );
     $edit_dialog->{-name}->configure( -text => '' );
     $edit_dialog->{-sections}->configure( -text => 1 );
@@ -873,9 +949,29 @@ sub save_course_modified {
     my $edit_dialog = shift;
     my $new         = shift;
     my $course;
+    my $tl = shift;
 
     my $tree = $edit_dialog->{-tree};
 
+	#--------------------------------------------
+	#Check that all elements are filled in
+	#--------------------------------------------
+   	if($edit_dialog->{-number}->get eq "" || $edit_dialog->{-name}->get eq ""
+   		|| $edit_dialog->{-sections}->get eq "" || $edit_dialog->{-course_hours}->get eq ""){
+   		$tl->messageBox(	-title => 'Error', 
+   							-message => "Missing elements");
+   		return;
+   	}
+   	
+   	foreach my $blnum ( 1 .. scalar( @{ $edit_dialog->{-hours} } ) ) {
+            if ( $edit_dialog->{-hours}[ $blnum - 1 ]->get eq ""){
+            	$tl->messageBox(-title => 'Error', 
+   								-message => "Missing elements" );
+   				return;
+            }
+            
+        }
+   	
     # get course number
     my $number = $edit_dialog->{-number}->get;
 
@@ -953,19 +1049,27 @@ sub save_course_modified {
 sub create_edit_dialog {
     my $frame = shift;
     my $tree  = shift;
-    my $tl    = $frame->Toplevel( -title => 'Edit/Modify Course' );
+	my $type  = shift;
+    my $tl    = $frame->Toplevel( -title => "$type Course");
     my $self  = { -tree => $tree, -toplevel => $tl };
 
     # ---------------------------------------------------------------
     # instructions
     # ---------------------------------------------------------------
     $tl->Label(
-                -text => 'Edit / Modify Course',
+                -text => "$type Course",
                 -font => [qw/-family arial -size 18/]
               )->pack( -pady => 10 );
+    if($type	 eq "Edit"){
     $tl->Label(
              -text => '... This will remove all teacher/lab info from Course', )
       ->pack( -pady => 5 );
+    }
+    
+    $tl->Label(
+                -text => "*Required Information",
+                -font => [qw/-family arial -size 18/]
+              )->pack( -pady => 10 );
 
     # ---------------------------------------------------------------
     # buttons
@@ -978,19 +1082,36 @@ sub create_edit_dialog {
                          -width   => 12,
                          -command => [ \&_add_block_to_editor, $self ]
                        )->pack( -side => 'left', -pady => 3 );
-
+                      
+    $self->{-remove_block_button}
+     = $button_row->Button(
+                         -text    => 'Remove Block',
+                         -width   => 12,
+                         -command => [ \&_remove_block_to_editor, $self ],
+                         -state => 'disabled'
+                       )->pack( -side => 'left', -pady => 3 );
+                       
+	if($type eq "Edit"){
     $self->{-modify} =
       $button_row->Button(
                            -text    => 'Modify',
                            -width   => 12,
-                           -command => [ \&save_course_modified, $self ]
+                           -command => [ \&save_course_modified, $self, 0 ,$tl]
                          )->pack( -side => 'left', -pady => 3 );
-
+	}
+	elsif($type eq "New"){
     $self->{-new} = $button_row->Button(
                                        -text    => 'Create New',
                                        -width   => 12,
-                                       -command => [ \&save_course_modified, $self, 1 ]
+                                       -command => [ \&save_course_modified, $self, 1, $tl ]
     )->pack( -side => 'left', -pady => 3 );
+	}
+	else{
+		my $debuggError = $tl->Dialog(-title => 'Error', 
+   										-text => "An error has occured, please contact Sandy Bultena.\nErrorCode:EC-ECD", 
+   										-default_button => 'Okay', -buttons => [ 'Okay'], 
+   										-bitmap => 'question' )->Show( );
+	}
 
     $self->{-cancel} =
       $button_row->Button(
@@ -1009,15 +1130,15 @@ sub create_edit_dialog {
     # Course Info Labels
     # ---------------------------------------------------------------
     $info_row->Label(
-                      -text   => "Number",
+                      -text   => "*Number",
                       -anchor => 'e'
                     )->grid( -column => 0, -row => 0, -sticky => 'nwes' );
     $info_row->Label(
-                      -text   => "Description",
+                      -text   => "*Description",
                       -anchor => 'e'
                     )->grid( -column => 0, -row => 1, -sticky => 'nwes' );
     $info_row->Label(
-                      -text   => "Hours per week",
+                      -text   => "*Hours per week",
                       -anchor => 'e'
                     )->grid( -column => 0, -row => 2, -sticky => 'nwes' );
 
@@ -1099,16 +1220,25 @@ sub create_edit_dialog {
         $num = 0 unless $num;
         $num++;
         $num = $input_num if defined $input_num;
+        my $rmBTN = $self->{-remove_block_button};
+        
+        if($num > 1){
+        		$rmBTN->configure(-state => 'normal');
+        }
+        
         my $info_row = $self->{-info_row};
 
-        $info_row->Label(
-                          -text   => "$num",
+		$self->{-blockNums} = [] unless $self->{-blockNums};
+
+		my $l = $info_row->Label(
+                          -text   => "*$num",
                           -anchor => 'e'
                         )->grid( -column => 0, -row => 4 + $num, -sticky => 'nwes' );
+		push @{$self->{-blockNums}},$l;
 
         $self->{-hours} = [] unless $self->{-hours};
 
-        my $e = $info_row->Entry(
+                my $e = $info_row->Entry(
                                   -width           => 15,
                                   -validate        => 'key',
                                   -validatecommand => \&is_number,
@@ -1121,6 +1251,32 @@ sub create_edit_dialog {
         # make the "Enter" key mimic Tab key
         $e->bind( "<Key-Return>", sub { $e->eventGenerate("<Tab>") } );
 
+    }
+    
+    sub _remove_block_to_editor {
+        my $self      = shift;
+        my $input_num = shift;
+        my $info_row = $self->{-info_row};
+        my $rmBTN = $self->{-remove_block_button};
+        
+        if($num <= 1){
+        		my $Error = $info_row->Dialog(-title => 'Error', 
+   										-text => "Can't remove block.", 
+   										-default_button => 'Okay', -buttons => [ 'Okay'])->Show( );
+   			return;
+        }
+        
+        $num--;
+        
+        if($num <= 1){
+        		$rmBTN->configure(-state => 'disabled');
+        }
+        
+        my $tempL = pop @{$self->{-blockNums}};
+        my $tempH = pop @{$self->{-hours}};
+        $tempH->destroy if Tk::Exists($tempH);;
+        $tempL->destroy if Tk::Exists($tempL);;
+        $info_row->update;
     }
 }
 

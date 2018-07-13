@@ -83,6 +83,13 @@ sub add {
 
         $self->{-list}{ $course->id } = $course;
     }
+    
+    foreach my $course ( $self->list ) {
+        print $course->number; 
+        print "\t"
+    }
+    print "\n-------\n";
+    
     return $self;
 }
 
@@ -109,6 +116,12 @@ sub remove {
       if exists $self->{-list}{ $course->id };
 
     $course->delete();
+    
+    foreach my $course ( $self->list ) {
+        print $course->number; 
+        print "\t"
+    }
+    print "\n-------\n";
 
     return $self;
 }

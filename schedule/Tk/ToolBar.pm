@@ -137,9 +137,16 @@ sub Populate {
     # some defaults
 	my $pwd = cwd;
        
+       print "Hello Sandy\n";
+       use FindBin;
+       print "$FindBin::Bin\n";
+       print "Goodbye\n";
+       my $image_dir = "$FindBin::Bin/Tk/Images";
+       
+       
     # search for images in default directory, depending on OS
     if ( $^O =~ /darwin/i ) {    # Mac OS linux
-		find(\&wanted, $ENV{"HOME"});
+		find(\&wanted, $image_dir);
 	}
 	elsif ( $^O =~ /win/i ) {
 		#find(\&wanted, $ENV{"TEMP"}."/par-.*/cache-.*/inc/");
@@ -155,10 +162,11 @@ sub Populate {
 			find(\&wanted, "../");
 		}
 	}
+      
     $self->{-defaults}{-image} = $default_img;
     # buttons
     $self->{-buttons} = {};
-
+print "Found all images\n";
     return $self;    # ??
 
 }

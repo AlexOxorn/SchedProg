@@ -11,7 +11,7 @@ our $image_dir;
 our $logo_file;
 
 sub get_image_dir {
-	return "$Scheduler::BinDir/Tk/Images";
+	#return "$Scheduler::BinDir/Tk/Images";
 	
     return $image_dir if $image_dir;
 
