@@ -137,7 +137,7 @@ sub new {
 	# Alex Code
 	# Right click menu binding
 	#-------------------------------
-	_create_right_click_menu( $trash_label,  $teachers_list, $labs_list,
+	_create_right_click_menu( $treescrolled,  $teachers_list, $labs_list,
                             $streams_list, $tree );
 
 
@@ -456,35 +456,166 @@ sub set_dirty {
 #create all the right click menu stuff
 #==================================================================
 sub _create_right_click_menu{
-	my $trash_label   = shift;
+	my $treescrolled  = shift;
     my $teachers_list = shift;
     my $labs_list     = shift;
     my $streams_list  = shift;
     my $tree          = shift;
 	
-	my $teacher_menu = $teachers_list->Menu();
-	my $lab_menu = $labs_list->Menu();
-	my $stream_menu = $streams_list->Menu();
+	my $lab_menu = $labs_list->Menu(-tearoff=>0);
+	my $stream_menu = $streams_list->Menu(-tearoff=>0);
+
+	$teachers_list->bind('<Button-3>', [\&_show_teacher_menu,$teachers_list, $tree, Ev('X'), Ev('Y')]);
 	
-	$teacher_menu->add('command', -label => 'Bell', -command => sub { $teachers_list->bell });
-	$teachers_list->bind('<Button-3>', [\&_show_teacher_menu,$teachers_list, $tree, $teacher_menu, Ev('x'), Ev('y')]);
+	$labs_list->bind('<Button-3>', [\&_show_lab_menu,$labs_list, $tree, Ev('X'), Ev('Y')]);
+	
+	$streams_list->bind('<Button-3>', [\&_show_stream_menu,$streams_list, $tree, Ev('X'), Ev('Y')]);
+	
 }
 
 #==================================================================
 #ALEX CODE
-#show teacher menu
+#show menus
 #==================================================================
 sub _show_teacher_menu{
-	my ($self,$teachers_list,$tree, $teacher_menu,$x, $y) = @_;
-	print $x;
-	print "+";
-	print $teachers_list->x;
-	print "=";
-	$x += $teachers_list->x;
-	print $x;
-	print "\n";
-	$y += $teachers_list->y;
+	my ($self,$teachers_list,$tree,$x, $y) = @_;
+	my $teacher_menu = $teachers_list->Menu(-tearoff=>0);
+	my @teachers = $teachers_list->curselection();
+	if (scalar @teachers <= 0){
+		return;
+	}
+	my $teacher_ID = $teachers_list->get($teachers[0]);
+    ( my $id ) = split " ", $teacher_ID;
+    chop $id;
+    my $add_obj = $Schedule->teachers->get($id);
+
+    # -------------------------------------------------------------
+    # add appropriate object to object
+    # -------------------------------------------------------------
+       
+    #	my $add_obj = $Schedule->teachers->get($id);
+    #	$obj->assign_teacher($add_obj);   
+        
+	my @courses = $Schedule->courses->list();
+	
+	$teacher_menu->cascade(-label => "Add to Course");
+	my $tch2cor_Menu = $teacher_menu->entrycget("Add to Course","-menu"); 
+	$tch2cor_Menu->configure(-tearoff=>0);
+	
+	
+	#('command', -label => $_->name, -command => sub { $teachers_list->bell})
+	foreach my $cor (@courses){
+		$tch2cor_Menu->cascade(-label => $cor->name);
+		my $tchCorSec = $tch2cor_Menu->entrycget($cor->name,"-menu");
+		$tchCorSec->configure(-tearoff=>0);
+		my @sections = $cor->sections;
+		foreach my $sec (@sections){
+			$tchCorSec->cascade(-label => "Section " . $sec->number());
+			my $blockList = $tchCorSec->entrycget("Section " . $sec->number(),"-menu");
+			$blockList->configure(-tearoff=>0);
+			my @blockarray = $sec->blocks;
+			my $size = scalar @blockarray;
+			$blockList->add('command', -label => "All Blocks", -command => sub {$sec->assign_teacher($add_obj) ; set_dirty()});
+			for my $itr (1...$size){
+				my $tempBlock = $blockarray[$itr-1];
+				$blockList->add('command', -label => $tempBlock->print_description2, -command => sub {$tempBlock->assign_teacher($add_obj) ; set_dirty()});
+			}
+		}
+	}
+	
+	#$teacher_menu->add('command', -label => $teacher_ID, -command => sub { $teachers_list->bell});
   	$teacher_menu->post($x, $y);  # Show the popup menu
+}
+
+sub _show_lab_menu{
+	my ($self,$labs_list,$tree,$x, $y) = @_;
+	my $lab_menu = $labs_list->Menu(-tearoff=>0);
+	my @labs = $labs_list->curselection();
+	if (scalar @labs <= 0){
+		return;
+	}
+	my $lab_ID = $labs_list->get($labs[0]);
+    ( my $id ) = split " ", $lab_ID;
+    chop $id;
+    my $add_obj = $Schedule->labs->get($id);
+
+    # -------------------------------------------------------------
+    # add appropriate object to object
+    # -------------------------------------------------------------
+       
+    #	my $add_obj = $Schedule->labs->get($id);
+    #	$obj->assign_lab($add_obj);   
+        
+	my @courses = $Schedule->courses->list();
+	
+	$lab_menu->cascade(-label => "Add to Course");
+	my $tch2cor_Menu = $lab_menu->entrycget("Add to Course","-menu"); 
+	$tch2cor_Menu->configure(-tearoff=>0);
+	
+	
+	#('command', -label => $_->name, -command => sub { $labs_list->bell})
+	foreach my $cor (@courses){
+		$tch2cor_Menu->cascade(-label => $cor->name);
+		my $tchCorSec = $tch2cor_Menu->entrycget($cor->name,"-menu");
+		$tchCorSec->configure(-tearoff=>0);
+		my @sections = $cor->sections;
+		foreach my $sec (@sections){
+			$tchCorSec->cascade(-label => "Section " . $sec->number());
+			my $blockList = $tchCorSec->entrycget("Section " . $sec->number(),"-menu");
+			$blockList->configure(-tearoff=>0);
+			my @blockarray = $sec->blocks;
+			my $size = scalar @blockarray;
+			$blockList->add('command', -label => "All Blocks", -command => sub {$sec->assign_lab($add_obj) ; set_dirty()});
+			for my $itr (1...$size){
+				my $tempBlock = $blockarray[$itr-1];
+				$blockList->add('command', -label => $tempBlock->print_description2, -command => sub {$tempBlock->assign_lab($add_obj) ; set_dirty()});
+			}
+		}
+	}
+	
+	#$lab_menu->add('command', -label => $lab_ID, -command => sub { $labs_list->bell});
+  	$lab_menu->post($x, $y);  # Show the popup menu
+}
+
+sub _show_stream_menu{
+	my ($self,$streams_list,$tree,$x, $y) = @_;
+	my $stream_menu = $streams_list->Menu(-tearoff=>0);
+	my @streams = $streams_list->curselection();
+	if (scalar @streams <= 0){
+		return;
+	}
+	my $stream_ID = $streams_list->get($streams[0]);
+    ( my $id ) = split " ", $stream_ID;
+    chop $id;
+    my $add_obj = $Schedule->streams->get($id);
+
+    # -------------------------------------------------------------
+    # add appropriate object to object
+    # -------------------------------------------------------------
+       
+    #	my $add_obj = $Schedule->streams->get($id);
+    #	$obj->assign_stream($add_obj);   
+        
+	my @courses = $Schedule->courses->list();
+	
+	$stream_menu->cascade(-label => "Add to Course");
+	my $tch2cor_Menu = $stream_menu->entrycget("Add to Course","-menu"); 
+	$tch2cor_Menu->configure(-tearoff=>0);
+	
+	
+	#('command', -label => $_->name, -command => sub { $streams_list->bell})
+	foreach my $cor (@courses){
+		$tch2cor_Menu->cascade(-label => $cor->name);
+		my $tchCorSec = $tch2cor_Menu->entrycget($cor->name,"-menu");
+		$tchCorSec->configure(-tearoff=>0);
+		my @sections = $cor->sections;
+		foreach my $sec (@sections){
+			$tchCorSec->add('command' , -label => "Section " . $sec->number() , -command => sub {$sec->assign_stream($add_obj) ; set_dirty()});
+		}
+	}
+	
+	#$stream_menu->add('command', -label => $stream_ID, -command => sub { $streams_list->bell});
+  	$stream_menu->post($x, $y);  # Show the popup menu
 }
 
 # =================================================================
@@ -618,10 +749,14 @@ sub _dropped_on_course {
     }
 
     if ( $Dragged_from eq 'Stream' ) {
+    	print "Dragged from stream\n";
         my $add_obj = $Schedule->streams->get($id);
+		print "$obj\n";
         if ( $obj->isa('Block') ) {
             $obj = $obj->section;
+ 			print "changed to section: $obj\n";
         }
+        print "Assigning $add_obj to $obj\n";
         $obj->assign_stream($add_obj);
         refresh_schedule($tree);
     }

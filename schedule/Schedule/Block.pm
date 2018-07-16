@@ -490,6 +490,25 @@ sub print_description {
 
 }
 
+
+#=================
+#Alex COde
+#Date: Time Hours
+#=================
+sub print_description2 {
+    my $self = shift;
+    my $text = "";
+    my $i;
+
+    $text .=
+        $self->day . ": "
+      . $self->start . "  "
+      . $self->duration . " hour(s)";
+
+    return $text;
+
+}
+
 # =================================================================
 # conflicts
 # =================================================================
