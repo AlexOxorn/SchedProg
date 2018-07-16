@@ -1,0 +1,246 @@
+--- !!perl/hash:Schedule
+-conflicts: !!perl/hash:Conflicts
+  -list: []
+-courses: !!perl/hash:Courses
+  -list:
+    0: &1 !!perl/hash:Course
+      -id: 0
+      -name: Introdcution to Computer Science
+      -number: COMP 250
+      -sections:
+        1: &2 !!perl/hash:Section
+          -blocks:
+            0: !!perl/hash:Block
+              -day: mon
+              -day_number: 1
+              -duration: 1.5
+              -id: 0
+              -labs: {}
+              -movable: 1
+              -section: *2
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            1: !!perl/hash:Block
+              -day: mon
+              -day_number: 1
+              -duration: 1.5
+              -id: 1
+              -labs: {}
+              -movable: 1
+              -section: *2
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+          -course: *1
+          -hours: 3
+          -id: 0
+          -number: 1
+          -streams: {}
+        2: &3 !!perl/hash:Section
+          -blocks:
+            2: !!perl/hash:Block
+              -day: mon
+              -day_number: 1
+              -duration: 1.5
+              -id: 2
+              -labs: {}
+              -movable: 1
+              -section: *3
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            3: !!perl/hash:Block
+              -day: mon
+              -day_number: 1
+              -duration: 1.5
+              -id: 3
+              -labs: {}
+              -movable: 1
+              -section: *3
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+          -course: *1
+          -hours: 3
+          -id: 1
+          -number: 2
+          -streams: {}
+    1: &4 !!perl/hash:Course
+      -id: 1
+      -name: Graph Theory
+      -number: MATH 350
+      -sections:
+        1: &5 !!perl/hash:Section
+          -blocks:
+            4: !!perl/hash:Block
+              -day: mon
+              -day_number: 1
+              -duration: 1
+              -id: 4
+              -labs: {}
+              -movable: 1
+              -section: *5
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            5: !!perl/hash:Block
+              -day: mon
+              -day_number: 1
+              -duration: 1
+              -id: 5
+              -labs: {}
+              -movable: 1
+              -section: *5
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            6: !!perl/hash:Block
+              -day: mon
+              -day_number: 1
+              -duration: 1
+              -id: 6
+              -labs: {}
+              -movable: 1
+              -section: *5
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+          -course: *4
+          -hours: 6
+          -id: 2
+          -number: 1
+          -streams: {}
+        2: &6 !!perl/hash:Section
+          -blocks:
+            7: !!perl/hash:Block
+              -day: mon
+              -day_number: 1
+              -duration: 1
+              -id: 7
+              -labs: {}
+              -movable: 1
+              -section: *6
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            8: !!perl/hash:Block
+              -day: mon
+              -day_number: 1
+              -duration: 1
+              -id: 8
+              -labs: {}
+              -movable: 1
+              -section: *6
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            9: !!perl/hash:Block
+              -day: mon
+              -day_number: 1
+              -duration: 1
+              -id: 9
+              -labs: {}
+              -movable: 1
+              -section: *6
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+          -course: *4
+          -hours: 6
+          -id: 3
+          -number: 2
+          -streams: {}
+        3: &7 !!perl/hash:Section
+          -blocks:
+            10: !!perl/hash:Block
+              -day: mon
+              -day_number: 1
+              -duration: 1
+              -id: 10
+              -labs: {}
+              -movable: 1
+              -section: *7
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            11: !!perl/hash:Block
+              -day: mon
+              -day_number: 1
+              -duration: 1
+              -id: 11
+              -labs: {}
+              -movable: 1
+              -section: *7
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            12: !!perl/hash:Block
+              -day: mon
+              -day_number: 1
+              -duration: 1
+              -id: 12
+              -labs: {}
+              -movable: 1
+              -section: *7
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+          -course: *4
+          -hours: 6
+          -id: 4
+          -number: 3
+          -streams: {}
+-labs: !!perl/hash:Labs
+  -list:
+    0: !!perl/hash:Lab
+      -descr: Science
+      -id: 0
+      -number: 101
+    1: !!perl/hash:Lab
+      -descr: Computer
+      -id: 1
+      -number: 102
+-streams: !!perl/hash:Streams
+  -list:
+    0: !!perl/hash:Stream
+      -descr: Comp Sci
+      -id: 0
+      -number: 301
+    1: !!perl/hash:Stream
+      -descr: Math
+      -id: 1
+      -number: 302
+-teachers: !!perl/hash:Teachers
+  -list:
+    0: !!perl/hash:Teacher
+      -dept: ''
+      -fname: Alex
+      -id: 0
+      -lname: Oxorn
+      -release: ''
+    1: !!perl/hash:Teacher
+      -dept: ''
+      -fname: Nathan
+      -id: 1
+      -lname: Palmer
+--- 13
+--- 2
+--- 2
+--- 5
+--- 2
+--- 13
+--- 2
