@@ -542,7 +542,7 @@ sub _show_tree_menu{
 									my @sections = $obj->sections;
 									foreach my $sec (@sections){
 										$sec->assign_teacher($teach);
-										refresh_section($tree,$sec,$input,1);
+										refresh_course($tree,$sec,$input,1);
 									}
 									set_dirty();
 								})
@@ -562,7 +562,7 @@ sub _show_tree_menu{
 										foreach my $teach (@teachers){
 											$sec->remove_teacher($teach);
 										}
-										refresh_section( $tree, $sec, $input, 1 );
+										refresh_course( $tree, $sec, $input, 1 );
 									};
 									set_dirty();
 								});
@@ -573,9 +573,6 @@ sub _show_tree_menu{
 			my @temp = $sec->teachers;
 			push(@teachers , @temp);
 		}
-		
-		use Data::Dumper;
-		print Dumper \@teachers;
 		
 		foreach my $teach (@teachers){
 			$remove_teach->command(	-label => $teach->firstname . " " . $teach->lastname,
