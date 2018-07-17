@@ -151,6 +151,9 @@ sub new {
 	$viewMenu->command(-label=>"75%", -underline=>0, -command  => [\&resize_view, $self, 0.75] );
 	$viewMenu->command(-label=>"100%", -underline=>0, -command => [\&resize_view, $self, 1.00] );
 
+	
+	#														[\&undo, $self, 'undo']
+
     # create the pop-up menu
     my $pm = $mw->Menu(-tearoff=>0);
     $pm->command(
@@ -231,6 +234,9 @@ sub new {
 	
 	$tl->bind('<Control-KeyPress-y>' => [\&undo, $self, 'redo'] );
 	$tl->bind('<Command-Shift-KeyPress-z>' => [\&undo, $self, 'redo'] );
+	
+	$mainMenu->add('command', -label=>"Undo", -command => [\&undo,$tl, $self, 'undo']);
+	$mainMenu->add('command', -label=>"Redo", -command => [\&undo,$tl, $self, 'redo']);
 		
 	# return object
 	return $self;
@@ -310,6 +316,13 @@ sub undo {
 	my $tl = shift;
 	my $self = shift;
 	my $type = shift;
+	
+	print $tl;
+	print "\n";
+	print $self;
+	print "\n";
+	print $type;
+	print "\n\n";
 
 	$self->guiSchedule->undo($type);
 	# get all teachers, labs and streams and update the button colours based on the new positions of guiblocks

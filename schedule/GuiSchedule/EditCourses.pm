@@ -16,6 +16,7 @@ use PerlLib::Colours;
 use Tk::FindImages;
 use Tk::Dialog;
 use Tk::Menu;
+use Tk::LabEntry;
 my $image_dir = Tk::FindImages::get_image_dir();
 
 =head1 NAME
@@ -88,7 +89,7 @@ sub new {
                                         );
 
     eval {
-     print "$image_dir/small_trash.gif\n";
+     #print "$image_dir/small_trash.gif\n";
     $Trash1_photo = $frame->Photo(
                                    -format => 'gif',
                                    -file   => "$image_dir/small_trash.gif"
@@ -471,12 +472,540 @@ sub _create_right_click_menu{
 	
 	$streams_list->bind('<Button-3>', [\&_show_stream_menu,$streams_list, $tree, Ev('X'), Ev('Y')]);
 	
+	$tree->bind('<Button-3>', [\&_show_tree_menu,$tree,$teachers_list,$labs_list,$streams_list,Ev('X'),Ev('Y')]);
+	
 }
 
 #==================================================================
 #ALEX CODE
 #show menus
 #==================================================================
+
+sub _show_tree_menu{
+	my ($self,$tree,$teachers_list,$labs_list,$streams_list,$x, $y) = @_;
+	my @inputs = $tree->selectionGet();
+	my $input = $inputs[0];
+	return unless $input;
+	
+	my $obj = $tree->infoData($input)->{-obj};
+	my $parent = $tree->info( 'parent', $input );
+	my $parent_obj = $tree->infoData($parent)->{-obj};
+	
+	my $tree_menu = $tree->Menu(-tearoff=>0);
+	if($obj->isa('Course')){
+		my @sections = $obj->sections;
+		#=====================================
+		#COURSE MENU
+		#=====================================
+		$tree_menu->cascade(-label => "Add Teacher");
+		$tree_menu->cascade(-label => "Set Stream");
+		$tree_menu->command(-label => "Add Section (in progress)", -command => => sub{$tree->bell});
+		$tree_menu->separator;
+		$tree_menu->cascade(-label => "Remove Teacher");
+		$tree_menu->cascade(-label => "Remove Stream");
+		$tree_menu->command(-label => "Clear All", 
+							-command => sub{
+								my @sections = $obj->sections;
+								foreach my $sec (@sections){
+									my @teachers = $sec->teachers;
+									my @streams = $sec->streams;
+									foreach my $teach (@teachers){
+										$sec->remove_teacher($teach);
+									}
+									foreach my $stream (@streams){
+										$sec->remove_stream($stream);
+									}	
+								}
+								refresh_schedule( $tree );
+								set_dirty();
+							});
+		$tree_menu->command(-label => "Delete Course", 
+							-command => sub{
+								$parent_obj->remove_course($obj);
+            					refresh_schedule( $tree );
+            					set_dirty();
+							});
+		
+		#-------------------------------------------
+		#Add Teacher Menu
+		#-------------------------------------------					
+		my $add_teach = $tree_menu->entrycget("Add Teacher","-menu");
+		$add_teach->configure(-tearoff=>0);
+		
+		my @newTeachers = $teachers_list->get(0,'end');
+		foreach my $teachID(@newTeachers){
+    		( my $Tid ) = split " ", $teachID;
+    		chop $Tid;
+    		my $teach = $Schedule->teachers->get($Tid);
+			$add_teach->command(-label => $teach->firstname . " " . $teach->lastname,
+								-command => sub{
+									my @sections = $obj->sections;
+									foreach my $sec (@sections){
+										$sec->assign_teacher($teach);
+										refresh_section($tree,$sec,$input,1);
+									}
+									set_dirty();
+								})
+		}
+		
+		#-------------------------------------------
+		#Remove Teacher Menu
+		#-------------------------------------------
+		my $remove_teach = $tree_menu->entrycget("Remove Teacher","-menu");
+		$remove_teach->configure(-tearoff=>0);
+		
+		$remove_teach->command(	-label => "All Teachers",
+								-command => sub{
+									my @sections = $obj->sections;
+									foreach my $sec (@sections){
+										my @teachers = $sec->teachers;
+										foreach my $teach (@teachers){
+											$sec->remove_teacher($teach);
+										}
+										refresh_section( $tree, $sec, $input, 1 );
+									};
+									set_dirty();
+								});
+		$remove_teach->separator;						
+		
+		my @teachers;
+		foreach my $sec(@sections){
+			my @temp = $sec->teachers;
+			push(@teachers , @temp);
+		}
+		
+		use Data::Dumper;
+		print Dumper \@teachers;
+		
+		foreach my $teach (@teachers){
+			$remove_teach->command(	-label => $teach->firstname . " " . $teach->lastname,
+									-command => sub{
+										$tree->bell;
+										#my @sections = $obj->sections;
+										#foreach my $sec (@sections){
+										#	$sec->remove_teacher($teach);
+										#	refresh_section( $tree, $sec, $input, 1 );
+										#}
+										#set_dirty();
+									})
+		}
+		
+		#-----------------------------------
+		#Add Streams
+		#-----------------------------------
+		my $add_stream = $tree_menu->entrycget("Set Stream","-menu");
+		$add_stream->configure(-tearoff=>0);
+		
+		my @newSabs = $streams_list->get(0,'end');
+		foreach my $streamID(@newSabs){
+    		( my $Lid ) = split " ", $streamID;
+    		chop $Lid;
+    		my $stream = $Schedule->streams->get($Lid);
+			$add_stream->command(-label => $stream->number . ": " . $stream->descr,
+								-command => sub{
+									my @sections = $obj->sections;
+									foreach my $sec (@sections){
+										$sec->assign_stream($stream);
+									}
+									refresh_schedule( $tree );
+									set_dirty();
+								})
+		}
+		
+		
+		#-----------------------------------------
+		#Remove Streams
+		#-----------------------------------------
+		my $remove_stream = $tree_menu->entrycget("Remove Stream","-menu");
+		$remove_stream->configure(-tearoff=>0);
+		
+		
+		$remove_stream->command(	-label => "All Streams",
+								-command => sub{
+									my @sections = $obj->sections;
+									foreach my $sec (@sections){
+										my @streams = $sec->streams;
+										foreach my $stream (@streams){
+											$sec->remove_stream($stream);
+										}
+									}
+									refresh_schedule( $tree );
+									set_dirty();
+								});
+		$remove_stream->separator;
+		
+		my @streams;
+		foreach my $sec(@sections){
+			my @temp = $sec->streams;
+			push(@teachers , @temp);
+		}
+		
+		foreach my $stream (@streams){
+			$remove_stream->command(-label => $stream->id . ": " . $stream->descr,
+									-command => sub{
+										$tree->bell;
+										#my @sections = $obj->sections;
+										#foreach my $sec (@sections){
+										#	$sec->remove_stream($stream);
+										#}
+										#refresh_schedule( $tree );
+										#set_dirty();
+									})
+		}
+	}
+	elsif($obj->isa('Section')){
+		#=====================================
+		#SECTION MENU
+		#=====================================
+		$tree_menu->cascade(-label => "Add Teacher");
+		$tree_menu->cascade(-label => "Set Stream");
+		$tree_menu->command(-label => "Add Block(s) (In progress)", 
+							-command => sub{
+								my $num;
+								my @hrs;
+								my $db1 = $tree_menu->DialogBox(-title => 'How Many Blocks', 
+															-buttons => ['Ok', 'Cancel'], 
+                     										-default_button => 'Ok',
+                     										#-height => 300,
+                     										#-width => 500
+                     										);
+                     			$db1->add('Label', -text => "How Many Blocks?")->pack;
+                     			$db1->add('LabEntry',
+                     					-textvariable => \$num,
+                     					-validate        => 'key',
+                        				-validatecommand => \&is_number,
+                        				-invalidcommand  => sub { $tree_menu->bell },
+                     					-width => 20, )->pack;
+                     			my $answer1 = $db1->Show( );
+                     			
+                     			if ($answer1 eq "Ok" && defined $num && $num ne "" && $num > 0) {
+  									my $db2 = $tree_menu->DialogBox(-title => 'How Many Hours', 
+																-buttons => ['Ok', 'Cancel'], 
+                     											-default_button => 'Ok',
+                     											#-height => 300,
+                     											#-width => 500
+                     											);
+                     				$db2->add('Label', -text => "How Many Hours Per Block?")->pack;
+                     				foreach my $i (1...$num) {
+  											push(@hrs,"");
+									}
+                     				foreach my $i (1...$num){
+                     					$db2->add('LabEntry',
+                     							-label => "Block $i",
+                     							-labelPack => [-side => 'left'],
+                     							-textvariable => \$hrs[$i-1],
+                     							-validate        => 'key',
+                        						-validatecommand => \&is_number,
+                        						-invalidcommand  => sub { $tree_menu->bell },
+                     							-width => 20, )->pack;
+                     				}
+                     				my $answer2 = $db2->Show( );
+                     				
+                     				if($answer2 eq "Ok"){
+                     					foreach my $i (1...$num) {
+                     						if($hrs[$i-1] ne "" && $hrs[$i-1] > 0){
+                     							my $bl = Block->new();
+            									$bl->duration( $hrs[ $i - 1 ] );
+            									$obj->add_block($bl);
+                     						}
+										}
+										refresh_section($tree,$obj,$input,1);
+										set_dirty();
+                     				}
+								}
+							});
+		$tree_menu->separator;
+		$tree_menu->cascade(-label => "Remove Teacher");
+		$tree_menu->cascade(-label => "Remove Stream");
+		$tree_menu->command(-label => "Clear All", 
+							-command => sub{
+								my @teachers = $obj->teachers;
+								my @streams = $obj->streams;
+								foreach my $teach (@teachers){
+									$obj->remove_teacher($teach);
+								}
+								foreach my $stream (@streams){
+									$obj->remove_stream($stream);
+								}
+								refresh_schedule( $tree );
+								set_dirty();
+							});
+		$tree_menu->command(-label => "Delete Section", 
+							-command => sub{
+								$parent_obj->remove_section($obj);
+            					refresh_course( $tree, $parent_obj, $parent, 1 );
+            					set_dirty();
+							});
+		#-------------------------------------------
+		#Add Teacher Menu
+		#-------------------------------------------					
+		my $add_teach = $tree_menu->entrycget("Add Teacher","-menu");
+		$add_teach->configure(-tearoff=>0);
+		
+		my @newTeachers = $teachers_list->get(0,'end');
+		foreach my $teachID(@newTeachers){
+    		( my $Tid ) = split " ", $teachID;
+    		chop $Tid;
+    		my $teach = $Schedule->teachers->get($Tid);
+			$add_teach->command(-label => $teach->firstname . " " . $teach->lastname,
+								-command => sub{
+									$obj->assign_teacher($teach);
+									set_dirty();
+									refresh_section($tree,$obj,$input,1);
+								})
+		}
+		
+		#-------------------------------------------
+		#Remove Teacher Menu
+		#-------------------------------------------
+		my $remove_teach = $tree_menu->entrycget("Remove Teacher","-menu");
+		$remove_teach->configure(-tearoff=>0);
+		
+		my @teachers = $obj->teachers;
+		$remove_teach->command(	-label => "All Teachers",
+								-command => sub{
+									foreach my $teach (@teachers){
+										$obj->remove_teacher($teach);
+									}
+									refresh_section( $tree, $obj, $input, 1 );
+									set_dirty();
+								});
+		$remove_teach->separator;						
+		
+		foreach my $teach (@teachers){
+			$remove_teach->command(	-label => $teach->firstname . " " . $teach->lastname,
+									-command => sub{
+										$obj->remove_teacher($teach);
+										refresh_section( $tree, $obj, $input, 1 );
+										set_dirty();
+									})
+		}
+		
+		#-----------------------------------
+		#Add Streams
+		#-----------------------------------
+		my $add_stream = $tree_menu->entrycget("Set Stream","-menu");
+		$add_stream->configure(-tearoff=>0);
+		
+		my @newSabs = $streams_list->get(0,'end');
+		foreach my $streamID(@newSabs){
+    		( my $Lid ) = split " ", $streamID;
+    		chop $Lid;
+    		my $stream = $Schedule->streams->get($Lid);
+			$add_stream->command(-label => $stream->number . ": " . $stream->descr,
+								-command => sub{
+									$obj->assign_stream($stream);
+									set_dirty();
+									refresh_schedule( $tree );
+								})
+		}
+		
+		
+		#-----------------------------------------
+		#Remove Streams
+		#-----------------------------------------
+		my $remove_stream = $tree_menu->entrycget("Remove Stream","-menu");
+		$remove_stream->configure(-tearoff=>0);
+		
+		my @streams = $obj->streams;
+		$remove_stream->command(	-label => "All Streams",
+								-command => sub{
+									foreach my $stream (@streams){
+										$obj->remove_stream($stream);
+									}
+									refresh_schedule( $tree );
+									set_dirty();
+								});
+		$remove_stream->separator;
+		foreach my $stream (@streams){
+			$remove_stream->command(-label => $stream->number . ": " . $stream->descr,
+									-command => sub{
+										$obj->remove_stream($stream);
+										refresh_schedule( $tree );
+										set_dirty();
+									})
+		}						
+		
+		
+	}
+	elsif($obj->isa('Block')){
+		#=========================
+		# BLOCK MENU
+		#=========================
+		$tree_menu->cascade(-label => "Add Teacher");
+		$tree_menu->cascade(-label => "Set Lab");
+		$tree_menu->separator;
+		$tree_menu->cascade(-label => "Remove Teacher");
+		$tree_menu->cascade(-label => "Remove Lab");
+		$tree_menu->command(-label => "Clear All", 
+							-command => sub{
+								my @teachers = $obj->teachers;
+								my @labs = $obj->labs;
+								foreach my $teach (@teachers){
+									$obj->remove_teacher($teach);
+								}
+								foreach my $lab (@labs){
+									$obj->remove_lab($lab);
+								}
+								refresh_block( $tree, $obj, $input, 1 );
+								set_dirty();
+							});
+		$tree_menu->command(-label => "Delete Block", 
+							-command => sub{
+								$parent_obj->remove_block($obj);
+            					refresh_section( $tree, $parent_obj, $parent, 1 );
+            					set_dirty();
+							});
+		$tree_menu->separator;
+		$tree_menu->command(-label => "Change Number of Hours(In progress)", 
+							-command => sub{
+								my $num;
+								my $db1 = $tree_menu->DialogBox(-title => 'Block Duration', 
+															-buttons => ['Ok', 'Cancel'], 
+                     										-default_button => 'Ok',
+                     										#-height => 300,
+                     										#-width => 500
+                     										);
+                     			$db1->add('Label', -text => "Block Duration (in Hours)?")->pack;
+                     			$db1->add('LabEntry',
+                     					-textvariable => \$num,
+                     					-validate        => 'key',
+                        				-validatecommand => \&is_number,
+                        				-invalidcommand  => sub { $tree_menu->bell },
+                     					-width => 20, )->pack;
+                     			my $answer1 = $db1->Show( );
+                     			if($answer1 eq 'Ok' && defined($num) && $num ne "" && $num > 0){
+                     				$obj->duration($num);
+                     				refresh_block( $tree, $obj, $input, 1 );
+                     				set_dirty();
+                     			}
+                     			elsif($answer1 eq 'Ok' && defined($num) && $num ne "" && $num > 0){
+                     				$parent_obj->remove_block($obj);
+            						refresh_section( $tree, $parent_obj, $parent, 1 );
+            						set_dirty();
+                     			}
+							});					
+							
+		#----------------------------------
+		#Add Teacher
+		#----------------------------------
+		my $add_teach = $tree_menu->entrycget("Add Teacher","-menu");
+		$add_teach->configure(-tearoff=>0);
+		
+		my @newTeachers = $teachers_list->get(0,'end');
+		foreach my $teachID(@newTeachers){
+    		( my $Tid ) = split " ", $teachID;
+    		chop $Tid;
+    		my $teach = $Schedule->teachers->get($Tid);
+			$add_teach->command(-label => $teach->firstname . " " . $teach->lastname,
+								-command => sub{
+									$obj->assign_teacher($teach);
+									set_dirty();
+									refresh_block($tree,$obj,$input,1);
+								})
+		}
+		
+		#--------------------------------------
+		#Add Lab
+		#--------------------------------------
+		my $add_lab = $tree_menu->entrycget("Set Lab","-menu");
+		$add_lab->configure(-tearoff=>0);
+		
+		my @newLabs = $labs_list->get(0,'end');
+		foreach my $labID(@newLabs){
+    		( my $Lid ) = split " ", $labID;
+    		chop $Lid;
+    		my $lab = $Schedule->labs->get($Lid);
+			$add_lab->command(-label => $lab->number . ": " . $lab->descr,
+								-command => sub{
+									$obj->assign_lab($lab);
+									set_dirty();
+									refresh_block($tree,$obj,$input,1);
+								})
+		}
+		
+		#-----------------------------------------
+		#Remove Teacher
+		#-----------------------------------------
+		my $remove_teach = $tree_menu->entrycget("Remove Teacher","-menu");
+		$remove_teach->configure(-tearoff=>0);
+		my @teachers = $obj->teachers;
+		
+		$remove_teach->command(	-label => "All Teachers",
+								-command => sub{
+									foreach my $teach (@teachers){
+										$obj->remove_teacher($teach);
+									}
+									refresh_block( $tree, $obj, $input, 1 );
+									set_dirty();
+								});
+								
+		$remove_teach->separator;
+		
+		foreach my $teach (@teachers){
+			$remove_teach->command(	-label => $teach->firstname . " " . $teach->lastname,
+									-command => sub{
+										$obj->remove_teacher($teach);
+										refresh_block( $tree, $obj, $input, 1 );
+										set_dirty();
+									})
+		}
+		
+		#-----------------------------------------
+		#Remove Lab
+		#-----------------------------------------
+		my $remove_lab = $tree_menu->entrycget("Remove Lab","-menu");
+		$remove_lab->configure(-tearoff=>0);
+		
+		my @labs = $obj->labs;
+								
+		$remove_lab->command(	-label => "All Labs",
+								-command => sub{
+									foreach my $lab (@labs){
+										$obj->remove_lab($lab);
+									}
+									refresh_block( $tree, $obj, $input, 1 );
+									set_dirty();
+								});						
+		
+		$remove_lab->separator;
+		
+		foreach my $lab (@labs){
+			$remove_lab->command(	-label => $lab->number . ": " . $lab->descr,
+									-command => sub{
+										$obj->remove_lab($lab);
+										refresh_block( $tree, $obj, $input, 1 );
+										set_dirty();
+									})
+		}
+		
+	}
+	elsif($obj->isa('Teacher')){
+		#=====================
+		#Teacher Menu
+		#=====================
+		$tree_menu->command(-label => "Remove",
+							-command => sub{
+								$parent_obj->remove_teacher($obj);
+								refresh_block($tree,$parent_obj,$parent,1);
+							})
+	}
+	elsif($obj->isa('Lab')){
+		#=====================
+		#Lab Menu
+		#=====================
+		$tree_menu->command(-label => "Remove",
+							-command => sub{
+								$parent_obj->remove_lab($obj);
+								refresh_block($tree,$parent_obj,$parent,1);
+							})
+	}
+	else{
+		return;
+	}
+	$tree_menu->post($x,$y);
+}
+
 sub _show_teacher_menu{
 	my ($self,$teachers_list,$tree,$x, $y) = @_;
 	my $teacher_menu = $teachers_list->Menu(-tearoff=>0);
@@ -509,16 +1038,37 @@ sub _show_teacher_menu{
 		my $tchCorSec = $tch2cor_Menu->entrycget($cor->name,"-menu");
 		$tchCorSec->configure(-tearoff=>0);
 		my @sections = $cor->sections;
+		$tchCorSec->add('command',
+					-label => "All Sections",
+					-command => sub{
+						foreach my $sec(@sections){
+							$sec->assign_teacher($add_obj) ;
+							refresh_section($tree,$sec,"Schedule/Course".$cor->id."/Section".$sec->id,1)
+						}
+						set_dirty();
+					});
 		foreach my $sec (@sections){
 			$tchCorSec->cascade(-label => "Section " . $sec->number());
 			my $blockList = $tchCorSec->entrycget("Section " . $sec->number(),"-menu");
 			$blockList->configure(-tearoff=>0);
 			my @blockarray = $sec->blocks;
 			my $size = scalar @blockarray;
-			$blockList->add('command', -label => "All Blocks", -command => sub {$sec->assign_teacher($add_obj) ; set_dirty()});
+			$blockList->add('command', 
+							-label => "All Blocks", 
+							-command => sub {
+								$sec->assign_teacher($add_obj) ;
+								set_dirty() ;
+								refresh_section($tree,$sec,"Schedule/Course".$cor->id."/Section".$sec->id,1)
+							});
 			for my $itr (1...$size){
 				my $tempBlock = $blockarray[$itr-1];
-				$blockList->add('command', -label => $tempBlock->print_description2, -command => sub {$tempBlock->assign_teacher($add_obj) ; set_dirty()});
+				$blockList->add('command', 
+								-label => $tempBlock->print_description2,
+								-command => sub {
+									$tempBlock->assign_teacher($add_obj) ;
+									set_dirty();
+									refresh_block($tree,$tempBlock,"Schedule/Course".$cor->id."/Section".$sec->id."/Block".$tempBlock->id,1)
+								});
 			}
 		}
 	}
@@ -565,10 +1115,22 @@ sub _show_lab_menu{
 			$blockList->configure(-tearoff=>0);
 			my @blockarray = $sec->blocks;
 			my $size = scalar @blockarray;
-			$blockList->add('command', -label => "All Blocks", -command => sub {$sec->assign_lab($add_obj) ; set_dirty()});
+			$blockList->add('command', 
+						-label => "All Blocks", 
+						-command => sub {
+							$sec->assign_lab($add_obj) ; 
+							set_dirty();
+							refresh_section($tree,$sec,"Schedule/Course".$cor->id."/Section".$sec->id,1)
+						});
 			for my $itr (1...$size){
 				my $tempBlock = $blockarray[$itr-1];
-				$blockList->add('command', -label => $tempBlock->print_description2, -command => sub {$tempBlock->assign_lab($add_obj) ; set_dirty()});
+				$blockList->add('command', 
+							-label => $tempBlock->print_description2, 
+							-command => sub {
+								$tempBlock->assign_lab($add_obj) ; 
+								set_dirty();
+								refresh_block($tree,$tempBlock,"Schedule/Course".$cor->id."/Section".$sec->id."/Block".$tempBlock->id,1)
+							});
 			}
 		}
 	}
@@ -610,7 +1172,13 @@ sub _show_stream_menu{
 		$tchCorSec->configure(-tearoff=>0);
 		my @sections = $cor->sections;
 		foreach my $sec (@sections){
-			$tchCorSec->add('command' , -label => "Section " . $sec->number() , -command => sub {$sec->assign_stream($add_obj) ; set_dirty()});
+			$tchCorSec->add('command' , 
+						-label => "Section " . $sec->number() , 
+						-command => sub {
+							$sec->assign_stream($add_obj) ; 
+							set_dirty();
+							refresh_schedule($tree);
+						});
 		}
 	}
 	
@@ -749,26 +1317,31 @@ sub _dropped_on_course {
     }
 
     if ( $Dragged_from eq 'Stream' ) {
-    	print "Dragged from stream\n";
+    	#print "Dragged from stream\n";
         my $add_obj = $Schedule->streams->get($id);
-		print "$obj\n";
+		#print "$obj\n";
         if ( $obj->isa('Block') ) {
             $obj = $obj->section;
- 			print "changed to section: $obj\n";
+ 			#print "changed to section: $obj\n";
         }
-        print "Assigning $add_obj to $obj\n";
+        #print "Assigning $add_obj to $obj\n";
         $obj->assign_stream($add_obj);
-        refresh_schedule($tree);
+        
     }
 
     # -------------------------------------------------------------
     # update the Schedule and the tree
     # -------------------------------------------------------------
-    if ( $obj->isa('Block') ) {
+    if($Dragged_from eq 'Stream'){
+    	refresh_schedule($tree);
+    }
+    elsif ( $obj->isa('Block') ) {
         refresh_block( $tree, $obj, $input, 1 );
+        #print $input;
     }
     elsif ( $obj->isa('Section') ) {
         refresh_section( $tree, $obj, $input, 1 );
+        #print $input;
     }
 
     # -------------------------------------------------------------
