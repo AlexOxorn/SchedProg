@@ -394,6 +394,26 @@ sub print_description {
 
 }
 
+sub teachers {
+    my $self = shift;
+    my %teachers;
+
+	foreach my $section ($self->sections){
+		foreach my $block ( $section->blocks ) {
+        		foreach my $teacher ( $block->teachers ) {
+            		$teachers{$teacher} = $teacher;
+        		}
+    		}	
+	}
+
+    if (wantarray) {
+        return values %teachers;
+    }
+    else {
+        return [ values %teachers ];
+    }
+}
+
 =head2 more stuff about conflicts to come
 
 # =================================================================

@@ -83,6 +83,7 @@ sub new {
     my $day      = $inputs{-day}      || $Default_day;
     my $start    = $inputs{-start}    || "8:00";
     my $duration = $inputs{-duration} || "1.5";
+    $duration = 8 if $duration > 8;
     my $movable = exists $inputs{-movable} ? $inputs{-movable} : 1;
 
     # create the object
@@ -184,6 +185,7 @@ sub duration {
     if (@_) {
         no warnings;
         my $duration = shift;
+        $duration = 8 if $duration > 8;
         if ($duration <= 0) {
             cluck "<$duration>: invalid duration, "."changed to $Default_duration" ;
             $duration = $Default_duration;

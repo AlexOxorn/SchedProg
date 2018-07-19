@@ -146,6 +146,14 @@ sub print_description {
 
 }
 
+sub print_description2 {
+    my $self = shift;
+    my $text = $self->number . ": " . $self->descr;
+
+    return $text;
+
+}
+
 # =================================================================
 # footer
 # =================================================================
