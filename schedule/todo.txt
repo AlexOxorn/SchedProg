@@ -1,0 +1,4 @@
+ToDos:
+
+- Double click teacher from teacher list => gives information (courses they are teaching)
+- Overview by course and by teacher TABS (make searchable)

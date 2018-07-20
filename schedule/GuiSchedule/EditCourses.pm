@@ -1506,7 +1506,7 @@ sub _double_click {
     my $path  = shift;
     my $obj   = _what_to_edit( $tree, $path );
     if ( $obj->isa('Course') ) {
-        _edit_course2( $frame, $tree, $obj , "Edit");
+        _edit_course2( $frame, $tree, $obj , $path);
     }
     elsif ( $obj->isa('Section') ) {
         _edit_section2( $frame, $tree, $obj, $path );
@@ -1567,45 +1567,93 @@ sub _edit_course2{
 	my $frame = shift;
     my $tree  = shift;
     my $obj   = shift;
-    my $type  = shift;
+    my $path = shift;
+    
+    my $change = 0;
+    
+    #-----------------------------
+    # Create Menu Values
+    #-----------------------------
     
     my $cNum = $obj->number;
     my $desc = $obj->name;
     
-    my @sections = $obj->sections;
-    my $curSec;
+    my $startNum = $cNum;
+    my $startDesc = $desc;
     
-    my %one2oneS;
-    my %one2oneT;
+    my @sections = $obj->sections;
+    my $curSec ="";
     
     my %sectionName;
     foreach my $i (@sections){
-    	$sectionName{$i} = "Section " . $i->number;
-    	$one2oneS{$i} = $i;
+    	$sectionName{$i->id} = "Section " . $i->number;
     }
     
     my @teachers = $Schedule->teachers->list;
-    my $curTech;
+    my $curTech ="";
     
     my %teacherName;
     foreach my $i (@teachers){
-    	$teacherName{$i} = $i->firstname . " " . $i->lastname;
-    	$one2oneT{$i} = $i;
+    	$teacherName{$i->id} = $i->firstname . " " . $i->lastname;
+    }
+    
+    my @teachersO = $obj->teachers;
+    my $curTechO = "";
+    my %teacherNameO;
+    foreach my $i (@teachersO){
+    	$teacherNameO{$i->id} = $i->firstname . " " . $i->lastname;
     }
     
     my @streams = $Schedule->streams->list;
-    my $curStrm;
+    my $curStrm = "";
     my %streamName;
     foreach my $i (@streams){
-    	$streamName{$i} = $i->print_description2;
+    	$streamName{$i->id} = $i->print_description2;
     }
     
-    #my $hpw;
+    my @streamsO = $obj->streams;
+    my $curStrmO = "";
+    my %streamNameO;
+    foreach my $i (@streamsO){
+    	$streamNameO{$i->id} = $i->print_description2;
+    }
     
-    my $edit_dialog = $frame->DialogBox(-title => 'Edit Course', -buttons => ['Okay', 'Cancel']);
+    #---------------------------------------------------
+    # Creating Frames and defining widget variable names
+    #---------------------------------------------------
+    my $edit_dialog = $frame->DialogBox(-title => "Edit " . $obj->name, -buttons => ['Close']);
     
-    my $frame1 = $edit_dialog->Frame( -height => 200, )->pack( -fill => 'x' );
+    my $frame1  = $edit_dialog->Frame( -height => 200, )->pack( -fill => 'x');
+    my $frame2  = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x');
+    my $frame2B = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x');
+    my $frame3  = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x');
+    my $frame3A = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x');
+    my $frame3B = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x');
+    my $frame4  = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x');
+    my $frame4A = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x');
+    my $frame4B = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x');
     
+    my $secDrop;
+    my $secAdd;
+    my $secAdd2;
+    my $secRem;
+    my $secEdit;
+    my $techDropO;
+    my $techDrop;
+    my $TechAdd;
+    my $TechRem;
+    my $streamDropO;
+    my $streamDrop;
+    my $steamAdd;
+    my $streamRem;
+    
+    my $sectionMessage;
+    my $teachMessage;
+    my $streamMessage;
+    
+    #-----------------------------------------
+    #Course number and name entry entry
+    #-----------------------------------------
     $frame1->LabEntry( 
     					-textvariable => \$cNum,
     					-width => 20, 
@@ -1617,53 +1665,268 @@ sub _edit_course2{
     					-width => 20, 
          				-label => 'Course Name', 
          				-labelPack => [-side => 'left'])->pack;
-         				
-    my $frame2 = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x' );
-    
-    my $secDrop = $frame2->JBrowseEntry(
+  
+	#-----------------------------------------
+    # Section Add/Remove/Edit
+    #-----------------------------------------
+    $secDrop = $frame2->JBrowseEntry(
         -label => 'Sections:',
         -variable => \$curSec,
         -state => 'normal',
         -choices => \%sectionName,
         -width  => 12 )->pack(-side   => 'left' , -expand => 1,-fill => 'x');
         
-     my $secAdd = $frame2->Button(
-     	-text => "Add Section",
-     	-command => sub {_flash_menu($secDrop)})->pack(-side   => 'left' , -expand => 0);
-     my $secRem = $frame2->Button(
+    $secAdd = $frame2B->Button(
+     	-text => "Add and Edit Section",
+     	-command => sub {
+     		my $sectionNum = $obj->get_new_number;
+	     	my $section = Section->new(-number=>$sectionNum,-hours=>0);
+	     	$obj->add_section($section);
+	    	$sectionName{$section->id} = "Section " . $section->number;
+	    	refresh_course($tree,$obj,$path,1);
+	    	
+	    	_edit_section2($frame2B,$tree,$section,$path . "/Section" . $section->id);
+	    	
+	    	$curSec = "Section " . $section->number;
+	    	
+	    	$secDrop->configure(-choices => \%sectionName);
+	     	$sectionMessage->configure(-text => "Section Added");
+	     	$change = 1;
+	     	$frame2->bell;
+	     	$secDrop->update;
+	     	$sectionMessage->update;
+     	})->pack(-side   => 'right' , -expand => 0);
+        
+    $secAdd2 = $frame2B->Button(
+     	-text => "Add Section(s)",
+     	-command => sub {
+     		my $answer = _add_section($frame2,$tree,$obj,$path);
+     		if($answer ne 'Cancel'){
+	     		#my $sectionNum = $obj->get_new_number;
+	     		#my $section = Section->new(-number=>$sectionNum,-hours=>0);
+	     		#$obj->add_section($section);
+	     		#$sectionName{$section->id} = "Section " . $section->number;
+	     		
+	     		my @sections2 = $obj->sections;
+			    
+			    my %sectionName2;
+			    foreach my $i (@sections2){
+			    	$sectionName2{$i->id} = "Section " . $i->number;
+			    }
+			    
+			    @sections = @sections2;
+			    %sectionName = %sectionName2;
+	     		
+	     		$secDrop->configure(-choices => \%sectionName);
+	     		$sectionMessage->configure(-text => "Section(s) Added");
+	     		$change = 1;
+	     		$frame2->bell;
+	     		$secDrop->update;
+	     		$sectionMessage->update;
+	     		#refresh_course($tree,$obj,$path,1);
+     		}else{
+     			$sectionMessage->configure(-text => "");
+	     		$sectionMessage->update;
+     		}
+     	})->pack(-side   => 'right' , -expand => 0);
+    
+   	$secRem = $frame2->Button(
      	-text => "Remove Section",
-     	-command => sub {$tree->bell ; $tree->bell})->pack(-side   => 'left' , -expand => 0);
-     my $secEdit = $frame2->Button(
+     	-command => sub {
+     		if($curSec ne ""){
+	     		my %rHash = reverse %sectionName;
+		     	my $id = $rHash{$curSec};
+		     	my $secRem = $obj->get_section_by_id($id);
+		     	$obj->remove_section($secRem);
+		     	delete $sectionName{$id};
+		     	$curSec = "";
+		     	
+		     	$secDrop->configure(-choices => \%sectionName);
+		     	$sectionMessage->configure(-text => "Section Removed");
+		     	$change = 1;
+		     	$frame2->bell;
+		     	$secDrop->update;
+		     	$sectionMessage->update;
+	     		refresh_course($tree,$obj,$path,1);	
+     		}
+     	})->pack(-side   => 'right' , -expand => 0);
+   	$secEdit = $frame2->Button(
      	-text => "Edit Section",
-     	-command => sub {$tree->bell ; $tree->bell ; $tree->bell})->pack(-side   => 'left' , -expand => 0);
-    
-    my $frame3 = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x');
-    
-    my $techDrop = $frame3->JBrowseEntry(
-        -label => 'Teachers:',
+     	-command => sub {
+     		if($curSec ne ""){
+     			my %rHash = reverse %sectionName;
+		     	my $id = $rHash{$curSec};
+		     	my $section = $obj->get_section_by_id($id);
+		     	
+		     	my $changeIN = _edit_section2($frame2B,$tree,$section,$path . "/Section" . $section->id);
+     			
+     			if($changeIN){
+     				my @teachers2 = $obj->teachers;
+			    
+				    my %teacherName2;
+				    foreach my $i (@teachers2){
+				    	$teacherName2{$i->id} = $i->firstname . " " . $i->lastname;
+				    }
+				    
+				    @teachersO = @teachers2;
+				    %teacherNameO = %teacherName2;
+				    
+				    my @streams2 = $obj->streams;
+			    
+				    my %streamName2;
+				    foreach my $i (@streams2){
+				    	$streamName2{$i->id} = "Section " . $i->number;
+				    }
+				    
+				    @streamsO = @streams2;
+				    %streamNameO = %streamName2;
+		     		
+		     		$techDropO->configure(-choices => \%teacherNameO);
+		     		$streamDropO->configure(-choices => \%streamNameO);
+		     		
+		     		$sectionMessage->configure(-text => "Section Edited");
+		     		$change = 1;
+		     		$frame2->bell;
+		     		$streamDropO->update;
+		     		$techDropO->update;
+		     		$sectionMessage->update;
+     			} else{
+     				$sectionMessage->configure(-text => "");
+     				$sectionMessage->update;
+     			}
+     		}
+     	})->pack(-side   => 'right' , -expand => 0);
+   
+   	$sectionMessage = $frame2B->Label(-text => "")->pack(-fill => 'x');
+   
+   	#--------------------------------------------------------
+    # Teacher Add/Remove
+   	#--------------------------------------------------------
+   	$techDrop = $frame3->JBrowseEntry(
+        -label => 'Add Teacher:',
         -variable => \$curTech,
         -state => 'normal',
         -choices => \%teacherName,
         -width  => 12 )->pack(-side   => 'left' , -expand => 1,-fill => 'x');
         
-    my $TechAdd = $frame3->Button(
+   	$TechAdd = $frame3->Button(
      	-text => "Add To All Sections",
-     	-command => sub {$tree->bell})->pack(-side   => 'left' , -expand => 0);
+     	-command => sub {
+     		if($curTech ne ""){
+     			my %rHash = reverse %teacherName;
+     			my $id = $rHash{$curTech};
+     			my $teachAdd = $Schedule->teachers->get($id);
+     			$obj->assign_teacher($teachAdd);
+     			$teacherNameO{$id} = $teachAdd->firstname . " " . $teachAdd->lastname;
+     			$curTech = "";
+     			$techDropO->configure(-choices => \%teacherNameO);
+     			$techDropO->update;
+     			$teachMessage->configure(-text => "Teacher Added");
+     			$teachMessage->update;
+     			$teachMessage->bell;
+     			refresh_course($tree,$obj,$path,1);
+     			$change = 1;
+     		}
+     	})->pack(-side   => 'left' , -expand => 0);
      	
-    my $frame4 = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x');
+    $techDropO = $frame3A->JBrowseEntry(
+        -label => 'Remove Teacher:',
+        -variable => \$curTechO,
+        -state => 'normal',
+        -choices => \%teacherNameO,
+        -width  => 12 )->pack(-side   => 'left' , -expand => 1,-fill => 'x');
+        
+   	$TechRem = $frame3A->Button(
+     	-text => "Remove From All Sections",
+     	-command => sub {
+     		if($curTechO ne ""){
+     			my %rHash = reverse %teacherNameO;
+     			my $id = $rHash{$curTechO};
+     			my $teachRem = $Schedule->teachers->get($id);
+     			$obj->remove_teacher($teachRem);
+     			$curTechO = "";
+     			delete $teacherNameO{$id};
+     			$techDropO->configure(-choices => \%teacherNameO);
+     			$techDropO->update;
+     			$teachMessage->configure(-text => "Teacher Removed");
+     			$teachMessage->bell;
+     			$teachMessage->update;
+     			$change = 1;
+     			refresh_course($tree,$obj,$path,1);
+     		}
+     	})->pack(-side   => 'left' , -expand => 0);
 
-    my $streamDrop = $frame4->JBrowseEntry(
+	$teachMessage = $frame3B->Label(-text => "")->pack(-fill => 'x');
+
+	#--------------------------------------------------------
+    # Stream Add/Remove
+   	#--------------------------------------------------------
+   	$streamDrop = $frame4->JBrowseEntry(
         -label => 'Streams:',
         -variable => \$curStrm,
         -state => 'normal',
         -choices => \%streamName,
         -width  => 12 )->pack(-side   => 'left' , -expand => 1,-fill => 'x');
         
-    my $steamAdd = $frame4->Button(
+  	$steamAdd = $frame4->Button(
      	-text => "Set To All Sections",
-     	-command => sub {$tree->bell})->pack(-side   => 'left' , -expand => 0);
+     	-command => sub {
+     		if($curStrm ne ""){
+     			my %rHash = reverse %streamName;
+     			my $id = $rHash{$curStrm};
+     			my $streamAdd = $Schedule->streams->get($id);
+     			$obj->assign_stream($streamAdd);
+     			$streamNameO{$id} = $streamAdd->number . ": " . $streamAdd->descr;
+     			$curStrm = "";
+     			$streamDropO->configure(-choices => \%streamNameO);
+     			$streamDropO->update;
+     			$streamMessage->configure(-text => "Stream Added");
+     			$streamMessage->update;
+     			$streamMessage->bell;
+     			refresh_schedule($tree);
+     			$change = 1;
+     		}
+     	})->pack(-side   => 'left' , -expand => 0);
+    
+    $streamDropO = $frame4A->JBrowseEntry(
+        -label => 'Remove Streams:',
+        -variable => \$curStrmO,
+        -state => 'normal',
+        -choices => \%streamNameO,
+        -width  => 12 )->pack(-side   => 'left' , -expand => 1,-fill => 'x');
+    
+    $streamRem = $frame4A->Button(
+     	-text => "Remove Stream",
+     	-command => sub {
+     		if($curStrmO ne ""){
+     			$change = 1;
+     			my %rHash = reverse %streamNameO;
+     			my $id = $rHash{$curStrmO};
+     			my $streamRem = $Schedule->streams->get($id);
+     			$obj->remove_stream($streamRem);
+     			delete $streamNameO{$id};
+     			$curStrmO = "";
+     			$streamDropO->configure(-choices => \%streamNameO);
+     			$streamDropO->update;
+     			$streamMessage->configure(-text => "Stream Removed");
+     			$streamMessage->update;
+     			$streamMessage->bell;
+     			refresh_schedule($tree);
+     		}
+     	})->pack(-side   => 'left' , -expand => 0);
+    
+    $streamMessage = $frame4B->Label(-text => "")->pack(-fill => 'x');
     
     $edit_dialog->Show();
+    
+    if($startDesc ne $desc || $startNum ne $cNum){
+	    	$obj->number($cNum);
+	    	$obj->name($desc);
+	    	refresh_schedule($tree);
+    		return 1;
+    } else{
+    		return $change;
+    }
     
 }
 
@@ -1673,11 +1936,15 @@ sub _edit_section2{
     my $obj   = shift;
     my $path  = shift;
     
+    my $change = 0;
+    
+    #--------------------------------------------------------
+    # Defining Menu Lists
+   	#--------------------------------------------------------
     my $objPar = $obj->course;
     my $parent = $tree->info( 'parent', $path );
     
     my $cNum = $obj->number;
-    #my $desc = $obj->name;
     
     
     my $curBlock = "";
@@ -1685,7 +1952,7 @@ sub _edit_section2{
     my @blocks = $obj->blocks;
     my %blockName;
     foreach my $i (@blocks){
-    	$blockName{$i->id} = $i->id . ": " . $i->print_description2;
+    		$blockName{$i->id} = $i->id . ": " . $i->print_description2;
     }
     
     my @teachersN = $Schedule->teachers->list;
@@ -1694,7 +1961,7 @@ sub _edit_section2{
     my %teacherNameN;
     my %one2oneT;
     foreach my $i (@teachersN){
-    	$teacherNameN{$i->id} = $i->firstname . " " . $i->lastname;
+    		$teacherNameN{$i->id} = $i->firstname . " " . $i->lastname;
     }
     
     my @teachersO = $obj->teachers;
@@ -1702,26 +1969,28 @@ sub _edit_section2{
     
     my %teacherNameO;
     foreach my $i (@teachersO){
-    	$teacherNameO{$i->id} = $i->firstname . " " . $i->lastname;
+    		$teacherNameO{$i->id} = $i->firstname . " " . $i->lastname;
     }
     
     my @streamsN = $Schedule->streams->list;
     my $curStrmN = "";
     my %streamNameN;
     foreach my $i (@streamsN){
-    	$streamNameN{$i->id} = $i->print_description2;
+    		$streamNameN{$i->id} = $i->print_description2;
     }
     
     my @streamsO = $obj->streams;
     my $curStrmO = "";
     my %streamNameO;
     foreach my $i (@streamsO){
-    	$streamNameO{$i->id} = $i->print_description2;
+    		$streamNameO{$i->id} = $i->print_description2;
     }
     
-    #my $hpw;
+    #--------------------------------------------------------
+    # Defining Frames and widget names
+   	#--------------------------------------------------------
     
-    my $edit_dialog = $frame->DialogBox(-title => 'Edit Section', -buttons => ['Close']);
+    my $edit_dialog = $frame->DialogBox(-title => $obj->course->name . ": Section " . $obj->number, -buttons => ['Close']);
          				
     my $frame2 = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x' );
     my $frame2B = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x');
@@ -1748,6 +2017,9 @@ sub _edit_section2{
     my $steamRem;
     my $streamMessage;
     
+    #--------------------------------------------------------
+    # Block Add/Remove/Edit
+   	#--------------------------------------------------------
     
     $secDrop = $frame2->JBrowseEntry(
         -label => 'Block:',
@@ -1773,6 +2045,7 @@ sub _edit_section2{
 	    		%blockName = %blockName2;
 	    		$secDrop->configure(-choices => \%blockName);
 	    		$secDrop->update;
+	    		$change = 1;
      		} else{
      			$blockMessage->configure(-text => "");
      		}
@@ -1794,6 +2067,7 @@ sub _edit_section2{
 	     		$blockMessage->configure(-text=>"Block Removed");
 	     		refresh_section($tree,$obj,$path,1);
 				set_dirty();
+				$change = 1;
      		}
      	})->pack(-side   => 'left' , -expand => 0);
      
@@ -1817,6 +2091,7 @@ sub _edit_section2{
 		    		%teacherNameO = %teachName2;
 		    		$techDropO->configure(-choices => \%teacherNameO);
 		    		$techDropO->update;
+		    		$change = 1;
 	     		}else{
 	     			$blockMessage->configure(-text => "");
 	     		}
@@ -1824,6 +2099,10 @@ sub _edit_section2{
      	})->pack(-side   => 'left' , -expand => 0);
     
     $blockMessage = $frame2B->Label(-text => "")->pack(-fill => 'x');
+    
+    #--------------------------------------------------------
+    # Teacher Add/REmove
+   	#--------------------------------------------------------
     
     $techDropN = $frame3->JBrowseEntry(
         -label => 'Add Teachers:',
@@ -1855,6 +2134,7 @@ sub _edit_section2{
      			$teachMessage->update;
      			$teachMessage->bell;
      			refresh_section($tree,$obj,$path,1);
+     			$change = 1;
      		}})->pack(-side   => 'left' , -expand => 0);
      	
     $techRem = $frame3A->Button(
@@ -1872,30 +2152,75 @@ sub _edit_section2{
      			$teachMessage->configure(-text => "Teacher Removed");
      			$teachMessage->bell;
      			$teachMessage->update;
+     			$change = 1;
      			refresh_section($tree,$obj,$path,1);
      		}
      	})->pack(-side   => 'left' , -expand => 0);
     
     $teachMessage = $frame3B->Label(-text=>"")->pack(-fill => 'x');
     
+    #--------------------------------------------------------
+    # Stream Add/REmove
+   	#--------------------------------------------------------
+    
     $streamDropN = $frame4->JBrowseEntry(
-        -label => 'Streams:',
+        -label => 'Add Streams:',
         -variable => \$curStrmN,
         -state => 'normal',
         -choices => \%streamNameN,
         -width  => 12 )->pack(-side   => 'left' , -expand => 1,-fill => 'x');
         
+    $streamDropO = $frame4A->JBrowseEntry(
+        -label => 'Remove Streams:',
+        -variable => \$curStrmO,
+        -state => 'normal',
+        -choices => \%streamNameO,
+        -width  => 12 )->pack(-side   => 'left' , -expand => 1,-fill => 'x');
+        
     $steamAdd = $frame4->Button(
-     	-text => "Set to all blocks",
-     	-command => sub {$tree->bell})->pack(-side   => 'left' , -expand => 0);
+     	-text => "Set Stream",
+     	-command => sub {
+     		if($curStrmN ne ""){
+	     		$change = 1;
+	     		my %rHash = reverse %streamNameN;
+	     		my $id = $rHash{$curStrmN};
+	     		my $streamAdd = $Schedule->streams->get($id);
+	     		$obj->assign_stream($streamAdd);
+	     		$streamNameO{$id} = $streamAdd->number . ": " . $streamAdd->descr;
+	     		$curStrmN = "";
+	    		$streamDropO->configure(-choices => \%streamNameO);
+	     		$streamDropO->update;
+	     		$streamMessage->configure(-text => "Stream Set");
+	     		$streamMessage->update;
+	     		$streamMessage->bell;
+	     		refresh_schedule($tree);
+     		}
+     	})->pack(-side   => 'left' , -expand => 0);
     
-    $steamRem = $frame4->Button(
-     	-text => "Remove from all blocks",
-     	-command => sub {$tree->bell})->pack(-side   => 'left' , -expand => 0);
+    $steamRem = $frame4A->Button(
+     	-text => "Remove Stream",
+     	-command => sub {
+     		if($curStrmO ne ""){
+     			$change = 1;
+     			my %rHash = reverse %streamNameO;
+     			my $id = $rHash{$curStrmO};
+     			my $streamRem = $Schedule->streams->get($id);
+     			$obj->remove_stream($streamRem);
+     			delete $streamNameO{$id};
+     			$curStrmO = "";
+     			$streamDropO->configure(-choices => \%streamNameO);
+     			$streamDropO->update;
+     			$streamMessage->configure(-text => "Stream Removed");
+     			$streamMessage->update;
+     			$streamMessage->bell;
+     			refresh_schedule($tree);
+     		}
+     	})->pack(-side   => 'left' , -expand => 0);
      	
-    $streamMessage = $frame3B->Label(-text=>"")->pack(-fill => 'x');
+    $streamMessage = $frame4B->Label(-text=>"")->pack(-fill => 'x');
     
     $edit_dialog->Show();
+    return $change;
     
 }
 
@@ -1907,14 +2232,15 @@ sub _edit_block2{
     
     my $change = 0;
     
+    #--------------------------------------------------------
+    # Defining list values
+   	#--------------------------------------------------------
+    
     my $objPar = $obj->section;
     my $parent = $tree->info( 'parent', $path );
     
-    
-    #my $cNum = $obj->number;
     my $dur = $obj->duration;
     my $oldDur = $dur;
-    #my $desc = $obj->name;
     
     my @teachersN = $Schedule->teachers->list;
     my $curTechN;
@@ -1948,9 +2274,10 @@ sub _edit_block2{
     	$labNameO{$i->id} = $i->number . ": " . $i->descr;
     }
     
-    #my $hpw;
-    
-    my $edit_dialog = $frame->DialogBox(-title => 'Edit Section', -buttons => ['Close']);
+    #--------------------------------------------------------
+    # Creating frames and widget names
+   	#--------------------------------------------------------
+    my $edit_dialog = $frame->DialogBox(-title => 'Edit ' . $obj->section->course->name . ": Section " . $obj->section->number . " -> Block " . $obj->id, -buttons => ['Close']);
          				
     my $frame2 = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x' );
     my $frame3 = $edit_dialog->Frame( -height => 30,  )->pack( -fill => 'x');
@@ -1975,13 +2302,23 @@ sub _edit_block2{
     
     my $labMessage;
     
+    #--------------------------------------------------------
+    # Block Duration Entry
+   	#--------------------------------------------------------
+    
     $durIn = $frame2->LabEntry( 
     					-textvariable => \$dur,
     					-width => 20, 
          				-label => 'Block Duration', 
-         				-labelPack => [-side => 'left'])->pack;
+         				-labelPack => [-side => 'left'],
+         				-validate        => 'key',
+             			-validatecommand => \&is_number,
+            	 		-invalidcommand  => sub { $frame->bell },)->pack(-fill => 'x');
     
     
+    #--------------------------------------------------------
+    # Teacher Add/Remove
+   	#--------------------------------------------------------
     
     $techNDrop = $frame3->JBrowseEntry(
         -label => 'Add Teacher:',
@@ -2009,8 +2346,6 @@ sub _edit_block2{
      			refresh_section($tree,$objPar,$parent,1);
      		}
      	})->pack(-side   => 'left' , -expand => 0);
-     	
-    
     
     $techODrop = $frame3A->JBrowseEntry(
         -label => 'Remonve Teacher:',
@@ -2041,6 +2376,10 @@ sub _edit_block2{
      	
     $teachMessage = $frame3B->Label(
     	-text => "")->pack(-side => 'bottom' , -fill => 'x');
+
+	#--------------------------------------------------------
+    # Lab Add/Remove
+   	#--------------------------------------------------------
 
     $streamNDrop = $frame4->JBrowseEntry(
         -label => 'Add Lab:',
@@ -2100,7 +2439,7 @@ sub _edit_block2{
     	-text => "")->pack(-side => 'bottom' , -fill => 'x');
     
     my $answer = $edit_dialog->Show();
-    if($answer eq 'Okay'){
+    if($answer eq 'Close'){
     	$obj->duration($dur);
     }
     refresh_section( $tree, $objPar, $parent, 1 ) unless $dur == $oldDur;
@@ -2108,6 +2447,9 @@ sub _edit_block2{
     
 }
 
+#========================================================
+# Add Block to section Dialog, return either Ok or Cancel
+#========================================================
 sub _add_block{
 	my $frame = shift;
 	my $tree = shift;
@@ -2119,24 +2461,21 @@ sub _add_block{
 	my $db1 = $frame->DialogBox(-title => 'How Many Blocks', 
 									-buttons => ['Ok', 'Cancel'], 
                      				-default_button => 'Ok',
-          							#-height => 300,
-                     				#-width => 500
                      			);
-	$db1->add('Label', -text => "How Many Blocks?")->pack;
+	$db1->add('Label', -text => "How Many Blocks? (MAX 256)")->pack;
     $db1->add('LabEntry',
              -textvariable => \$num,
              -validate        => 'key',
-             -validatecommand => \&is_number,
+             -validatecommand => \&is_integer,
              -invalidcommand  => sub { $frame->bell },
              -width => 20, )->pack;
     my $answer = $db1->Show( );
                      			
     if ($answer eq "Ok" && defined $num && $num ne "" && $num > 0) {
+    	$num = 256 if $num > 256;
   		my $db2 = $frame->DialogBox(-title => 'How Many Hours', 
 									-buttons => ['Ok', 'Cancel'], 
-    								-default_button => 'Ok',
-                     				#-height => 300,
-                     				#-width => 500
+    									-default_button => 'Ok',
                      				);
     	$db2->add('Label', -text => "How Many Hours Per Block?")->pack;
     	foreach my $i (1...$num) {
@@ -2168,6 +2507,102 @@ sub _add_block{
     }
     return $answer;
 }
+
+#==========================================================
+# Add Sections to a Course and add blocks to those sections.
+# Return either Ok or Cancel
+#==========================================================
+sub _add_section{
+	my $frame = shift;
+	my $tree = shift;
+	my $obj = shift;
+	my $input = shift;
+	
+	my $numS;
+	my $numB;
+	my @hrs;
+	my @blocks;
+	
+	my $db0 = $frame->DialogBox(-title => 'How Many Sections', 
+									-buttons => ['Ok', 'Cancel'], 
+                     				-default_button => 'Ok',
+          							#-height => 300,
+                     				#-width => 500
+                     			);
+	$db0->add('Label', -text => "How Many Sections? (MAX 256)")->pack;
+    $db0->add('LabEntry',
+             -textvariable => \$numS,
+             -validate        => 'key',
+             -validatecommand => \&is_integer,
+             -invalidcommand  => sub { $frame->bell },
+             -width => 20, )->pack;
+    my $answer = $db0->Show( );
+    
+    if($answer eq 'Ok'  && defined $numS && $numS ne "" && $numS > 0){
+    	$numS = 256 if $numS > 256;
+	    
+	    my $db1 = $frame->DialogBox(-title => 'How Many Blocks', 
+										-buttons => ['Ok', 'Cancel'], 
+	                     				-default_button => 'Ok',
+	          							#-height => 300,
+	                     				#-width => 500
+	                     			);
+		$db1->add('Label', -text => "How Many Blocks? (MAX 256)")->pack;
+	    $db1->add('LabEntry',
+	             -textvariable => \$numB,
+	             -validate        => 'key',
+	             -validatecommand => \&is_integer,
+	             -invalidcommand  => sub { $frame->bell },
+	             -width => 20, )->pack;
+	    $answer = $db1->Show( );
+	    
+	                     			
+	    if ($answer eq "Ok" && defined $numB && $numB ne "" && $numB > 0) {
+	    	$numB = 256 if $numB > 256;
+	  		my $db2 = $frame->DialogBox(-title => 'How Many Hours', 
+										-buttons => ['Ok', 'Cancel'], 
+	    								-default_button => 'Ok',
+	                     				#-height => 300,
+	                     				#-width => 500
+	                     				);
+	    	$db2->add('Label', -text => "How Many Hours Per Block?")->pack;
+	    	foreach my $i (1...$numB) {
+	  			push(@hrs,"");
+			}
+	    	foreach my $i (1...$numB){
+	   			$db2->add('LabEntry',
+	        	         	-label => "Block $i",
+	            	 		-labelPack => [-side => 'left'],
+	            	 		-textvariable => \$hrs[$i-1],
+	            	  		-validate        => 'key',
+	            	     	-validatecommand => \&is_number,
+	           				-invalidcommand  => sub { $frame->bell },
+	            	   		-width => 20, )->pack;
+	   		}
+	    	$answer = $db2->Show( );
+	                     				
+	   		if($answer eq "Ok"){
+	   			
+	   			foreach my $j (1...$numS){
+	   				my $sectionNum = $obj->get_new_number;
+     				my $section = Section->new(-number=>$sectionNum,-hours=>0);
+     				$obj->add_section($section);
+		   			foreach my $i (1...$numB) {
+		        		if($hrs[$i-1] ne "" && $hrs[$i-1] > 0){
+		        	    	my $bl = Block->new();
+		    	        	$bl->duration( $hrs[ $i - 1 ] );
+		    	       		$section->add_block($bl);
+						}
+					}
+	   			}
+				refresh_course($tree,$obj,$input,1);
+				set_dirty();
+	     	}
+	    }
+    }
+    return $answer;
+}
+
 
 sub _edit_course {
     my $frame = shift;
@@ -2573,6 +3008,16 @@ sub create_edit_dialog {
 sub is_number {
     my $n = shift;
     return 1 if $n =~ /^\s*\d*\.?\d*\s*$/;
+    return 0;
+}
+
+# =================================================================
+# validate that number be entered in a entry box is a whole number
+# (positive integer)
+# =================================================================
+sub is_integer {
+    my $n = shift;
+    return 1 if $n =~ /^\s*\d+\s*$/;
     return 0;
 }
 

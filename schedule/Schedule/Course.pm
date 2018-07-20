@@ -210,6 +210,30 @@ sub get_section {
 }
 
 # =================================================================
+# get_section_by_id
+# =================================================================
+
+=head2 get_section_by_id ( section id )
+
+gets section from this course that has section id
+
+Returns Section object
+
+=cut
+
+sub get_section_by_id {
+    my $self    = shift;
+    my $id = shift;
+
+    my @sections = $self->sections;
+    foreach my $i (@sections){
+    		return $i if $i->id == $id;
+    }
+
+    return;
+}
+
+# =================================================================
 # remove_section
 # =================================================================
 
@@ -394,6 +418,16 @@ sub print_description {
 
 }
 
+# =================================================================
+# teachers
+# =================================================================
+
+=head2 teachers ( )
+
+returns an list of teachers assigned to all sections in this course
+
+=cut
+
 sub teachers {
     my $self = shift;
     my %teachers;
@@ -412,6 +446,151 @@ sub teachers {
     else {
         return [ values %teachers ];
     }
+}
+
+# =================================================================
+# streams
+# =================================================================
+
+=head2 teachers ( )
+
+returns an list of streams assigned to all sections in this course
+
+=cut
+
+sub streams {
+    my $self = shift;
+    my %streams;
+
+	foreach my $section ($self->sections){
+		foreach my $stream ( $section->streams ) {
+            	$streams{$stream} = $stream;
+    		}	
+	}
+
+    if (wantarray) {
+        return values %streams;
+    }
+    else {
+        return [ values %streams ];
+    }
+}
+
+# =================================================================
+# assign_teacher
+# =================================================================
+
+=head2 assign_teacher ( teacher object )
+
+Assign a teacher to all sectionss in this course
+
+Returns course object
+
+=cut
+
+sub assign_teacher {
+    my $self = shift;
+
+    if (@_) {
+        my $teacher = shift;
+        foreach my $section ( $self->sections ) {
+            $section->assign_teacher($teacher);
+        }
+    }
+
+    return $self;
+}
+
+# =================================================================
+# assign_stream
+# =================================================================
+
+=head2 assign_teacher ( teacher object )
+
+Assign a steam to all sections in this course
+
+Returns course object
+
+=cut
+
+sub assign_stream {
+    my $self = shift;
+
+    if (@_) {
+        my $stream = shift;
+        foreach my $section ( $self->sections ) {
+            $section->assign_stream($stream);
+        }
+    }
+
+    return $self;
+}
+
+# =================================================================
+# remove_teacher
+# =================================================================
+
+=head2 remove_teacher ( teacher object )
+
+removes teacher from all blocks in this course
+
+Returns Course object
+
+=cut
+
+sub remove_teacher {
+    my $self    = shift;
+    my $teacher = shift;
+
+    foreach my $section ( $self->sections ) {
+        $section->remove_teacher($teacher);
+    }
+
+    return $self;
+
+}
+
+# =================================================================
+# remove_stream
+# =================================================================
+
+=head2 remove_stream ( stream # )
+
+removes all streams from this course
+
+Returns Course object
+
+=cut
+
+sub remove_stream {
+    my $self   = shift;
+    my $stream = shift;
+
+    foreach my $section ( $self->sections ) {
+        $section->remove_stream($stream);
+    }
+
+    return $self;
+
+}
+
+#=======================================
+# Get unused section number (Alex Code)
+#=======================================
+
+=head2 get_new_number
+
+returns the first unused section number
+
+=cut
+
+sub get_new_number{
+	my $self = shift;
+	my $number = 1;
+	while($self->get_section($number)){
+		$number++;
+	}
+	return $number;
 }
 
 =head2 more stuff about conflicts to come
