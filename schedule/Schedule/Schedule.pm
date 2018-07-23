@@ -365,6 +365,52 @@ sub sections_for_teacher {
     }
 }
 
+
+# =================================================================
+# get course info for teacher
+# =================================================================
+
+=head2 courses_for_teacher (teacher object) 
+
+Returns a list of courses that this teacher teaches
+
+=cut
+
+sub courses_for_teacher {
+    my $self    = shift;
+    my $teacher = shift;
+
+    # --------------------------------------------------------------
+    # validate input
+    # --------------------------------------------------------------
+    confess "<"
+      . ref($teacher)
+      . ">: invalid teacher - must be a Teacher object"
+      unless ref($teacher) && $teacher->isa("Teacher");
+
+    # --------------------------------------------------------------
+    # loop through course->section->teachers to match teacher ids
+    # --------------------------------------------------------------
+    my %courses;
+
+    foreach my $course ( $self->courses->list ) {
+        foreach my $section ( $course->sections ) {
+            foreach my $teacher_id ( $section->teachers ) {
+                if ( $teacher->id eq $teacher_id->id ) {
+                    $courses{$course} = $course;
+                }
+            }
+        }
+    }
+
+    if (wantarray) {
+        return values %courses;
+    }
+    else {
+        return [ values %courses ];
+    }
+}
+
 # =================================================================
 # get block info for teacher
 # =================================================================

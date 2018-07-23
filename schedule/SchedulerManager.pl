@@ -404,7 +404,7 @@ sub create_standard_page {
 	);
 	$Pages{'labs'} = $Notebook->add(
 		'labs',
-		-label    => 'Labs',
+		-label    => 'Resources',
 		-raisecmd => \&draw_edit_labs
 	);
 	$Pages{'streams'} = $Notebook->add(
@@ -713,7 +713,7 @@ sub write_ini {
 		  ->pack( -expand => 1, -fill => 'both' );
 
 		my $lview =
-		  $frame->LabFrame( -label => 'Lab views', )
+		  $frame->LabFrame( -label => 'Resource views', )
 		  ->pack( -expand => 1, -fill => 'both' );
 
 		my $lview2 =
@@ -942,7 +942,7 @@ sub write_ini {
 		  ->pack( -expand => 1, -fill => 'both' );
 
 		my $lview =
-		  $exportFrame->LabFrame( -label => 'Lab views', )
+		  $exportFrame->LabFrame( -label => 'Resource views', )
 		  ->pack( -expand => 1, -fill => 'both' );
 
 		my $lview2 =
@@ -962,7 +962,7 @@ sub write_ini {
                   ->pack(-side=>'bottom', -fill => 'x');
 
 		$exportSchedule->create_frame( $tview2, 'teacher', \&toggle);
-		$exportSchedule->create_frame( $lview2,  'lab', \&toggle);
+		$exportSchedule->create_frame( $lview2,  'resource', \&toggle);
 		$exportSchedule->create_frame( $sview2,  'stream', \&toggle);
 
         # turn all buttons to their appropriate colours

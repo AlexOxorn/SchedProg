@@ -111,9 +111,9 @@ sub new {
         $sl->destroy;
     }
 
-    $frame->Label( -text => 'Drag teachers/labs to sections/blocks' )->pack;
+    $frame->Label( -text => 'Drag teachers/resources to sections/blocks' )->pack;
     $frame->Label(
-          -text => 'Drag courses/sections/blocks/labs/teachers to garbage can' )
+          -text => 'Drag courses/sections/blocks/resources/teachers to garbage can' )
       ->pack;
     $frame->Label( -text => 'Double-click course to edit' )->pack;
 
@@ -219,7 +219,7 @@ sub create_panel_for_modifying {
     )->pack( -side => 'left' );
     
     my $new_classEdit = $button_row->Button(
-                                    -text    => "Modify Course",
+                                    -text    => "Edit Selection",
                                     -width   => 12,
                                     -command => [ \&edit_course, $frame, $tree , "Edit" ]
     )->pack( -side => 'left' );
@@ -415,11 +415,11 @@ sub add_lab {
     my $path     = shift;
     my $not_hide = shift;
 
-    my $l_id = "Lab" . $l->id;
+    my $l_id = $l . $l->id;
     no warnings;
     $tree->add(
                 "$path/$l_id",
-                -text => "Lab: " . $l->number . " " . $l->descr,
+                -text => "Resource: " . $l->number . " " . $l->descr,
                 -data => { -obj => $l }
               );
     $tree->hide( 'entry', "$path/$l_id" ) unless $not_hide;
@@ -502,7 +502,9 @@ sub _show_tree_menu{
 		#=====================================
 		$tree_menu->cascade(-label => "Add Teacher");
 		$tree_menu->cascade(-label => "Set Stream");
-		$tree_menu->command(-label => "Edit Course", -command => [ \&edit_course, $tree_menu, $tree , "Edit" ]);
+		$tree_menu->command(-label => "Add Section(s)",
+							-command => [\&_add_section,$tree_menu,$tree,$obj,$input]);
+		$tree_menu->command(-label => "Edit Course", -command => [ \&_edit_course2, $tree_menu, $tree , $obj , $input ]);
 		$tree_menu->separator;
 		$tree_menu->cascade(-label => "Remove Teacher");
 		$tree_menu->cascade(-label => "Remove Stream");
@@ -661,6 +663,8 @@ sub _show_tree_menu{
 		$tree_menu->cascade(-label => "Set Stream");
 		$tree_menu->command(-label => "Add Block(s) (In progress)", 
 							-command => [\&_add_block,$tree_menu,$tree,$obj,$input]);
+		$tree_menu->command(-label => "Edit Section",
+							-command => [\&_edit_section2,$tree_menu,$tree,$obj,$input]);
 		$tree_menu->separator;
 		$tree_menu->cascade(-label => "Remove Teacher");
 		$tree_menu->cascade(-label => "Remove Stream");
@@ -780,10 +784,12 @@ sub _show_tree_menu{
 		# BLOCK MENU
 		#=========================
 		$tree_menu->cascade(-label => "Add Teacher");
-		$tree_menu->cascade(-label => "Set Lab");
+		$tree_menu->cascade(-label => "Set Resource");
+		$tree_menu->command(-label => "Edit Block",
+							-command => [\&_edit_block2,$tree_menu,$tree,$obj,$input]);
 		$tree_menu->separator;
 		$tree_menu->cascade(-label => "Remove Teacher");
-		$tree_menu->cascade(-label => "Remove Lab");
+		$tree_menu->cascade(-label => "Remove Resource");
 		$tree_menu->command(-label => "Clear All", 
 							-command => sub{
 								my @teachers = $obj->teachers;
@@ -855,7 +861,7 @@ sub _show_tree_menu{
 		#--------------------------------------
 		#Add Lab
 		#--------------------------------------
-		my $add_lab = $tree_menu->entrycget("Set Lab","-menu");
+		my $add_lab = $tree_menu->entrycget("Set Resource","-menu");
 		$add_lab->configure(-tearoff=>0);
 		
 		my @newLabs = $labs_list->get(0,'end');
@@ -901,12 +907,12 @@ sub _show_tree_menu{
 		#-----------------------------------------
 		#Remove Lab
 		#-----------------------------------------
-		my $remove_lab = $tree_menu->entrycget("Remove Lab","-menu");
+		my $remove_lab = $tree_menu->entrycget("Remove Resource","-menu");
 		$remove_lab->configure(-tearoff=>0);
 		
 		my @labs = $obj->labs;
 								
-		$remove_lab->command(	-label => "All Labs",
+		$remove_lab->command(	-label => "All Resources",
 								-command => sub{
 									foreach my $lab (@labs){
 										$obj->remove_lab($lab);
@@ -1522,7 +1528,21 @@ sub edit_course {
     my $type  = shift;
     my $input = $tree->selectionGet();
     my $obj   = _what_to_edit( $tree, $input );
-    _edit_course( $frame, $tree, $obj , $type );
+    if($type eq 'Edit'){
+    		if($obj){
+	    		if($obj->isa('Course')){
+	    			_edit_course2( $frame, $tree, $obj , $input );
+	    		}elsif($obj->isa('Section')){
+	    			_edit_section2( $frame, $tree, $obj , $input );
+	    		}elsif($obj->isa('Block')){
+	    			_edit_block2( $frame, $tree, $obj , $input );
+	    		}	
+    		}else{
+	    		$frame->bell;	
+	    	}
+    }else{
+    		_new_course( $frame, $tree, $obj , $type );
+    }
 }
 
 sub _what_to_edit {
@@ -2348,7 +2368,7 @@ sub _edit_block2{
      	})->pack(-side   => 'left' , -expand => 0);
     
     $techODrop = $frame3A->JBrowseEntry(
-        -label => 'Remonve Teacher:',
+        -label => 'Remove Teacher:',
         -variable => \$curTechO,
         -state => 'normal',
         -choices => \%teacherNameO,
@@ -2382,14 +2402,14 @@ sub _edit_block2{
    	#--------------------------------------------------------
 
     $streamNDrop = $frame4->JBrowseEntry(
-        -label => 'Add Lab:',
+        -label => 'Add Resource:',
         -variable => \$curLabN,
         -state => 'normal',
         -choices => \%labNameN,
         -width  => 12 )->pack(-side   => 'left' , -expand => 1,-fill => 'x');
         
     $steamAdd = $frame4->Button(
-     	-text => "Set Lab",
+     	-text => "Set Resource",
      	-command => sub {
      		if($curLabN ne ""){
      			$change = 1;
@@ -2401,7 +2421,7 @@ sub _edit_block2{
      			$curLabN = "";
      			$streamODrop->configure(-choices => \%labNameO);
      			$streamODrop->update;
-     			$labMessage->configure(-text => "Lab Set");
+     			$labMessage->configure(-text => "Resource Set");
      			$labMessage->update;
      			$labMessage->bell;
      			refresh_section($tree,$objPar,$parent,1);
@@ -2409,14 +2429,14 @@ sub _edit_block2{
      	})->pack(-side   => 'left' , -expand => 0);
 
     $streamODrop = $frame4A->JBrowseEntry(
-        -label => 'Remove Lab:',
+        -label => 'Remove Resource:',
         -variable => \$curLabO,
         -state => 'normal',
         -choices => \%labNameO,
         -width  => 12 )->pack(-side   => 'left' , -expand => 1,-fill => 'x');
     
     $steamRem = $frame4A->Button(
-     	-text => "Remove Lab",
+     	-text => "Remove Resource",
      	-command => sub {
      		if($curLabO ne ""){
      			$change = 1;
@@ -2428,7 +2448,7 @@ sub _edit_block2{
      			$curLabO = "";
      			$streamODrop->configure(-choices => \%labNameO);
      			$streamODrop->update;
-     			$labMessage->configure(-text => "Lab Removed");
+     			$labMessage->configure(-text => "Resource Removed");
      			$labMessage->update;
      			$labMessage->bell;
      			refresh_section($tree,$objPar,$parent,1);
@@ -2604,7 +2624,7 @@ sub _add_section{
 }
 
 
-sub _edit_course {
+sub _new_course {
     my $frame = shift;
     my $tree  = shift;
     my $obj   = shift;
@@ -2783,14 +2803,9 @@ sub create_edit_dialog {
               )->pack( -pady => 10 );
     if($type	 eq "Edit"){
     $tl->Label(
-             -text => '... This will remove all teacher/lab info from Course', )
+             -text => '... This will remove all teacher/resources info from Course', )
       ->pack( -pady => 5 );
     }
-    
-    $tl->Label(
-                -text => "*Required Information",
-                -font => [qw/-family arial -size 18/]
-              )->pack( -pady => 10 );
 
     # ---------------------------------------------------------------
     # buttons
@@ -2851,15 +2866,15 @@ sub create_edit_dialog {
     # Course Info Labels
     # ---------------------------------------------------------------
     $info_row->Label(
-                      -text   => "*Number",
+                      -text   => "Number",
                       -anchor => 'e'
                     )->grid( -column => 0, -row => 0, -sticky => 'nwes' );
     $info_row->Label(
-                      -text   => "*Description",
+                      -text   => "Description",
                       -anchor => 'e'
                     )->grid( -column => 0, -row => 1, -sticky => 'nwes' );
     $info_row->Label(
-                      -text   => "*Hours per week",
+                      -text   => "Hours per week",
                       -anchor => 'e'
                     )->grid( -column => 0, -row => 2, -sticky => 'nwes' );
 
@@ -2952,7 +2967,7 @@ sub create_edit_dialog {
 		$self->{-blockNums} = [] unless $self->{-blockNums};
 
 		my $l = $info_row->Label(
-                          -text   => "*$num",
+                          -text   => "$num",
                           -anchor => 'e'
                         )->grid( -column => 0, -row => 4 + $num, -sticky => 'nwes' );
 		push @{$self->{-blockNums}},$l;
@@ -3246,6 +3261,16 @@ sub create_section_dialog {
 
     return $self;
 }
+
+#===============================================================
+# Show Teacher Stats
+#===============================================================
+
+sub _teacher_stat{
+	my $teacher = shift;
+	
+}
+
 
 # =================================================================
 # footer

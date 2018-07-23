@@ -185,6 +185,13 @@ sub duration {
     if (@_) {
         no warnings;
         my $duration = shift;
+        if($duration < .25 && $duration > 0){
+        		$duration = .5;
+        }else{    	
+	        my $temp = 2 * $duration;
+	        my $rounded = int($temp + 0.5);
+	        $duration = $rounded/2;
+        }
         $duration = 8 if $duration > 8;
         if ($duration <= 0) {
             cluck "<$duration>: invalid duration, "."changed to $Default_duration" ;

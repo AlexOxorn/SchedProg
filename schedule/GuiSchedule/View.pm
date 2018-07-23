@@ -497,7 +497,7 @@ sub _drop_guiblock {
 	if (!$Good_Drop) {
 		# tell user
 		$cn->messageBox(-title   => 'Error Copying Classes',
-				        -message => 'Error! Can only move class from teacher to teacher or lab to lab.',
+				        -message => 'Error! Can only move class from teacher to teacher or resource to resource.',
 				        -type    => 'OK',
 				        -icon    => 'error');
 		# redraw view to reset colours of guiblocks
