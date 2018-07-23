@@ -137,10 +137,7 @@ sub Populate {
     # some defaults
 	my $pwd = cwd;
        
-       print "Hello Sandy\n";
        use FindBin;
-       print "$FindBin::Bin\n";
-       print "Goodbye\n";
        my $image_dir = "$FindBin::Bin/Tk/Images";
        
        

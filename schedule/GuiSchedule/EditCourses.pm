@@ -215,13 +215,13 @@ sub create_panel_for_modifying {
     my $new_classNew = $button_row->Button(
                                     -text    => "New Course",
                                     -width   => 12,
-                                    -command => [ \&edit_course, $frame, $tree , "New"]
+                                    -command => [ \&new_course, $frame, $tree]
     )->pack( -side => 'left' );
     
     my $new_classEdit = $button_row->Button(
                                     -text    => "Edit Selection",
                                     -width   => 12,
-                                    -command => [ \&edit_course, $frame, $tree , "Edit" ]
+                                    -command => [ \&edit_course, $frame, $tree ]
     )->pack( -side => 'left' );
 
     # ---------------------------------------------------------------
@@ -1525,10 +1525,8 @@ sub _double_click {
 sub edit_course {
     my $frame = shift;
     my $tree  = shift;
-    my $type  = shift;
     my $input = $tree->selectionGet();
     my $obj   = _what_to_edit( $tree, $input );
-    if($type eq 'Edit'){
     		if($obj){
 	    		if($obj->isa('Course')){
 	    			_edit_course2( $frame, $tree, $obj , $input );
@@ -1536,14 +1534,35 @@ sub edit_course {
 	    			_edit_section2( $frame, $tree, $obj , $input );
 	    		}elsif($obj->isa('Block')){
 	    			_edit_block2( $frame, $tree, $obj , $input );
-	    		}	
+	    		}else{
+	    			$frame->bell;	
+	    		}
     		}else{
 	    		$frame->bell;	
 	    	}
-    }else{
-    		_new_course( $frame, $tree, $obj , $type );
-    }
 }
+
+# ============================================================================================
+# Create a new course
+# ============================================================================================
+sub new_course {
+    my $frame = shift;
+    my $tree  = shift;
+
+    # make dialog box for editing
+    my $edit_dialog = new_course_dialog( $frame, $tree);
+
+    # empty dialog box
+    $edit_dialog->{-number}->configure( -text  => '' );
+    $edit_dialog->{-name}->configure( -text => '' );
+    $edit_dialog->{-sections}->configure( -text => 1 );
+    $edit_dialog->{-hours}[0]->configure( -text => 1.5 );
+
+    # show and populate
+    $edit_dialog->{-toplevel}->raise();
+
+}
+
 
 sub _what_to_edit {
     my $tree  = shift;
@@ -2624,64 +2643,6 @@ sub _add_section{
 }
 
 
-sub _new_course {
-    my $frame = shift;
-    my $tree  = shift;
-    my $obj   = shift;
-    my $type  = shift;
-	;
-    # make dialog box for editing
-    my $edit_dialog = create_edit_dialog( $frame, $tree , $type);
-
-    # is a course selected?
-    my $course_selected = 0;
-    if ( $obj && $obj->isa('Course') ) {
-        $course_selected = 1;
-        $edit_dialog->{-inital_number} = $obj->number;
-    }
-
-    # empty dialog box
-    if($type eq "Edit"){
-    		$edit_dialog->{-modify}->configure( -state => 'disabled' );
-    }
-    $edit_dialog->{-number}->configure( -text  => '' );
-    $edit_dialog->{-name}->configure( -text => '' );
-    $edit_dialog->{-sections}->configure( -text => 1 );
-    $edit_dialog->{-hours}[0]->configure( -text => 1.5 );
-
-    # course is selected, fill dialog with course material
-    if ($course_selected) {
-        $edit_dialog->{-modify}->configure( -state => 'normal' );
-        $edit_dialog->{-number}->configure( -text  => $obj->number );
-        $edit_dialog->{-name}->configure( -text => $obj->name );
-
-        # how many sections?
-        my @sections = $obj->sections;
-        $edit_dialog->{-sections}->configure( -text => scalar(@sections) );
-
-        if (@sections) {
-            $edit_dialog->{-course_hours}
-              ->configure( -text => $sections[0]->hours );
-
-            # put hours for each block
-            my @blocks = $sections[0]->blocks;
-
-            foreach my $i ( 1 .. @blocks ) {
-                my $bl  = $blocks[ $i - 1 ];
-                my $hrs = $bl->duration;
-                if ( $i > 1 ) {
-                    _add_block_to_editor( $edit_dialog, $i );
-                }
-                $edit_dialog->{-hours}[ $i - 1 ]->configure( -text => $hrs );
-            }
-        }
-
-    }
-
-    # show and populate
-    $edit_dialog->{-toplevel}->raise();
-
-}
 
 # =================================================================
 # save modified course
@@ -2787,25 +2748,19 @@ sub save_course_modified {
 # =================================================================
 # make dialog box for editing courses
 # =================================================================
-sub create_edit_dialog {
+sub new_course_dialog {
     my $frame = shift;
     my $tree  = shift;
-	my $type  = shift;
-    my $tl    = $frame->Toplevel( -title => "$type Course");
+    my $tl    = $frame->Toplevel( -title => "New Course");
     my $self  = { -tree => $tree, -toplevel => $tl };
 
     # ---------------------------------------------------------------
     # instructions
     # ---------------------------------------------------------------
     $tl->Label(
-                -text => "$type Course",
+                -text => "New Course",
                 -font => [qw/-family arial -size 18/]
               )->pack( -pady => 10 );
-    if($type	 eq "Edit"){
-    $tl->Label(
-             -text => '... This will remove all teacher/resources info from Course', )
-      ->pack( -pady => 5 );
-    }
 
     # ---------------------------------------------------------------
     # buttons
@@ -2827,28 +2782,13 @@ sub create_edit_dialog {
                          -state => 'disabled'
                        )->pack( -side => 'left', -pady => 3 );
                        
-	if($type eq "Edit"){
-    $self->{-modify} =
-      $button_row->Button(
-                           -text    => 'Modify',
-                           -width   => 12,
-                           -command => [ \&save_course_modified, $self, 0 ,$tl]
-                         )->pack( -side => 'left', -pady => 3 );
-	}
-	elsif($type eq "New"){
     $self->{-new} = $button_row->Button(
                                        -text    => 'Create New',
                                        -width   => 12,
                                        -command => [ \&save_course_modified, $self, 1, $tl ]
     )->pack( -side => 'left', -pady => 3 );
-	}
-	else{
-		my $debuggError = $tl->Dialog(-title => 'Error', 
-   										-text => "An error has occured, please contact Sandy Bultena.\nErrorCode:EC-ECD", 
-   										-default_button => 'Okay', -buttons => [ 'Okay'], 
-   										-bitmap => 'question' )->Show( );
-	}
-
+	
+	
     $self->{-cancel} =
       $button_row->Button(
                            -text    => 'Cancel',
