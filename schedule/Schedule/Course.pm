@@ -399,7 +399,7 @@ sub print_description {
 
     # sections
     foreach my $s ( sort {$a->number <=> $b->number} $self->sections ) {
-        $text .= "\nSection " . $s->number . "\n";
+        $text .= "\n$s\n";
         $text .= "-" x 50 . "\n";
 
         # blocks
@@ -415,6 +415,23 @@ sub print_description {
     }
 
     return $text;
+
+}
+
+# =================================================================
+# print_description2
+# =================================================================
+
+=head2 print_description2
+
+Number: Name
+
+=cut
+
+sub print_description2 {
+    my $self = shift;
+
+    return $self->number . ": " . $self->name;
 
 }
 

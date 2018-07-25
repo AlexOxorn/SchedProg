@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+
 package Scheduler;
+
 # ==================================================================
 # Entry point for the Gui Schedule Management Tool
 # ==================================================================
@@ -28,10 +30,9 @@ use Tk::LabFrame;
 use Tk::ROText;
 use YAML;
 
-use Tk::FindImages; 
+use Tk::FindImages;
 my $logo_file = Tk::FindImages::get_logo();
 my $image_dir = Tk::FindImages::get_image_dir();
-
 
 use Cwd 'abs_path';
 use File::Basename;
@@ -69,6 +70,8 @@ my $Main_frame_height = 400;
 my $Main_frame_width  = 800;
 my $Notebook;
 my %Pages;
+my $OverviewNotebook;
+my %OverviewPages;
 my $Front_page_frame;
 my $Main_page_frame;
 my $Menu;
@@ -83,44 +86,42 @@ $mw = MainWindow->new();
 $mw->Frame( -height => $Main_frame_height )->pack( -side => 'left' );
 $mw->geometry("600x600");
 $mw->protocol( 'WM_DELETE_WINDOW', \&exit_schedule );
-( $Colours, $Fonts )   = InitGui->set($mw);
+( $Colours, $Fonts ) = InitGui->set($mw);
 $Colours = {
-WorkspaceColour=>"#eeeeee",
-WindowForeground=>"black",
-SelectedBackground=>"#cdefff",
-SelectedForeground=>"#0000ff",
-DarkBackground=>"#cccccc",
-ButtonBackground=>"#abcdef",
-ButtonForeground=>"black",
-ActiveBackground=>"#89abcd",
-highlightbackground=>"#0000ff",
-ButtonHighlightBackground=>"#ff0000",
-DataBackground=>"white",
-DataForeground=>"black",
+	WorkspaceColour           => "#eeeeee",
+	WindowForeground          => "black",
+	SelectedBackground        => "#cdefff",
+	SelectedForeground        => "#0000ff",
+	DarkBackground            => "#cccccc",
+	ButtonBackground          => "#abcdef",
+	ButtonForeground          => "black",
+	ActiveBackground          => "#89abcd",
+	highlightbackground       => "#0000ff",
+	ButtonHighlightBackground => "#ff0000",
+	DataBackground            => "white",
+	DataForeground            => "black",
 };
 $ConflictColours = {
-Conflict->TIME => "#FF0000"
-, Conflict->LUNCH        => "orange"
-, Conflict->MINIMUM_DAYS => "#FF80FF"
-, Conflict->AVAILABILITY => "pink"
+	Conflict->TIME         => "#FF0000",
+	Conflict->LUNCH        => "orange",
+	Conflict->MINIMUM_DAYS => "#FF80FF",
+	Conflict->AVAILABILITY => "pink"
 };
 SetSystemColours( $mw, $Colours );
 $mw->configure( -bg => $Colours->{WorkspaceColour} );
-( $Menu,    $Toolbar ) = create_menu();
+( $Menu, $Toolbar ) = create_menu();
 
-my $guiSchedule = GuiSchedule->new( $mw, \$Dirtyflag, \$Schedule );
+my $guiSchedule    = GuiSchedule->new( $mw, \$Dirtyflag, \$Schedule );
 my $exportSchedule = GuiSchedule->new( $mw, \$Dirtyflag, \$Schedule );
 
 create_front_page();
 $Status_bar = create_status_bar();
 
-
-
 # ==================================================================
 # post-process procedures
 # - must be started after the mainloop has started
 # ==================================================================
-$mw->after(500,\&set_dirty_label);
+$mw->after( 500, \&set_dirty_label );
 
 # ==================================================================
 # ==================================================================
@@ -232,8 +233,7 @@ sub menu_info {
 					-command     => $b_props{save}{cb}
 				],
 				[
-					"command", "Save As",
-					-command     => \&save_as_schedule
+					"command", "Save As", -command => \&save_as_schedule
 				],
 				'separator',
 				[
@@ -246,21 +246,21 @@ sub menu_info {
 		],
 		[ "command", "View", -command => $b_props{open}{view} ],
 	];
-	
+
 	# ------------------------------------------------------------------------
 	# bind all of the 'accelerators
 	# ------------------------------------------------------------------------
-	$mw->bind('<Control-Key-o>',$b_props{open}{cb});
-	$mw->bind('<Control-Key-s>',$b_props{save}{cb});
-	$mw->bind('<Control-Key-n>',$b_props{new}{cb});
-	$mw->bind('<Control-Key-e>',\&exit_schedule);
+	$mw->bind( '<Control-Key-o>', $b_props{open}{cb} );
+	$mw->bind( '<Control-Key-s>', $b_props{save}{cb} );
+	$mw->bind( '<Control-Key-n>', $b_props{new}{cb} );
+	$mw->bind( '<Control-Key-e>', \&exit_schedule );
 
 	# if darwin, also bind the 'command' key for MAC users
-	if ($^O =~ /darwin/) {
-		$mw->bind('<Meta-Key-o>',$b_props{open}{cb});
-		$mw->bind('<Meta-Key-s>',$b_props{save}{cb});
-		$mw->bind('<Meta-Key-n>',$b_props{new}{cb});
-		$mw->bind('<Meta-Key-e>',\&exit_schedule);
+	if ( $^O =~ /darwin/ ) {
+		$mw->bind( '<Meta-Key-o>', $b_props{open}{cb} );
+		$mw->bind( '<Meta-Key-s>', $b_props{save}{cb} );
+		$mw->bind( '<Meta-Key-n>', $b_props{new}{cb} );
+		$mw->bind( '<Meta-Key-e>', \&exit_schedule );
 	}
 	return \@buttons, \%b_props, $menu;
 
@@ -412,13 +412,12 @@ sub create_standard_page {
 		-label    => 'Streams',
 		-raisecmd => \&draw_edit_streams
 	);
- 	$Pages{'export'} = $Notebook->add(
+	$Pages{'export'} = $Notebook->add(
 		'export',
 		-label    => 'Export',
 		-raisecmd => \&draw_export_schedule
 	);
-    
-    
+
 }
 
 # ==================================================================
@@ -426,7 +425,7 @@ sub create_standard_page {
 # ==================================================================
 sub create_status_bar {
 	my $red;
-	if (Colour->isLight($Colours->{WorkspaceColour})) {
+	if ( Colour->isLight( $Colours->{WorkspaceColour} ) ) {
 		$red = "#880000";
 	}
 	else {
@@ -444,13 +443,13 @@ sub create_status_bar {
 		-borderwidth  => 1,
 		-relief       => 'ridge',
 	)->pack( -side => 'left', -expand => 1, -fill => 'x' );
-	
+
 	$status_frame->Label(
 		-textvariable => \$Dirty_symbol,
 		-borderwidth  => 1,
 		-relief       => 'ridge',
-		-width => 15,
-		-fg => $red,
+		-width        => 15,
+		-fg           => $red,
 	)->pack( -side => 'right', -fill => 'x' );
 
 	return $status_frame;
@@ -460,12 +459,12 @@ sub create_status_bar {
 # keep dirty label up to date
 # ==================================================================
 sub set_dirty_label {
-	
+
 	while (1) {
-		
+
 		# wait for DirtyFlag to change
-		$mw->waitVariable(\$Dirtyflag);
-		
+		$mw->waitVariable( \$Dirtyflag );
+
 		# set label accordingly
 		if ($Dirtyflag) {
 			$Dirty_symbol = "NOT SAVED";
@@ -473,7 +472,7 @@ sub set_dirty_label {
 		else {
 			$Dirty_symbol = "";
 		}
-		
+
 	}
 }
 
@@ -484,6 +483,7 @@ sub new_schedule {
 
 	# TODO: close all views, empty the GuiSchedule array of views, etc.
 	$guiSchedule->destroy_all;
+
 	# TODO: save previous schedule?
 
 	$Schedule = Schedule->new();
@@ -561,6 +561,7 @@ sub open_schedule {
 
 	# TODO: close all views, empty the GuiSchedule array of views, etc.
 	$guiSchedule->destroy_all;
+
 	# get file to open
 	unless ( $file && -e $file ) {
 		$file = "";
@@ -653,7 +654,7 @@ sub exit_schedule {
 	}
 
 	write_ini();
-	
+
 	$mw->destroy();
 	CORE::exit();
 }
@@ -707,7 +708,7 @@ sub write_ini {
 		my $tview =
 		  $frame->LabFrame( -label => 'Teacher views', )
 		  ->pack( -expand => 1, -fill => 'both' );
-		
+
 		my $tview2 =
 		  $tview->Scrolled( 'Frame', -scrollbars => "osoe" )
 		  ->pack( -expand => 1, -fill => 'both' );
@@ -728,22 +729,58 @@ sub write_ini {
 		  $sview->Scrolled( 'Frame', -scrollbars => "osoe" )
 		  ->pack( -expand => 1, -fill => 'both' );
 
-        $guiSchedule->reset_button_refs();
-		$guiSchedule->create_frame( $tview2, 'teacher');
-		$guiSchedule->create_frame( $lview2,  'lab' );
-		$guiSchedule->create_frame( $sview2,  'stream' );
+		$guiSchedule->reset_button_refs();
+		$guiSchedule->create_frame( $tview2, 'teacher' );
+		$guiSchedule->create_frame( $lview2, 'lab' );
+		$guiSchedule->create_frame( $sview2, 'stream' );
 	}
 }
 
 # ==================================================================
 # draw_overview
 # ==================================================================
+
 {
-	my $tbox;
 
 	sub draw_overview {
 
 		my $f = $Pages{overview};
+		print "Called draw_overview\n";
+
+		unless ($OverviewNotebook) {
+			print "\nCreating notebook\n";
+			$OverviewNotebook =
+			  $f->NoteBook()->pack( -expand=>1,-fill=>'both');
+
+			$OverviewPages{'course2'} = $OverviewNotebook->add(
+				'course2',
+				-label    => 'by Course',
+				#-raisecmd => \&draw_overview_course,
+			);
+
+			$OverviewPages{'teacher2'} = $OverviewNotebook->add(
+				'teacher2',
+				-label    => 'by Teacher',
+				#-raisecmd => \&draw_overview_teacher,
+			);
+
+
+		}
+		draw_overview_course();
+		draw_overview_teacher();
+
+	}
+}
+
+# ============================================================
+# Draw Course Overview
+# ============================================================
+
+{
+	my $tbox;
+
+	sub draw_overview_course {
+		my $f = $OverviewPages{'course2'};
 
 		unless ($tbox) {
 			$tbox = $f->Scrolled(
@@ -778,6 +815,50 @@ sub write_ini {
 }
 
 # ==================================================================
+# Draw Teacher Overview
+# ==================================================================
+
+{
+	my $tbox2;
+
+	sub draw_overview_teacher {
+		my $f = $OverviewPages{'teacher2'};
+
+		unless ($tbox2) {
+			$tbox2 = $f->Scrolled(
+				'ROText',
+				-height     => 20,
+				-width      => 50,
+				-scrollbars => 'osoe',
+				-wrap       => 'none'
+			)->pack( -expand => 1, -fill => 'both' );
+		}
+		$tbox2->delete( "1.0", 'end' );
+
+		# if schedule, show info
+		if ($Schedule) {
+			unless ( $Schedule->all_teachers ) {
+				$tbox2->insert( 'end', 'No teachers defined in this schedule' );
+			}
+			else {
+				foreach
+				  my $t ( sort { lc( $a->lastname ) cmp lc( $b->lastname ) }
+					$Schedule->all_teachers )
+				{
+					$tbox2->insert( 'end', $Schedule->teacher_details($t) );
+				}
+			}
+		}
+
+		# if no schedule, show info
+		else {
+			$tbox2->insert( 'end', 'There is no schedule, please open one' );
+		}
+
+	}
+}
+
+# ==================================================================
 # draw_edit_teachers
 # ==================================================================
 {
@@ -788,12 +869,12 @@ sub write_ini {
 
 			my $f = $Pages{teachers};
 			if ($de) {
-				$de->refresh($Schedule->teachers);
+				$de->refresh( $Schedule->teachers );
 			}
 			else {
 				$de =
-				  DataEntry->new( $f, $Schedule->teachers, 'Teacher', $Schedule,
-					\$Dirtyflag, $guiSchedule );
+				  DataEntry->new( $f, $Schedule->teachers, 'Teacher',
+					$Schedule, \$Dirtyflag, $guiSchedule );
 			}
 		}
 	}
@@ -810,7 +891,7 @@ sub write_ini {
 
 			my $f = $Pages{streams};
 			if ($de) {
-				$de->refresh($Schedule->streams);
+				$de->refresh( $Schedule->streams );
 			}
 			else {
 				$de =
@@ -833,7 +914,7 @@ sub write_ini {
 
 			my $f = $Pages{labs};
 			if ($de) {
-				$de->refresh($Schedule->labs);
+				$de->refresh( $Schedule->labs );
 			}
 			else {
 				$de = $de =
@@ -868,75 +949,77 @@ sub write_ini {
 # ==================================================================
 {
 	my $frame;
-    my $exportFrame;
-    my $exportFrameDirty;
-    my $currentExport;
-    my @exportFormats;
-    my %selected;
+	my $exportFrame;
+	my $exportFrameDirty;
+	my $currentExport;
+	my @exportFormats;
+	my %selected;
 
 	sub draw_export_schedule {
 		my $f = $Pages{export};
 
-        # cleanup from last iteration
-        $frame->destroy if $frame;
-        $exportFrameDirty = 0;
-        
+		# cleanup from last iteration
+		$frame->destroy if $frame;
+		$exportFrameDirty = 0;
+
 		$frame = $f->Frame->pack( -expand => 1, -fill => 'both' );
 
-        my $exportList = $frame->Scrolled( 'Listbox', -scrollbars => 'oe',  -height => scalar(@exportFormats) )
-            ->pack( -side => 'top', -fill => 'x')
-            ->Subwidget('listbox');
+		my $exportList = $frame->Scrolled(
+			'Listbox',
+			-scrollbars => 'oe',
+			-height     => scalar(@exportFormats)
+		)->pack( -side => 'top', -fill => 'x' )->Subwidget('listbox');
 
-        @exportFormats = ("Excel (*.xlsx)", "Comma Separated Value (*.csv)");
-        $currentExport = -1;
-        
-        foreach my $exportFormat (@exportFormats) {
-            $exportList->insert('end', $exportFormat);
-        }       
-        $exportList->selectionSet(0);
-        change_format($exportList);
+		@exportFormats = ( "Excel (*.xlsx)", "Comma Separated Value (*.csv)" );
+		$currentExport = -1;
 
-        $exportList->bind("<<ListboxSelect>>", [\&change_format]);
-    }
+		foreach my $exportFormat (@exportFormats) {
+			$exportList->insert( 'end', $exportFormat );
+		}
+		$exportList->selectionSet(0);
+		change_format($exportList);
 
-    sub change_format {
-        my $exportList = shift;
-        
-        $exportFrame->destroy if $exportFrameDirty;
-        
-        my $selection = $exportList->curselection->[0];
-        return if($selection == $currentExport);
-        $currentExport = $selection;
-        
-        if($currentExport == 0) {
-            draw_excel_export();
-        }
-        elsif($currentExport == 1) {
-            draw_csv_export();
-        }
-    }
-    
-    sub draw_csv_export() {
+		$exportList->bind( "<<ListboxSelect>>", [ \&change_format ] );
+	}
 
-        $exportFrame = $frame->Frame->pack( -expand => 1, -fill => 'both' );
-        $exportFrameDirty = 1;
-        
-        my $exportButton =
-            $exportFrame->Button(-text => "Export", -command => [\&generate_csv])
-            ->pack(-side=>'bottom', -fill => 'x');
+	sub change_format {
+		my $exportList = shift;
 
-        
-    }
-    
-    sub draw_excel_export() {
-        
-        $exportFrame = $frame->Frame->pack( -expand => 1, -fill => 'both' );
-        $exportFrameDirty = 1;
-        
+		$exportFrame->destroy if $exportFrameDirty;
+
+		my $selection = $exportList->curselection->[0];
+		return if ( $selection == $currentExport );
+		$currentExport = $selection;
+
+		if ( $currentExport == 0 ) {
+			draw_excel_export();
+		}
+		elsif ( $currentExport == 1 ) {
+			draw_csv_export();
+		}
+	}
+
+	sub draw_csv_export() {
+
+		$exportFrame = $frame->Frame->pack( -expand => 1, -fill => 'both' );
+		$exportFrameDirty = 1;
+
+		my $exportButton = $exportFrame->Button(
+			-text    => "Export",
+			-command => [ \&generate_csv ]
+		)->pack( -side => 'bottom', -fill => 'x' );
+
+	}
+
+	sub draw_excel_export() {
+
+		$exportFrame = $frame->Frame->pack( -expand => 1, -fill => 'both' );
+		$exportFrameDirty = 1;
+
 		my $tview =
 		  $exportFrame->LabFrame( -label => 'Teacher views', )
 		  ->pack( -expand => 1, -fill => 'both' );
-		
+
 		my $tview2 =
 		  $tview->Scrolled( 'Frame', -scrollbars => "osoe" )
 		  ->pack( -expand => 1, -fill => 'both' );
@@ -957,122 +1040,136 @@ sub write_ini {
 		  $sview->Scrolled( 'Frame', -scrollbars => "osoe" )
 		  ->pack( -expand => 1, -fill => 'both' );
 
-        my $exportButton =
-            $exportFrame->Button(-text => "Export", -command => [\&generate_excel])
-                  ->pack(-side=>'bottom', -fill => 'x');
+		my $exportButton = $exportFrame->Button(
+			-text    => "Export",
+			-command => [ \&generate_excel ]
+		)->pack( -side => 'bottom', -fill => 'x' );
 
-		$exportSchedule->create_frame( $tview2, 'teacher', \&toggle);
-		$exportSchedule->create_frame( $lview2,  'resource', \&toggle);
-		$exportSchedule->create_frame( $sview2,  'stream', \&toggle);
+		$exportSchedule->create_frame( $tview2, 'teacher',  \&toggle );
+		$exportSchedule->create_frame( $lview2, 'resource', \&toggle );
+		$exportSchedule->create_frame( $sview2, 'stream',   \&toggle );
 
-        # turn all buttons to their appropriate colours
-        if($exportSchedule->_button_refs) {
-        	foreach my $obj (keys %{$exportSchedule->_button_refs}) {
-            	my $btn = ${$exportSchedule->_button_refs->{$obj}};
-            	if ($selected{$obj}) {
-                	$btn->configure(-bg=>"yellow",
-                	-fg=>"black");
-            	}
-            	else {
-                	$btn->configure(-bg=>$Colours->{ButtonBackground},
-                	-fg=>$Colours->{ButtonForeground});
-            	}
-        	}
-    	}
+		# turn all buttons to their appropriate colours
+		if ( $exportSchedule->_button_refs ) {
+			foreach my $obj ( keys %{ $exportSchedule->_button_refs } ) {
+				my $btn = ${ $exportSchedule->_button_refs->{$obj} };
+				if ( $selected{$obj} ) {
+					$btn->configure(
+						-bg => "yellow",
+						-fg => "black"
+					);
+				}
+				else {
+					$btn->configure(
+						-bg => $Colours->{ButtonBackground},
+						-fg => $Colours->{ButtonForeground}
+					);
+				}
+			}
+		}
 	}
 
-    sub toggle {
-        my $self = shift;
-        my $obj = shift;
-        my $type = shift;
-        my $btn = shift;
-        if($selected{$obj}) {
-            undef($selected{$obj});
-            $$btn->configure(-bg=>$Colours->{ButtonBackground},
-            -fg=>$Colours->{ButtonForeground});
-        }
-        else {
-            $selected{$obj} = $obj;
-            $$btn->configure(-background => "yellow",-fg=>"black" );
-        }
-    }
+	sub toggle {
+		my $self = shift;
+		my $obj  = shift;
+		my $type = shift;
+		my $btn  = shift;
+		if ( $selected{$obj} ) {
+			undef( $selected{$obj} );
+			$$btn->configure(
+				-bg => $Colours->{ButtonBackground},
+				-fg => $Colours->{ButtonForeground}
+			);
+		}
+		else {
+			$selected{$obj} = $obj;
+			$$btn->configure( -background => "yellow", -fg => "black" );
+		}
+	}
 
-    sub generate_excel() {
+	sub generate_excel() {
 
-        my @teachers;
-        my @rooms;
-        my @streams;
+		my @teachers;
+		my @rooms;
+		my @streams;
 
-        # extract the selected values from the map, they are the values (keys are "strings").
-        foreach my $obj (values %selected) {
-            next unless $obj;
-            
-            #sort them into their arrays based in their type.
-            if($obj->isa("Teacher")) {
-                push @teachers, $obj;
-            }
-            elsif($obj->isa("Lab")) {
-                push @rooms, $obj;
-            }
-            elsif($obj->isa("Stream")) {
-                push @streams, $obj;
-            }
-            else {
-                # this should not happen.
-                print STDERR "Error: $obj has unknown type\n";
-            }
-        }
+# extract the selected values from the map, they are the values (keys are "strings").
+		foreach my $obj ( values %selected ) {
+			next unless $obj;
 
-        # get the schedule reference
-        my $schedule = ${$guiSchedule->schedule_ptr};
+			#sort them into their arrays based in their type.
+			if ( $obj->isa("Teacher") ) {
+				push @teachers, $obj;
+			}
+			elsif ( $obj->isa("Lab") ) {
+				push @rooms, $obj;
+			}
+			elsif ( $obj->isa("Stream") ) {
+				push @streams, $obj;
+			}
+			else {
+				# this should not happen.
+				print STDERR "Error: $obj has unknown type\n";
+			}
+		}
 
-        # sort the selections
-        @teachers = sort { $a->lastname cmp $b->lastname} @teachers;
-        @rooms    = sort { $a->number cmp $b->number} @rooms;
-        @streams  = sort { $a->number cmp $b->number} @streams;
+		# get the schedule reference
+		my $schedule = ${ $guiSchedule->schedule_ptr };
 
-        my $file = $mw->getSaveFile( -initialdir => $Current_directory, -filetypes => [['Excel', '.xlsx'], ['All','*']] );
-        return unless $file;
+		# sort the selections
+		@teachers = sort { $a->lastname cmp $b->lastname } @teachers;
+		@rooms    = sort { $a->number cmp $b->number } @rooms;
+		@streams  = sort { $a->number cmp $b->number } @streams;
 
-        # if the user didn't provide the .xlsx extension
-        $file .= ".xlsx" if($file !~ /\.xlsx$/);
-   
-        my $excel = Excel->new(-output_file => $file);
+		my $file = $mw->getSaveFile(
+			-initialdir => $Current_directory,
+			-filetypes  => [ [ 'Excel', '.xlsx' ], [ 'All', '*' ] ]
+		);
+		return unless $file;
 
-        foreach my $teacher (@teachers) {
-            my @blocks = $schedule->blocks_for_teacher($teacher);
-            my $title = $teacher->firstname . ' ' . $teacher->lastname;
-            $excel->add(0, $title, \@blocks);
-        }
-                
-        foreach my $room (@rooms) {
-            my @blocks = $schedule->blocks_in_lab($room);
-            my $title = $room->number;
-            $excel->add(1, $title, \@blocks);
-        }
+		# if the user didn't provide the .xlsx extension
+		$file .= ".xlsx" if ( $file !~ /\.xlsx$/ );
 
-        foreach my $stream (@streams) {
-            my @blocks = $schedule->blocks_for_stream($stream);
-            my $title = $stream->number;
-            $excel->add(2, $title, \@blocks);
-        }
+		my $excel = Excel->new( -output_file => $file );
 
-        $excel->export();
-    }
+		foreach my $teacher (@teachers) {
+			my @blocks = $schedule->blocks_for_teacher($teacher);
+			my $title  = $teacher->firstname . ' ' . $teacher->lastname;
+			$excel->add( 0, $title, \@blocks );
+		}
 
-    sub generate_csv {
+		foreach my $room (@rooms) {
+			my @blocks = $schedule->blocks_in_lab($room);
+			my $title  = $room->number;
+			$excel->add( 1, $title, \@blocks );
+		}
 
-         # get the schedule reference
-        my $schedule = ${$guiSchedule->schedule_ptr};
+		foreach my $stream (@streams) {
+			my @blocks = $schedule->blocks_for_stream($stream);
+			my $title  = $stream->number;
+			$excel->add( 2, $title, \@blocks );
+		}
 
-        my $file = $mw->getSaveFile( -initialdir => $Current_directory, -filetypes => [['Comma Separated Value', '.csv'], ['All','*']] );
-        return unless $file;
+		$excel->export();
+	}
 
-        # if the user didn't provide the .csv extension
-        $file .= ".csv" if($file !~ /\.csv$/);
-   
-        my $csv = CSV->new(-output_file => $file, -schedule => $schedule);
-        $csv->export();
-    }
+	sub generate_csv {
+
+		# get the schedule reference
+		my $schedule = ${ $guiSchedule->schedule_ptr };
+
+		my $file = $mw->getSaveFile(
+			-initialdir => $Current_directory,
+			-filetypes =>
+			  [ [ 'Comma Separated Value', '.csv' ], [ 'All', '*' ] ]
+		);
+		return unless $file;
+
+		# if the user didn't provide the .csv extension
+		$file .= ".csv" if ( $file !~ /\.csv$/ );
+
+		my $csv = CSV->new( -output_file => $file, -schedule => $schedule );
+		$csv->export();
+	}
 }
-    
+

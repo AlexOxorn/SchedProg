@@ -19,6 +19,7 @@ use Schedule::Lab;
 use Schedule::Labs;
 use Schedule::Streams;
 use Schedule::Stream;
+use Scalar::Util 'refaddr';
 
 use List::Util qw/all min max/;
 
@@ -974,6 +975,122 @@ sub _disjoint {
     } 
     
     return 1;
+}
+
+# ================================================
+# Teacher Stats
+# ================================================
+
+=head2 $Schedule->print_description($teacher)
+
+Returns a text string that gives some teacher statistics
+
+=cut
+
+sub teacher_stat{
+	my $self = shift;
+	my $teacher = shift;
+	print $teacher;
+	
+	my @courses = $self->courses_for_teacher($teacher);
+	my @sections = $self->sections_for_teacher($teacher);
+	my @blocks =  $self->blocks_for_teacher($teacher);
+	
+	my %week;
+	$week{'Monday'} = 0;
+	$week{'Tuesday'} = 0;
+	$week{'Wednesday'} = 0;
+	$week{'Thursday'} = 0;
+	$week{'Friday'} = 0;
+	$week{'Saturday'} = 0;
+	$week{'Sunday'} = 0;
+	
+	my $hoursOfWork;
+	
+	foreach my $i (@blocks){
+		$hoursOfWork += $i->duration;
+		if($i->day eq 'mon'){ $week{'Monday'} = 1 }
+		elsif($i->day eq 'tue'){ $week{'Tuesday'} = 1 }
+		elsif($i->day eq 'wed'){ $week{'Wednesday'} = 1 }
+		elsif($i->day eq 'thu'){ $week{'Thursday'} = 1 }
+		elsif($i->day eq 'fri'){ $week{'Friday'} = 1 }
+		elsif($i->day eq 'sat'){ $week{'Saturday'} = 1 }
+		elsif($i->day eq 'sun'){ $week{'Sunday'} = 1 }
+	}
+	
+	my $message = $teacher->firstname . " " . $teacher->lastname . "'s Stats.\n\n";
+	
+	$message = $message . "Days of the week working:\n";
+	
+	$message = $message . "Monday " 		if($week{'Monday'});
+	$message = $message . "Tuesday " 	if($week{'Tuesday'});
+	$message = $message . "Wednesday " 	if($week{'Wednesday'});
+	$message = $message . "Thursday " 	if($week{'Thursday'});
+	$message = $message . "Friday " 		if($week{'Friday'});
+	$message = $message . "Saturday " 	if($week{'Saturday'});
+	$message = $message . "Sunday " 		if($week{'Sunday'});
+	
+	$message = $message . "\nHours of Work: $hoursOfWork\n\n";
+	
+	$message = $message . "Courses being taught:\n";
+	
+	foreach my $i (@courses){
+		my $numSections = 0;
+		foreach my $j (@sections){
+			$numSections++ if refaddr($j->course) == refaddr($i);
+		}
+		$message = $message . "->" . $i->print_description2 . " ($numSections Section(s))\n";
+	}
+	
+	return $message;
+}
+
+sub teacher_details{
+	my $self = shift;
+	my $teacher = shift;
+	
+	my $text = "";
+
+    # header
+    $text .= "\n\n" . "=" x 50 . "\n";
+    $text .= "$teacher\n";
+    $text .= "=" x 50 . "\n";
+
+	foreach my $c ( sort {lc($a->number) cmp lc($b->number)} $self->courses_for_teacher($teacher)){
+		
+		$text .= "\n" . $c->number . " " . $c->name . "\n";
+		$text .= "-" x 80 ;
+		
+		# sections
+	    foreach my $s ( sort {$a->number <=> $b->number} $c->sections ) {
+	        my @sTeacher = $s->teachers;
+	        my $contains = 0;
+	        foreach my $st (@sTeacher){
+	        		$contains = 1 if refaddr($st) == refaddr($teacher);
+	        }
+	        if($contains){
+		        	$text .= "\n\t$s\n";
+		        $text .= "\t" . "- " x 25 . "\n";
+		
+		        # blocks
+		        foreach my $b ( sort{$a->day_number <=> $b->day_number || $a->start_number <=> $b->start_number }$s->blocks ) {
+		            my @bTeacher = $b->teachers;
+			        my $contains = 0;
+			        foreach my $bt (@bTeacher){
+			        		$contains = 1 if refaddr($bt) == refaddr($teacher);
+			        }
+		            if($contains){
+			            	$text .=
+			              "\t" . $b->day . " " . $b->start . ", " . $b->duration . " hours\n";
+			            $text .=
+			              "\t\tlabs: " . join( ", ", map { "$_" } $b->labs ) . "\n";
+		            }
+		        }
+	        } 
+	    }	
+	}
+
+    return $text;
 }
 
 # =================================================================

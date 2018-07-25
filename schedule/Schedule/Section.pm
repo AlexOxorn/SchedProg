@@ -9,6 +9,8 @@ use lib ("$FindBin::Bin/..");
 use Schedule::Block;
 use Carp;
 
+use overload '""' => \&print_description;
+
 =head1 NAME
 
 Section - describes a distinct course/section 
@@ -81,17 +83,19 @@ Section object
 #--------------------------------------------------------------------
 sub new {
     my $class = shift;
-    confess "Bad inputs\n" if @_ % 2;
+    confess "Bad inputs\n" if (@_ % 2 && @_ % 3);
     my %inputs = @_;
 
     my $number = $inputs{-number} || "";
     my $hours  = $inputs{-hours}  || 1.5;
+    my $name   = $inputs{-name}   || "";
 
     my $self = {};
     bless $self, $class;
     $self->{-id} = $Max_id++;
     $self->number($number);
     $self->hours($hours);
+    $self->name($name);
     return $self;
 }
 
@@ -131,6 +135,22 @@ sub hours {
         $self->{-hours} = $hours;
     }
     return $self->{-hours};
+}
+
+# =================================================================
+# name
+# =================================================================
+
+=head2 name ( [name] )
+
+Section name
+
+=cut
+
+sub name {
+    my $self = shift;
+    $self->{-name} = shift if @_;
+    return $self->{-name};
 }
 
 # =================================================================
@@ -525,6 +545,20 @@ sub block {
     return $self->{-blocks}->{$block_id};
 }
 
+# ================================================================
+# print description
+# ================================================================
+
+sub print_description{
+	my $self = shift;
+	$self->name("") unless $self->name;
+	if($self->name ne ""){
+		return "Section " . $self->number . ": " . $self->name;
+	}else{
+		return "Section " . $self->number;
+	}
+}
+
 # =================================================================
 # is_conflicted
 # =================================================================
@@ -566,6 +600,25 @@ sub conflicts {
 =head2 more stuff about conflicts to come
 
 =cut
+
+#=======================================
+# Get unused block number (Alex Code)
+#=======================================
+
+=head2 get_new_number
+
+returns the first unused block number
+
+=cut
+
+sub get_new_number{
+	my $self = shift;
+	my $number = 1;
+	while($self->get_block($number)){
+		$number++;
+	}
+	return $number;
+}
 
 # =================================================================
 # footer

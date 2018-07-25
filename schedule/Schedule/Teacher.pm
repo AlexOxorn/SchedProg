@@ -5,6 +5,7 @@ use warnings;
 package Teacher;
 use Carp;
 use overload '""' => \&print_description;
+use Scalar::Util 'refaddr';
 
 
 =head1 NAME

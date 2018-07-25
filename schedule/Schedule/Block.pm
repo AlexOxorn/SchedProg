@@ -58,6 +58,7 @@ part of a section of a course.
 # Class Variables
 # =================================================================
 our $Max_id = 0;
+our $Default_day = 'mon';
 
 # =================================================================
 # new
@@ -88,10 +89,43 @@ sub new {
     my $class = shift;
 
     # create the object
-    my $self = $class->SUPER::new(@_);
+    my @time_slot_arg;
+    my %inputs = @_;
+    
+    my $day      = $inputs{-day};
+    my $start    = $inputs{-start};
+    my $duration = $inputs{-duration};
+    my $number	 = $inputs{-number};
+    
+    my $self = $class->SUPER::new(-day=>$day,-start=>$start,-duration=>$duration);
+    
     $self->{-id} = $Max_id++;
+    $self->number($number);
 
     return $self;
+}
+
+# =================================================================
+# number
+# =================================================================
+
+=head2 number ( [block number] )
+
+Gets and sets the block number
+
+=cut
+
+sub number {
+    my $self = shift;
+    if (@_) {
+        my $number = shift;
+
+        confess "<$number>: section number cannot be a null string"
+          if $number eq "";
+
+        $self->{-number} = $number;
+    }
+    return $self->{-number};
 }
 
 # =================================================================
@@ -142,6 +176,36 @@ sub start {
     }
 
     return $self->SUPER::start;
+}
+
+# =================================================================
+# day
+# =================================================================
+
+=head2 start ( [time] )
+
+Get/set start time of block, in 24hr clock
+
+=cut
+
+sub day {
+    my $self = shift;
+
+    if (@_) {
+        my $day = shift;
+        $self->SUPER::day($day);
+
+        # if there are synced blocks, change them too
+        # (NB: have to careful about infinite loop!)
+        foreach my $other ( $self->synced() ) {
+            my $old = $other->SUPER::day;
+            if ( $old ne $self->SUPER::day ) {
+                $other->day( $self->SUPER::day );
+            }
+        }
+    }
+
+    return $self->SUPER::day;
 }
 
 #==================================================================
