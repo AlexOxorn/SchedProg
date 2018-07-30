@@ -8,7 +8,9 @@ use FindBin;
 use lib ("$FindBin::Bin/..");
 use Carp;
 use Schedule::Section;
-use overload '""' => \&print_description;
+use overload  
+	fallback=> 1,
+	'""' => \&print_description;
 
 =head1 NAME
 
@@ -82,7 +84,7 @@ sub new {
     my $self = {};
     bless $self, $class;
 
-    $self->{-id} = $Max_id++;
+    $self->{-id} = ++$Max_id;
     $self->number($number);
     $self->name($name);
     return $self;

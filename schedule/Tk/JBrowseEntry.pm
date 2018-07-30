@@ -693,7 +693,11 @@ sub Populate
         $lpack = [-side => 'left', -anchor => 'e']  unless (defined $lpack);
         my $labelvalue = $args->{'-label'};
  
-        my $ll = $w->Label(-relief => $w->{'-labelrelief'}, -text => delete $args->{'-label'});
+        my $ll = $w->Label(-relief => $w->{'-labelrelief'}, -text => delete $args->{'-label'},-justify => 'left', -width=>15);
+
+#        my $ll = $w->Label(-relief => $w->{'-labelrelief'}, -text => delete $args->{'-label'});
+
+
 #       my $tf = $w->Frame(-borderwidth => ($w->{-borderwidth} || 2), -highlightthickness => 1, 
 #                       -relief => ($w->{-relief} || 'sunken'));     #CHGD. TO NEXT 2 20070904 FROM WOLFRAM HUMANN.
         my $tf = $w->Frame(-borderwidth => $w->{-borderwidth}, -highlightthickness => $w->{'-framehighlightthickness'}, 

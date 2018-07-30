@@ -230,10 +230,10 @@ sub new {
 
 	$cn->CanvasBind('<Shift-ButtonPress-1>' => [\&toggle_movement_type, $self] );
 	$tl->bind('<Control-KeyPress-z>' => [\&undo, $self, 'undo'] );
-	$tl->bind('<Command-KeyPress-z>' => [\&undo, $self, 'undo'] );
+	$tl->bind('<Meta-Key-z>' => [\&undo, $self, 'undo'] );
 	
 	$tl->bind('<Control-KeyPress-y>' => [\&undo, $self, 'redo'] );
-	$tl->bind('<Command-Shift-KeyPress-z>' => [\&undo, $self, 'redo'] );
+	$tl->bind('<Meta-Key-y>' => [\&undo, $self, 'redo'] );
 	
 	$mainMenu->add('command', -label=>"Undo", -command => [\&undo,$tl, $self, 'undo']);
 	$mainMenu->add('command', -label=>"Redo", -command => [\&undo,$tl, $self, 'redo']);

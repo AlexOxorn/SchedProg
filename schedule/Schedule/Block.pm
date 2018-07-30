@@ -10,7 +10,9 @@ use Schedule::Time_slot;
 use Schedule::Conflict;
 
 our @ISA = qw(Time_slot);
-use overload '""' => \&print_description;
+use overload 
+	fallback=> 1,
+	'""' => \&print_description;
 
 =head1 NAME
 
@@ -99,7 +101,7 @@ sub new {
     
     my $self = $class->SUPER::new(-day=>$day,-start=>$start,-duration=>$duration);
     
-    $self->{-id} = $Max_id++;
+    $self->{-id} = ++$Max_id;
     $self->number($number);
 
     return $self;
@@ -116,15 +118,20 @@ Gets and sets the block number
 =cut
 
 sub number {
+	
     my $self = shift;
     if (@_) {
         my $number = shift;
 
         confess "<$number>: section number cannot be a null string"
           if $number eq "";
-
+		
+		
         $self->{-number} = $number;
     }
+    
+    $self->{-number} = 0 unless $self->{-number};
+    
     return $self->{-number};
 }
 
@@ -548,9 +555,12 @@ Returns a text string that describes the block
 =cut
 
 sub print_description {
+	
     my $self = shift;
     my $text = "";
     my $i;
+	
+	$self->refresh_number;
 
     if ( $self->section ) {
         if ( $self->section->course ) {
@@ -565,6 +575,7 @@ sub print_description {
       . " hours, in "
       . join( ", ", map { "$_" } $self->labs );
 
+	
     return $text;
 
 }
@@ -575,12 +586,16 @@ sub print_description {
 #Date: Time Hours
 #=================
 sub print_description2 {
+	
     my $self = shift;
     my $text = "";
     my $i;
+    
+    $self->refresh_number;
 
     $text .=
-        $self->day . ": "
+    		$self->number . " : "
+      . $self->day . ", "
       . $self->start . "  "
       . $self->duration . " hour(s)";
 
@@ -609,10 +624,31 @@ sub conflicts {
         return $self->{-conflicts};
     }
 }
-
 =head2 more stuff about conflicts to come
 
 =cut
+
+#===================================
+# Refresh Number
+#===================================
+
+=head2 conflicts ( )
+
+Assigns a number to a block without one
+
+=cut
+
+sub refresh_number{
+	my $self = shift;
+	my $number = $self->number;
+	my $section = $self->section;
+	
+	if($number == 0){
+		$self->number($section->get_new_number);
+	}
+	
+}
+
 
 # =================================================================
 # footer

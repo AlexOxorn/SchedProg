@@ -4,7 +4,9 @@ use warnings;
 
 package Teacher;
 use Carp;
-use overload '""' => \&print_description;
+use overload  
+	fallback=> 1,
+	'""' => \&print_description;
 use Scalar::Util 'refaddr';
 
 
@@ -75,7 +77,7 @@ sub new {
     
     my $self = { };
     bless $self, $class;
-    $self->{-id} = $Max_id++;
+    $self->{-id} = ++$Max_id;
     $self->firstname($fname);
     $self->lastname($lname);
     $self->dept($dept);

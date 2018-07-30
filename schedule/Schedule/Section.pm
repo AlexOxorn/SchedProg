@@ -9,7 +9,9 @@ use lib ("$FindBin::Bin/..");
 use Schedule::Block;
 use Carp;
 
-use overload '""' => \&print_description;
+use overload  
+	fallback=> 1,
+	'""' => \&print_description;
 
 =head1 NAME
 
@@ -92,7 +94,7 @@ sub new {
 
     my $self = {};
     bless $self, $class;
-    $self->{-id} = $Max_id++;
+    $self->{-id} = ++$Max_id;
     $self->number($number);
     $self->hours($hours);
     $self->name($name);
@@ -133,6 +135,29 @@ sub hours {
           unless $hours =~ /^[0-9]/ && $hours > 0;
 
         $self->{-hours} = $hours;
+    }
+    return $self->{-hours};
+}
+
+# =================================================================
+# add_hours
+# =================================================================
+
+=head2 add_hours ( [hours] )
+
+Add x hours to the hours variable
+
+=cut
+
+sub add_hours {
+    my $self = shift;
+    if (@_) {
+        my $hours = shift;
+
+        confess "<$hours>: hours must be a number and > 0"
+          unless $hours =~ /^[0-9]/ && $hours > 0;
+
+        $self->{-hours} += $hours;
     }
     return $self->{-hours};
 }
@@ -199,6 +224,33 @@ sub course {
     }
     return $self->{-course};
 }
+
+# =================================================================
+# get_block
+# =================================================================
+
+=head2 get_block ( block number )
+
+gets block from this section that has block number
+
+Returns Block object
+
+=cut
+
+sub get_block {
+	
+    my $self    = shift;
+    my $number	= shift;
+
+    my @blocks = $self->blocks;
+    foreach my $i (@blocks){
+    		$i->number(0) unless $i->number;
+    		if ($i->number == $number) { return $i}  
+    }
+	
+    return;
+}
+
 
 # =================================================================
 # assign_lab
@@ -550,11 +602,22 @@ sub block {
 # ================================================================
 
 sub print_description{
+	
+	
 	my $self = shift;
 	$self->name("") unless $self->name;
+	#foreach my $i ($self->blocks){
+	#	unless($i->number){
+	#		$i->number($self->get_new_number)	
+	#	}
+	#}
+	
+	
 	if($self->name ne ""){
+		
 		return "Section " . $self->number . ": " . $self->name;
 	}else{
+		
 		return "Section " . $self->number;
 	}
 }

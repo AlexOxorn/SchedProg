@@ -260,14 +260,16 @@ sub save {
         # corresponding object
         else {
             my $obj = $self->{-obj};
-            my %parms;
-            my $col = 1;
-            foreach my $method ( @{ $self->{-methods} } ) {
-                $parms{ '-' . $method } = $data[ $col - 1 ];
-                $col++;
+            unless($obj->isa('Labs') && $obj->get_by_number($data[ 1 ])){
+	            	my %parms;
+	            my $col = 1;
+	            foreach my $method ( @{ $self->{-methods} } ) {
+	                $parms{ '-' . $method } = $data[ $col - 1 ];
+	                $col++;
+	            }
+	            my $new = $self->{-type}->new(%parms);
+	            $obj->add($new);
             }
-            my $new = $self->{-type}->new(%parms);
-            $obj->add($new);
         }
     }
     

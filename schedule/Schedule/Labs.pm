@@ -117,7 +117,7 @@ sub get_by_number {
     my $number = shift;
     return unless $number;
     
-    foreach my $lab (@{$self->list}) {
+    foreach my $lab ($self->list) {
         if ($lab->number eq $number) {
             return $lab;
         }

@@ -7,7 +7,9 @@ use Carp;
 use FindBin;
 use lib "$FindBin::Bin/..";
 use Schedule::Time_slot;
-use overload '""' => \&print_description;
+use overload  
+	fallback=> 1,
+	'""' => \&print_description;
 
 =head1 NAME
 
@@ -73,7 +75,7 @@ sub new {
 
     my $self = {};
     bless $self;
-    $self->{-id} = $Max_id++;
+    $self->{-id} = ++$Max_id;
     $self->number ($number);
     $self->descr  ($desc);
 

@@ -181,7 +181,7 @@ sub menu_info {
 	# ----------------------------------------------------------
 	# button names
 	# ----------------------------------------------------------
-	my @buttons = ( 'new', 'open', 'save', 'print', '', 'mag', );
+	my @buttons = ( 'new', 'open','CSVimport', 'save', 'print');
 
 	# ----------------------------------------------------------
 	# toolbar structure
@@ -195,6 +195,10 @@ sub menu_info {
 			cb => \&open_schedule,
 			hn => 'Open Schedule File',
 		},
+		CSVimport => {
+			cb => \&import_schedule,
+			hn => 'Import Schedule from CSV'
+		},
 		print => {
 			cb => \&text_schedule,
 			hn => 'Create Text Form of Schedule',
@@ -202,10 +206,6 @@ sub menu_info {
 		save => {
 			cb => \&save_schedule,
 			hn => "Save Schedule File",
-		},
-		mag => {
-			cb => \&view_schedule,
-			hn => 'View interactive Schedules',
 		},
 	);
 
@@ -225,6 +225,10 @@ sub menu_info {
 					"command", "~Open",
 					-accelerator => "Ctrl-o",
 					-command     => $b_props{open}{cb}
+				],
+				[
+					"command", "~Import CSV",
+					-command     => $b_props{import}{cb}
 				],
 				'separator',
 				[
@@ -660,6 +664,60 @@ sub exit_schedule {
 }
 
 # ==================================================================
+# import_schedule
+# ==================================================================
+
+sub import_schedule{
+	my $file = shift;
+
+	print "HAHA\n";
+
+	# TODO: close all views, empty the GuiSchedule array of views, etc.
+	$guiSchedule->destroy_all;
+
+	# get file to open
+	unless ( $file && -e $file ) {
+		$file = "";
+		$file = $mw->getOpenFile( -initialdir => $Current_directory );
+	}
+
+	# if user has chosen file...
+	if ($file) {
+
+		# get CSV input of file
+		$Schedule = CSV->import_csv($file);
+		if ( !$Schedule ) {
+			$mw->messageBox(
+				-title   => 'Read Schedule',
+				-message => "Cannot read schedule\nERROR:$@",
+				-type    => 'OK',
+				-icon    => 'error'
+			);
+			undef $file;
+		}
+	}
+
+	# if schedule successfully read, then
+	if ( $file && $Schedule ) {
+		#$Current_schedule_file = abs_path($file);
+		$Current_directory     = dirname($file);
+		write_ini();
+	}
+
+	# update the overview page
+	if ($Notebook) {
+		$Notebook->raise('overview');
+		draw_overview();
+	}
+	else {
+		$Front_page_frame->packForget();
+		create_standard_page();
+	}
+
+	return;
+}
+
+# ==================================================================
 # read_ini
 # ==================================================================
 sub read_ini {
@@ -745,10 +803,8 @@ sub write_ini {
 	sub draw_overview {
 
 		my $f = $Pages{overview};
-		print "Called draw_overview\n";
 
 		unless ($OverviewNotebook) {
-			print "\nCreating notebook\n";
 			$OverviewNotebook =
 			  $f->NoteBook()->pack( -expand=>1,-fill=>'both');
 

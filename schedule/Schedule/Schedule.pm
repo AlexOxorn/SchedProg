@@ -990,7 +990,6 @@ Returns a text string that gives some teacher statistics
 sub teacher_stat{
 	my $self = shift;
 	my $teacher = shift;
-	print $teacher;
 	
 	my @courses = $self->courses_for_teacher($teacher);
 	my @sections = $self->sections_for_teacher($teacher);

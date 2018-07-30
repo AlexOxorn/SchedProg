@@ -822,6 +822,9 @@ sub create_new_view {
 		else {
 			@blocks = $schedule->blocks_for_stream($obj);
 		}
+		if ($ENV{DEBUG}){
+			print "Calling new view with <$mw>, <\@blocks>, <$schedule>, <$obj>, <$type>, <$btn_ptr>\n";
+		}
 		my $view = View->new( $mw, \@blocks, $schedule, $obj, $type, $btn_ptr );
 
 		$self->add_view($view);

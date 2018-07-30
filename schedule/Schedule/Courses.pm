@@ -65,7 +65,7 @@ sub new {
 # add
 # =================================================================
 
-=head2 add()
+=head2 add( Course Object(s) )
 
 Adds a new course Courses object
 
@@ -84,11 +84,6 @@ sub add {
         $self->{-list}{ $course->id } = $course;
     }
     
-    foreach my $course ( $self->list ) {
-        print $course->number; 
-        print "\t"
-    }
-    print "\n-------\n";
     
     return $self;
 }

@@ -89,7 +89,7 @@ sub new {
     # create the object
     my $self = {};
     bless $self, $class;
-    $self->{-id} = $Max_id++;
+    $self->{-id} = ++$Max_id;
     $self->day($day);
     $self->start($start);
     $self->duration($duration);
