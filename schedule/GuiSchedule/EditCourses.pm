@@ -1885,11 +1885,11 @@ sub _edit_course2 {
 	#-----------------------------------------
 	
 	$edit_dialog->Label( -text => "Course Number",-anchor=>'w')->grid(
-		$edit_dialog->LabEntry(-textvariable => \$cNum,),
+		$edit_dialog->Entry(-textvariable => \$cNum,),
 		'-','-',-sticky=>"nsew");
 
 	$edit_dialog->Label( -text => "Course Name", -anchor=>'w')->grid(
-		$edit_dialog->LabEntry(-textvariable => \$desc,),
+		$edit_dialog->Entry(-textvariable => \$desc,),
 		'-','-',-sticky=>"nsew");
 		
 	$edit_dialog->Label(-text => "" )->grid(-columnspan=>4,-sticky=>"nsew");
@@ -1905,7 +1905,8 @@ sub _edit_course2 {
 		-width    => 12
 	)->grid(-row=>3,-column=>1,-ipadx=>$pad,-sticky=>"nsew");
 	my $shit = $secDrop->Subwidget("entry");print $shit;
-	$shit->configure(-bg=>"pink");
+    $shit->configure(-disabledbackground=>"white");
+    $shit->configure(-disabledforeground=>"black");
 	
 
 	$secAdd = $edit_dialog->Button(
