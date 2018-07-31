@@ -1,7 +1,35 @@
-ToDos:
 
-- Double click teacher from teacher list => gives information (courses they are teaching)
-- Overview by course and by teacher TABS (make searchable)
+Sandy's priority lis
+X Drag Teach on course
+X In new course menu => 'create' and 'create and edit'
++ Inside menu2s , add a delete button with close button
+X Double click teacher from teacher list => gives information (courses they are teaching)
+X Overview by course and by teacher TABS (make searchable)
+	X Overview by course is done, make new notebook in "Overview", one for course, one for teachers
+
+X Giving Section Names
+X Giving Blocks Numbers
+
+X Change max id >= 1
+
+X Import CSV
+X CSV Icon
+X last opened change (current schedule something)
+- Invalid CSV
+X Deleting view
+
+X Disallow multiple labs with same room number
+
+X Fallback
++ Pretty up menu2s
+	- Line up label with drop down menu (Mom)
+- get rid of trash icon / code
++ fix weird variable names
++ add missing dirty flags
+
+- Limit number of things that can be added
+- Add scrolled object
 
 
-- In new course menu => 'create' and 'create and edit'
+
+
