@@ -1839,8 +1839,11 @@ sub _edit_course2 {
 	#---------------------------------------------------
 	my $edit_dialog = $frame->DialogBox(
 		-title   => "Edit " . $obj->name,
-		-buttons => [ 'Close', 'Delete' ]
+		-buttons => [ 'Close', 'Delete' ],
+		
+		#-bg=>'pink',
 	);
+	my $top = $edit_dialog->Subwidget("top");
 
 	#my $frame1  = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
 	#my $frame1A = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
@@ -1877,39 +1880,38 @@ sub _edit_course2 {
 	my $sectionMessage;
 	my $teachMessage;
 	my $streamMessage;
-	
+
 	my $pad = 40;
 
 	#-----------------------------------------
 	#Course number and name entry entry
 	#-----------------------------------------
-	
-	$edit_dialog->Label( -text => "Course Number",-anchor=>'w')->grid(
-		$edit_dialog->Entry(-textvariable => \$cNum,),
-		'-','-',-sticky=>"nsew");
 
-	$edit_dialog->Label( -text => "Course Name", -anchor=>'w')->grid(
-		$edit_dialog->Entry(-textvariable => \$desc,),
-		'-','-',-sticky=>"nsew");
-		
-	$edit_dialog->Label(-text => "" )->grid(-columnspan=>4,-sticky=>"nsew");
-	
+	$top->Label( -text => "Course Number", -anchor => 'w' )
+	  ->grid( $edit_dialog->Entry( -textvariable => \$cNum, ),
+		'-', '-', -sticky => "nsew" );
+
+	$top->Label( -text => "Course Name", -anchor => 'w' )
+	  ->grid( $edit_dialog->Entry( -textvariable => \$desc, ),
+		'-', '-', -sticky => "nsew" );
+
+	$top->Label( -text => "" )
+	  ->grid( -columnspan => 4, -sticky => "nsew" );
 
 	#-----------------------------------------
 	# Section Add/Remove/Edit
 	#-----------------------------------------
-	$secDrop = $edit_dialog->JBrowseEntry(
+	$secDrop = $top->JBrowseEntry(
 		-variable => \$curSec,
 		-state    => 'readonly',
 		-choices  => \%sectionName,
 		-width    => 12
-	)->grid(-row=>3,-column=>1,-ipadx=>$pad,-sticky=>"nsew");
-	my $shit = $secDrop->Subwidget("entry");print $shit;
-    $shit->configure(-disabledbackground=>"white");
-    $shit->configure(-disabledforeground=>"black");
-	
+	)->grid( -row => 3, -column => 1, -ipadx => $pad, -sticky => "nsew" );
+	my $secDropEntry = $secDrop->Subwidget("entry");
+	$secDropEntry->configure( -disabledbackground => "white" );
+	$secDropEntry->configure( -disabledforeground => "black" );
 
-	$secAdd = $edit_dialog->Button(
+	$secAdd = $top->Button(
 		-text    => "Advanced Add Section",
 		-command => sub {
 			my $sectionNum = $obj->get_new_number;
@@ -1917,7 +1919,7 @@ sub _edit_course2 {
 			$obj->add_section($section);
 			refresh_course( $tree, $obj, $path, 1 );
 
-			my $answer = _edit_section2( $edit_dialog, $tree, $section,
+			my $answer = _edit_section2( $top, $tree, $section,
 				$path . "/Section" . $section->id );
 
 			$sectionName{ $section->id } = "$section" if $answer != 2;
@@ -1929,16 +1931,16 @@ sub _edit_course2 {
 			$sectionMessage->configure( -text => "Canceled" ) if $answer == 2;
 			$curSec = "" if $answer == 2;
 			$change = 1;
-			$edit_dialog->bell;
+			$top->bell;
 			$secDrop->update;
 			$sectionMessage->update;
 		}
-	)->grid(-row=>3,-column=>3,-sticky=>"nsew");
+	)->grid( -row => 3, -column => 3, -sticky => "nsew" );
 
-	$secAdd2 = $edit_dialog->Button(
+	$secAdd2 = $top->Button(
 		-text    => "Add Section(s)",
 		-command => sub {
-			my $answer = _add_section( $edit_dialog, $tree, $obj, $path );
+			my $answer = _add_section( $top, $tree, $obj, $path );
 			$answer = "Cancel" unless $answer;
 			if ( $answer ne 'Cancel' ) {
 
@@ -1955,7 +1957,7 @@ sub _edit_course2 {
 				$secDrop->configure( -choices => \%sectionName );
 				$sectionMessage->configure( -text => "Section(s) Added" );
 				$change = 1;
-				$edit_dialog->bell;
+				$top->bell;
 				$secDrop->update;
 				$sectionMessage->update;
 
@@ -1966,12 +1968,12 @@ sub _edit_course2 {
 				$sectionMessage->update;
 			}
 		}
-	)->grid(-row=>3,-column=>2,-sticky=>"nsew");
-	
-	$secText = $edit_dialog->Label( -text => "Sections:",-anchor=>'w' )->grid(-row=>3,-column=>0,-sticky=>"nsew");
+	)->grid( -row => 3, -column => 2, -sticky => "nsew" );
 
+	$secText = $top->Label( -text => "Sections:", -anchor => 'w' )
+	  ->grid( -row => 3, -column => 0, -sticky => "nsew" );
 
-	$secRem = $edit_dialog->Button(
+	$secRem = $top->Button(
 		-text    => "Remove Section",
 		-command => sub {
 			if ( $curSec ne "" ) {
@@ -1985,14 +1987,14 @@ sub _edit_course2 {
 				$secDrop->configure( -choices => \%sectionName );
 				$sectionMessage->configure( -text => "Section Removed" );
 				$change = 1;
-				$edit_dialog->bell;
+				$top->bell;
 				$secDrop->update;
 				$sectionMessage->update;
 				refresh_course( $tree, $obj, $path, 1 );
 			}
 		}
 	);
-	$secEdit = $edit_dialog->Button(
+	$secEdit = $top->Button(
 		-text    => "Edit Section",
 		-command => sub {
 			if ( $curSec ne "" ) {
@@ -2000,7 +2002,7 @@ sub _edit_course2 {
 				my $id      = $rHash{$curSec};
 				my $section = $obj->get_section_by_id($id);
 
-				my $answer = _edit_section2( $edit_dialog, $tree, $section,
+				my $answer = _edit_section2( $top, $tree, $section,
 					$path . "/Section" . $section->id );
 
 				if ($answer) {
@@ -2041,7 +2043,7 @@ sub _edit_course2 {
 					}
 
 					$change = 1;
-					$edit_dialog->bell;
+					$top->bell;
 					$streamDropO->update;
 					$teachDropO->update;
 					$sectionMessage->update;
@@ -2054,21 +2056,27 @@ sub _edit_course2 {
 		}
 	);
 
-	$sectionMessage = $edit_dialog->Label(-text => "" )->grid('-',$secRem,$secEdit,-sticky=>"nsew");
+	$sectionMessage = $top->Label( -text => "" )
+	  ->grid( '-', $secRem, $secEdit, -sticky => "nsew" );
 
-	$edit_dialog->Label(-text => "" )->grid(-columnspan=>4,-sticky=>"nsew");
+	$top->Label( -text => "" )
+	  ->grid( -columnspan => 4, -sticky => "nsew" );
 
 	#--------------------------------------------------------
 	# Teacher Add/Remove
 	#--------------------------------------------------------
-	$teachDrop = $edit_dialog->JBrowseEntry(
+	$teachDrop = $top->JBrowseEntry(
 		-variable => \$curTeach,
 		-state    => 'readonly',
 		-choices  => \%teacherName,
 		-width    => 12
 	);
 
-	$teachAdd = $edit_dialog->Button(
+	my $teachDropEntry = $teachDrop->Subwidget("entry");
+	$teachDropEntry->configure( -disabledbackground => "white" );
+	$teachDropEntry->configure( -disabledforeground => "black" );
+
+	$teachAdd = $top->Button(
 		-text    => "Add To All Sections",
 		-command => sub {
 			if ( $curTeach ne "" ) {
@@ -2089,17 +2097,22 @@ sub _edit_course2 {
 			}
 		}
 	);
-	
-	$teachText = $edit_dialog->Label(-text => "Add Teacher: ",-anchor=>'w')->grid($teachDrop,'-',$teachAdd,-sticky=>"nsew");
 
-	$teachDropO = $edit_dialog->JBrowseEntry(
+	$teachText = $top->Label( -text => "Add Teacher: ", -anchor => 'w' )
+	  ->grid( $teachDrop, '-', $teachAdd, -sticky => "nsew" );
+
+	$teachDropO = $top->JBrowseEntry(
 		-variable => \$curTeachO,
 		-state    => 'readonly',
 		-choices  => \%teacherNameO,
 		-width    => 12
 	);
 
-	$teachRem = $edit_dialog->Button(
+	my $teachDropOEntry = $teachDropO->Subwidget("entry");
+	$teachDropOEntry->configure( -disabledbackground => "white" );
+	$teachDropOEntry->configure( -disabledforeground => "black" );
+
+	$teachRem = $top->Button(
 		-text    => "Remove From All Sections",
 		-command => sub {
 			if ( $curTeachO ne "" ) {
@@ -2120,22 +2133,28 @@ sub _edit_course2 {
 		}
 	);
 
-	$teachTextO = $edit_dialog->Label(-text => "Remove Teacher: ",-anchor=>'w')->grid($teachDropO,'-',$teachRem,-sticky=>"nsew");
-	
+	$teachTextO =
+	  $top->Label( -text => "Remove Teacher: ", -anchor => 'w' )
+	  ->grid( $teachDropO, '-', $teachRem, -sticky => "nsew" );
 
-	$teachMessage = $edit_dialog->Label(-text => "" )->grid(-columnspan=>4);
+	$teachMessage =
+	  $top->Label( -text => "" )->grid( -columnspan => 4 );
 
 	#--------------------------------------------------------
 	# Stream Add/Remove
 	#--------------------------------------------------------
-	$streamDrop = $edit_dialog->JBrowseEntry(
+	$streamDrop = $top->JBrowseEntry(
 		-variable => \$curStream,
 		-state    => 'readonly',
 		-choices  => \%streamName,
 		-width    => 12
 	);
 
-	$streamAdd = $edit_dialog->Button(
+	my $streamDropEntry = $streamDrop->Subwidget("entry");
+	$streamDropEntry->configure( -disabledbackground => "white" );
+	$streamDropEntry->configure( -disabledforeground => "black" );
+
+	$streamAdd = $top->Button(
 		-text    => "Set To All Sections",
 		-command => sub {
 			if ( $curStream ne "" ) {
@@ -2157,17 +2176,22 @@ sub _edit_course2 {
 		}
 	);
 
-	$streamText = $edit_dialog->Label(-text=>"Stream Add: ",-anchor=>'w')->grid($streamDrop,'-',$streamAdd,-sticky=>'nsew');
+	$streamText = $top->Label( -text => "Stream Add: ", -anchor => 'w' )
+	  ->grid( $streamDrop, '-', $streamAdd, -sticky => 'nsew' );
 
-	$streamDropO = $edit_dialog->JBrowseEntry(
+	$streamDropO = $top->JBrowseEntry(
 		-variable => \$curStreamO,
 		-state    => 'readonly',
 		-choices  => \%streamNameO,
 		-width    => 12
 	);
 
-	$streamRem = $edit_dialog->Button(
-		-text => "Remove From All Secitons",
+	my $streamDropOEntry = $streamDropO->Subwidget("entry");
+	$streamDropOEntry->configure( -disabledbackground => "white" );
+	$streamDropOEntry->configure( -disabledforeground => "black" );
+
+	$streamRem = $top->Button(
+		-text    => "Remove From All Secitons",
 		-command => sub {
 			if ( $curStreamO ne "" ) {
 				$change = 1;
@@ -2187,17 +2211,27 @@ sub _edit_course2 {
 		}
 	);
 
-	$streamTextO = $edit_dialog->Label(-text=>"Stream Remove: ",-anchor=>'w')->grid($streamDropO,'-',$streamRem,-sticky=>'nsew');
-	 
+	$streamTextO =
+	  $top->Label( -text => "Stream Remove: ", -anchor => 'w' )
+	  ->grid( $streamDropO, '-', $streamRem, -sticky => 'nsew' );
 
-	$streamMessage = $edit_dialog->Label(-text => "" )->grid(-columnspan=>4);
+	$streamMessage =
+	  $top->Label( -text => "", )->grid( -columnspan => 4 , -sticky=>'n');
+	  
+	#$top->Label( -text => "" )->grid( -columnspan => 4 );
+
+	my ( $columns, $rows ) = $top->gridSize();
+	for ( my $i = 1 ; $i < $columns ; $i++ ) {
+		$top->gridColumnconfigure( $i, -weight => 1 );
+	}
+	$top->gridRowconfigure( $rows-1, -weight => 1 );
 
 	my $answer = $edit_dialog->Show();
 	$answer = "Close" unless $answer;
 
 	if ( $answer eq 'Delete' ) {
 
-		my $sure = $edit_dialog->DialogBox(
+		my $sure = $top->DialogBox(
 			-title   => "Delete?",
 			-buttons => [ 'Yes', 'NO' ]
 		);
@@ -2321,30 +2355,36 @@ sub _edit_section2 {
 	my $streamTextO;
 	my $streamDropN;
 	my $streamTextN;
-	my $steamAdd;
-	my $steamRem;
+	my $streamAdd;
+	my $streamRem;
 	my $streamMessage;
+
+	my $pad = 40;
 
 	#--------------------------------------------------------
 	# Block Add/Remove/Edit
 	#--------------------------------------------------------
 
-	
-	$edit_dialog->Label( -text => "Section Name",-anchor=>'w')->grid(
-		$edit_dialog->LabEntry(-textvariable => \$cName,),
-		'-','-',-sticky=>"nsew");
+	$edit_dialog->Label( -text => "Section Name", -anchor => 'w' )
+	  ->grid( $edit_dialog->Entry( -textvariable => \$cName ),
+		'-', '-', -sticky => "nsew" );
+
+	$edit_dialog->Label( -text => "" )->grid( -columnspan => 4 );
 
 	$blockDrop = $edit_dialog->JBrowseEntry(
-		-label    => 'Block:',
 		-variable => \$curBlock,
 		-state    => 'readonly',
 		-choices  => \%blockName,
 		-width    => 12
-	)->grid(-column=>1,-row=>2,-sticky=>'nsew',ipadx=>40);
-	
-	#================
-	#CONTINUE HERE
-	#===================
+	)->grid( -column => 1, -row => 2, -sticky => 'nsew', -ipadx => $pad );
+	my $blockDropEntry = $blockDrop->Subwidget("entry");
+	$blockDropEntry->configure( -disabledbackground => "white" );
+	$blockDropEntry->configure( -disabledforeground => "black" );
+
+	$blockText = $edit_dialog->Label(
+		-text   => "Block: ",
+		-anchor => 'w'
+	)->grid( -column => 0, -row => 2, -sticky => 'nsew' );
 
 	$blockAdd = $edit_dialog->Button(
 		-text    => "Add Block(s)",
@@ -2370,7 +2410,7 @@ sub _edit_section2 {
 				$blockMessage->configure( -text => "" );
 			}
 		}
-	);
+	)->grid( -column => 2, -row => 3, -sticky => 'nsew', -columnspan => 2 );
 
 	$blockRem = $edit_dialog->Button(
 		-text    => "Remove Block",
@@ -2391,7 +2431,7 @@ sub _edit_section2 {
 				$change = 1;
 			}
 		}
-	);
+	)->grid( -column => 3, -row => 2, -sticky => 'nsew' );
 
 	$blockEdit = $edit_dialog->Button(
 		-text    => "Edit Block",
@@ -2431,29 +2471,38 @@ sub _edit_section2 {
 				}
 			}
 		}
-	);
+	)->grid( -column => 2, -row => 2, -sticky => 'nsew' );
 
-	$blockMessage = $edit_dialog->Label( -text => "" );
+	$blockMessage = $edit_dialog->Label( -text => "" )
+	  ->grid( -column => 1, -row => 3, -sticky => 'nsew' );
+
+	$edit_dialog->Label( -text => "" )->grid( -columnspan => 4 );
 
 	#--------------------------------------------------------
 	# Teacher Add/REmove
 	#--------------------------------------------------------
 
 	$teachDropN = $edit_dialog->JBrowseEntry(
-		-label    => 'Add Teachers:',
 		-variable => \$curTeachN,
 		-state    => 'readonly',
 		-choices  => \%teacherNameN,
 		-width    => 12
 	);
 
+	my $teachDropNEntry = $teachDropN->Subwidget("entry");
+	$teachDropNEntry->configure( -disabledbackground => "white" );
+	$teachDropNEntry->configure( -disabledforeground => "black" );
+
 	$teachDropO = $edit_dialog->JBrowseEntry(
-		-label    => 'Remove Teachers:',
 		-variable => \$curTeachO,
 		-state    => 'readonly',
 		-choices  => \%teacherNameO,
 		-width    => 12
 	);
+
+	my $teachDropOEntry = $teachDropO->Subwidget("entry");
+	$teachDropOEntry->configure( -disabledbackground => "white" );
+	$teachDropOEntry->configure( -disabledforeground => "black" );
 
 	$teachAdd = $edit_dialog->Button(
 		-text    => "Set to all blocks",
@@ -2477,6 +2526,11 @@ sub _edit_section2 {
 		}
 	);
 
+	$teachTextN = $edit_dialog->Label(
+		-text   => "Add Teacher: ",
+		-anchor => 'w'
+	)->grid( $teachDropN, '-', $teachAdd, -sticky => 'nsew' );
+
 	$teachRem = $edit_dialog->Button(
 		-text    => "Remove from all blocks",
 		-command => sub {
@@ -2498,29 +2552,41 @@ sub _edit_section2 {
 		}
 	);
 
-	$teachMessage = $edit_dialog->Label( -text => "" );
+	$teachTextO = $edit_dialog->Label(
+		-text   => "Remove Teacher: ",
+		-anchor => 'w'
+	)->grid( $teachDropO, '-', $teachRem, -sticky => 'nsew' );
+
+	$teachMessage =
+	  $edit_dialog->Label( -text => "" )->grid( -columnspan => 4 );
 
 	#--------------------------------------------------------
 	# Stream Add/REmove
 	#--------------------------------------------------------
 
 	$streamDropN = $edit_dialog->JBrowseEntry(
-		-label    => 'Add Streams:',
 		-variable => \$curStreamN,
 		-state    => 'readonly',
 		-choices  => \%streamNameN,
 		-width    => 12
 	);
 
+	my $streamDropNEntry = $streamDropN->Subwidget("entry");
+	$streamDropNEntry->configure( -disabledbackground => "white" );
+	$streamDropNEntry->configure( -disabledforeground => "black" );
+
 	$streamDropO = $edit_dialog->JBrowseEntry(
-		-label    => 'Remove Streams:',
 		-variable => \$curStreamO,
 		-state    => 'readonly',
 		-choices  => \%streamNameO,
 		-width    => 12
 	);
 
-	$steamAdd = $edit_dialog->Button(
+	my $streamDropOEntry = $streamDropO->Subwidget("entry");
+	$streamDropOEntry->configure( -disabledbackground => "white" );
+	$streamDropOEntry->configure( -disabledforeground => "black" );
+
+	$streamAdd = $edit_dialog->Button(
 		-text    => "Set Stream",
 		-command => sub {
 			if ( $curStreamN ne "" ) {
@@ -2542,7 +2608,12 @@ sub _edit_section2 {
 		}
 	);
 
-	$steamRem = $edit_dialog->Button(
+	$streamTextN = $edit_dialog->Label(
+		-text   => "Add Stream: ",
+		-anchor => 'w'
+	)->grid( $streamDropN, '-', $streamAdd, -sticky => 'nsew' );
+
+	$streamRem = $edit_dialog->Button(
 		-text    => "Remove Stream",
 		-command => sub {
 			if ( $curStreamO ne "" ) {
@@ -2563,7 +2634,13 @@ sub _edit_section2 {
 		}
 	);
 
-	$streamMessage = $edit_dialog->Label( -text => "" );
+	$streamTextO = $edit_dialog->Label(
+		-text   => "Remove Stream: ",
+		-anchor => 'w'
+	)->grid( $streamDropO, '-', $streamRem, -sticky => 'nsew' );
+
+	$streamMessage =
+	  $edit_dialog->Label( -text => "" )->grid( -columnspan => 4 );
 
 	my $answer = $edit_dialog->Show();
 	$answer = "NO" unless $answer;
@@ -2662,25 +2739,29 @@ sub _edit_block2 {
 		-buttons => [ 'Close', 'Delete' ]
 	);
 
-	my $frame2  = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
-	my $frame3  = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
-	my $frame3A = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
-	my $frame3B = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
-	my $frame4  = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
-	my $frame4A = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
-	my $frame4B = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
+	#my $frame2  = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
+	#my $frame3  = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
+	#my $frame3A = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
+	#my $frame3B = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
+	#my $frame4  = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
+	#my $frame4A = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
+	#my $frame4B = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
 
 	my $durIn;
 	my $teachDropN;
+	my $teachTextN;
 	my $teachAdd;
 	my $teachDropO;
+	my $teachTextO;
 	my $teachRem;
 
 	my $teachMessage;
 
 	my $labDropN;
+	my $labTextN;
 	my $labAdd;
 	my $labDropO;
+	my $labTextO;
 	my $labRem;
 
 	my $labMessage;
@@ -2689,29 +2770,36 @@ sub _edit_block2 {
 	# Block Duration Entry
 	#--------------------------------------------------------
 
-	$durIn = $frame2->LabEntry(
+	$durIn = $edit_dialog->Entry(
 		-textvariable    => \$dur,
-		-width           => 20,
-		-label           => 'Block Duration',
-		-labelPack       => [ -side => 'left' ],
 		-validate        => 'key',
 		-validatecommand => \&is_number,
 		-invalidcommand  => sub { $frame->bell },
-	)->pack( -fill => 'x' );
+	);
+
+	$edit_dialog->Label(
+		-text   => 'Block Duration: ',
+		-anchor => 'w'
+	)->grid( $durIn, '-', '-', -sticky => 'nsew' );
+
+	$edit_dialog->Label( -text => "" )->grid( -columnspan => 4 );
 
 	#--------------------------------------------------------
 	# Teacher Add/Remove
 	#--------------------------------------------------------
 
-	$teachDropN = $frame3->JBrowseEntry(
-		-label    => 'Add Teacher:',
+	$teachDropN = $edit_dialog->JBrowseEntry(
 		-variable => \$curTeachN,
 		-state    => 'readonly',
 		-choices  => \%teacherNameN,
 		-width    => 12
-	)->pack( -side => 'left', -expand => 1, -fill => 'x' );
+	);
 
-	$teachAdd = $frame3->Button(
+	my $teachDropNEntry = $teachDropN->Subwidget("entry");
+	$teachDropNEntry->configure( -disabledbackground => "white" );
+	$teachDropNEntry->configure( -disabledforeground => "black" );
+
+	$teachAdd = $edit_dialog->Button(
 		-text    => "Set Teacher",
 		-command => sub {
 			if ( $curTeachN ne "" ) {
@@ -2731,17 +2819,25 @@ sub _edit_block2 {
 				refresh_section( $tree, $objPar, $parent, 1 );
 			}
 		}
-	)->pack( -side => 'left', -expand => 0 );
+	);
 
-	$teachDropO = $frame3A->JBrowseEntry(
-		-label    => 'Remove Teacher:',
+	$teachTextN = $edit_dialog->Label(
+		-text   => 'Add Teacher',
+		-anchor => 'w'
+	)->grid( $teachDropN, '-', $teachAdd, -sticky => 'nsew' );
+
+	$teachDropO = $edit_dialog->JBrowseEntry(
 		-variable => \$curTeachO,
 		-state    => 'readonly',
 		-choices  => \%teacherNameO,
 		-width    => 12
-	)->pack( -side => 'left', -expand => 1, -fill => 'x' );
+	);
 
-	$teachRem = $frame3A->Button(
+	my $teachDropOEntry = $teachDropO->Subwidget("entry");
+	$teachDropOEntry->configure( -disabledbackground => "white" );
+	$teachDropOEntry->configure( -disabledforeground => "black" );
+
+	$teachRem = $edit_dialog->Button(
 		-text    => "Remove Teacher",
 		-command => sub {
 			if ( $curTeachO ne "" ) {
@@ -2760,24 +2856,32 @@ sub _edit_block2 {
 				refresh_section( $tree, $objPar, $parent, 1 );
 			}
 		}
-	)->pack( -side => 'left', -expand => 0 );
+	);
+
+	$teachTextO = $edit_dialog->Label(
+		-text   => 'Remove Teacher',
+		-anchor => 'w'
+	)->grid( $teachDropO, '-', $teachRem, -sticky => 'nsew' );
 
 	$teachMessage =
-	  $frame3B->Label( -text => "" )->pack( -side => 'bottom', -fill => 'x' );
+	  $edit_dialog->Label( -text => "" )->grid( -columnspan => 4 );
 
 	#--------------------------------------------------------
 	# Lab Add/Remove
 	#--------------------------------------------------------
 
-	$labDropN = $frame4->JBrowseEntry(
-		-label    => 'Add Resource:',
+	$labDropN = $edit_dialog->JBrowseEntry(
 		-variable => \$curLabN,
 		-state    => 'readonly',
 		-choices  => \%labNameN,
 		-width    => 12
-	)->pack( -side => 'left', -expand => 1, -fill => 'x' );
+	);
 
-	$labAdd = $frame4->Button(
+	my $labDropNEntry = $labDropN->Subwidget("entry");
+	$labDropNEntry->configure( -disabledbackground => "white" );
+	$labDropNEntry->configure( -disabledforeground => "black" );
+
+	$labAdd = $edit_dialog->Button(
 		-text    => "Set Resource",
 		-command => sub {
 			if ( $curLabN ne "" ) {
@@ -2797,17 +2901,25 @@ sub _edit_block2 {
 				set_dirty();
 			}
 		}
-	)->pack( -side => 'left', -expand => 0 );
+	);
 
-	$labDropO = $frame4A->JBrowseEntry(
-		-label    => 'Remove Resource:',
+	$labTextN = $edit_dialog->Label(
+		-text   => 'Add Resource',
+		-anchor => 'w'
+	)->grid( $labDropN, '-', $labAdd, -sticky => 'nsew' );
+
+	$labDropO = $edit_dialog->JBrowseEntry(
 		-variable => \$curLabO,
 		-state    => 'readonly',
 		-choices  => \%labNameO,
 		-width    => 12
-	)->pack( -side => 'left', -expand => 1, -fill => 'x' );
+	);
 
-	$labRem = $frame4A->Button(
+	my $labDropOEntry = $labDropO->Subwidget("entry");
+	$labDropOEntry->configure( -disabledbackground => "white" );
+	$labDropOEntry->configure( -disabledforeground => "black" );
+
+	$labRem = $edit_dialog->Button(
 		-text    => "Remove Resource",
 		-command => sub {
 			if ( $curLabO ne "" ) {
@@ -2826,10 +2938,14 @@ sub _edit_block2 {
 				refresh_section( $tree, $objPar, $parent, 1 );
 			}
 		}
-	)->pack( -side => 'left', -expand => 0 );
+	);
 
-	$labMessage =
-	  $frame4B->Label( -text => "" )->pack( -side => 'bottom', -fill => 'x' );
+	$labTextO = $edit_dialog->Label(
+		-text   => 'Remove Resource',
+		-anchor => 'w'
+	)->grid( $labDropO, '-', $labRem, -sticky => 'nsew' );
+
+	$labMessage = $edit_dialog->Label( -text => "" );
 
 	my $answer = $edit_dialog->Show();
 	$answer = "Close" unless $answer;
@@ -3036,7 +3152,8 @@ sub _add_section {
 					$obj->add_section($section);
 					foreach my $i ( 1 ... $numB ) {
 						if ( $hrs[ $i - 1 ] ne "" && $hrs[ $i - 1 ] > 0 ) {
-							my $bl = Block->new(-number => $section->get_new_number);
+							my $bl =
+							  Block->new( -number => $section->get_new_number );
 							$bl->duration( $hrs[ $i - 1 ] );
 							$section->add_block($bl);
 						}
@@ -3135,7 +3252,7 @@ sub save_course_modified {
 
 		# for each section, add the blocks
 		foreach my $blnum ( 1 .. scalar( @{ $edit_dialog->{-hours} } ) ) {
-			my $bl = Block->new(-number => $sec->get_new_number);
+			my $bl = Block->new( -number => $sec->get_new_number );
 			$bl->duration( $edit_dialog->{-hours}[ $blnum - 1 ]->get );
 			$sec->add_block($bl);
 		}
