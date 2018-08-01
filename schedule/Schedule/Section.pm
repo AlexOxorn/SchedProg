@@ -175,6 +175,9 @@ Section name
 sub name {
     my $self = shift;
     $self->{-name} = shift if @_;
+    if ($self->{-name} eq "") {
+        $self->{-name} = "Section " . $self->number;
+    }
     return $self->{-name};
 }
 
