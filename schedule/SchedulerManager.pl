@@ -685,11 +685,11 @@ sub import_schedule{
 	if ($file) {
 
 		# get CSV input of file
-		$Schedule = CSV->import_csv($file);
-		if ( !$Schedule ) {
+		eval{$Schedule = CSV->import_csv($file)};
+		if ( $@ || !$Schedule ) {
 			$mw->messageBox(
 				-title   => 'Read Schedule',
-				-message => "Cannot read schedule\nERROR:$@",
+				-message => "Cannot read CSV\nERROR:$@",
 				-type    => 'OK',
 				-icon    => 'error'
 			);

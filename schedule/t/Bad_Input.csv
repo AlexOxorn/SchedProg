@@ -1,0 +1,17 @@
+ ,Course Name,Course No.,Section,Ponderation,Start Time,End Time,Day,Type,Max,Teacher First Name,Teacher ID,Room,Other Rooms Used,Restriction,Travel Fees,Approx. Material Fees,Teacher Last Name
+420,Introdcution to Computer Science,COMP 250,2,90,1000,11:30,Tuesday,C+-Lecture & Lab combined,30,Alex,3,,,,,,Oxorn
+420,Introdcution to Computer Science,COMP 250,2,90,1000,1130,Wednesday,C+-Lecture & Lab combined,30,Alex,3,101,,,,,Oxorn
+420,Introdcution to Computer Science,COMP 250,asd,90,830,1000,Wednesday,C+-Lecture & Lab combined,30,Alex,2,,,,,,Oxorn
+420,Introdcution to Computer Science,COMP 250,1,90,1000,1130,Monday,C+-Lecture & Lab combined,30,Alex,2,101,,,,,Oxorn
+420,Graph Theory,MATH 350,2,90,1400,1500,Wednesday,C+-Lecture & Lab combined,30,Nathan,1,102,,,,,Palmer
+420,Graph Theory,MATH 350,2,90,930,1030,Tuesday,C+-Lecture & Lab combined,30,Nathan,1,,,,,,Palmer
+420,Graph Theory,MATH 350,2,90,800,900,Monday,C+-Lecture & Lab combined,30,Nathan,1,,,,,,Palmer
+420,Graph Theory,MATH 350,1,90,1400,1500,Friday,C+-Lecture & Lab combined,30,Nathan,1,,,,,,Palmer
+420,Graph Theory,MATH 350,1,90,930,1030,Friday,C+-Lecture & Lab combined,30,Nathan,1,,,,,,Palmer
+420,Graph Theory,MATH 350,1,90,1130,1230,Thursday,C+-Lecture & Lab combined,30,Nathan,1,102,,,,,Palmer
+420,Graph Theory,MATH 350,3,90,1230,1330,Tuesday,C+-Lecture & Lab combined,30,Alex,3,,,,,,Oxorn
+420,Graph Theory,MATH 350,3,90,1230,1330,Tuesday,C+-Lecture & Lab combined,30,Nathan,1,,,,,,Palmer
+420,Graph Theory,MATH 350,3,90,930,1030,Wednesday,C+-Lecture & Lab combined,30,Nathan,1,,,,,,Palmer
+420,Graph Theory,MATH 350,3,90,930,1030,Wednesday,C+-Lecture & Lab combined,30,Alex,3,,,,,,Oxorn
+420,Graph Theory,MATH 350,3,90,1100,1200,Monday,C+-Lecture & Lab combined,30,Nathan,1,102,,,,,Palmer
+420,Graph Theory,MATH 350,3,90,1100,1200,Monday,C+-Lecture & Lab combined,30,Alex,3,102,,,,,Oxorn

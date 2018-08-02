@@ -111,13 +111,6 @@ sub new {
 		$sl->destroy;
 	}
 
-	$frame->Label( -text => 'Drag teachers/resources to sections/blocks' )
-	  ->pack;
-	$frame->Label( -text =>
-		  'Drag courses/sections/blocks/resources/teachers to garbage can' )
-	  ->pack;
-	$frame->Label( -text => 'Double-click course to edit' )->pack;
-
 	# ----------------------------------------------------------------
 	# make Schedule tree
 	# ----------------------------------------------------------------
@@ -2276,7 +2269,7 @@ sub _edit_section2 {
 	my $cNum = $obj->number;
 
 	my $cName = $obj->name;
-	my $oldName = "" unless $cName;
+	my $oldName = $cName || "";
 
 	my $curBlock = "";
 
@@ -3212,8 +3205,7 @@ sub save_course_modified {
 	#--------------------------------------------
 	if (   $edit_dialog->{-number}->get eq ""
 		|| $edit_dialog->{-name}->get eq ""
-		|| $edit_dialog->{-sections}->get eq ""
-		|| $edit_dialog->{-course_hours}->get eq "" )
+		|| $edit_dialog->{-sections}->get eq "")
 	{
 		$tl->messageBox(
 			-title   => 'Error',
@@ -3275,7 +3267,6 @@ sub save_course_modified {
 
 		# create new section
 		$sec = Section->new( -number => $num );
-		$sec->hours( $edit_dialog->{-course_hours}->get );
 		$course->add_section($sec);
 
 		# for each section, add the blocks
@@ -3377,10 +3368,10 @@ sub new_course_dialog {
 		-text   => "Description",
 		-anchor => 'e'
 	)->grid( -column => 0, -row => 1, -sticky => 'nwes' );
-	$info_row->Label(
-		-text   => "Hours per week",
-		-anchor => 'e'
-	)->grid( -column => 0, -row => 2, -sticky => 'nwes' );
+	#$info_row->Label(
+	#	-text   => "Hours per week",
+	#	-anchor => 'e'
+	#)->grid( -column => 0, -row => 2, -sticky => 'nwes' );
 
 	# ---------------------------------------------------------------
 	# Course Info Entry boxes
@@ -3393,24 +3384,24 @@ sub new_course_dialog {
 	  $info_row->Entry( -width => 30 )
 	  ->grid( -column => 1, -row => 1, -sticky => 'nwes' );
 
-	$self->{-course_hours} = $info_row->Entry(
-		-width           => 6,
-		-validate        => 'key',
-		-validatecommand => \&is_number,
-		-invalidcommand  => sub { $info_row->bell },
-	)->grid( -column => 1, -row => 2, -sticky => 'nwes' );
+	#$self->{-course_hours} = $info_row->Entry(
+	#	-width           => 6,
+	#	-validate        => 'key',
+	#	-validatecommand => \&is_number,
+	#	-invalidcommand  => sub { $info_row->bell },
+	#)->grid( -column => 1, -row => 2, -sticky => 'nwes' );
 
 	# make the "Enter" key mimic Tab key
 	$self->{-number}->bind( "<Key-Return>",
 		sub { $self->{-number}->eventGenerate("<Tab>") } );
 	$self->{-name}
 	  ->bind( "<Key-Return>", sub { $self->{-name}->eventGenerate("<Tab>") } );
-	$self->{-course_hours}->bind(
-		"<Key-Return>",
-		sub {
-			$self->{-course_hours}->eventGenerate("<Tab>");
-		}
-	);
+	#$self->{-course_hours}->bind(
+	#	"<Key-Return>",
+	#	sub {
+	#		$self->{-course_hours}->eventGenerate("<Tab>");
+	#	}
+	#);
 
 	# ---------------------------------------------------------------
 	# Section Info

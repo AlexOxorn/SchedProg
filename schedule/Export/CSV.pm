@@ -8,7 +8,8 @@ use lib "$FindBin::Bin/..";
 
 use Text::CSV;
 use Schedule::Schedule;
-
+use Scalar::Util qw(looks_like_number);
+use Carp;
 use Data::Dumper;
 
 =head1 NAME
@@ -126,11 +127,11 @@ sub export {
 		"Discipline",
 		"Course Name",
 		"Course No.",
-		"Sections",
+		"Section",
 		"Ponderation",
-		"Start time",
-		"End time",
-		"Days",
+		"Start Time",
+		"End Time",
+		"Day",
 		"Type",
 		"Max",
 		"Teacher Last Name",
@@ -217,9 +218,6 @@ sub export {
 # =====================================================
 
 sub import_csv {
-
-	
-
 	my $Schedule2 = Schedule->new();
 	my $Courses   = $Schedule2->courses;
 	my $Teachers  = $Schedule2->teachers;
@@ -227,6 +225,7 @@ sub import_csv {
 	my $Streams   = $Schedule2->streams;
 
 	my %repeateTeacherName;
+	my %fieldNames;
 
 	my $class = shift;
 	my $file  = shift;
@@ -250,27 +249,39 @@ sub import_csv {
 
 	my $fields = $csv->getline($data);
 
-	my $debug = 1;
-	while ( my $fields = $csv->getline($data) ) {
-		
+	print @{$fields} . "\n\n";
+	foreach my $i (1...scalar @{$fields}){
+		$fieldNames{$fields->[$i-1]} = $i-1;
+	}
 
-		
+	while ( my $fields = $csv->getline($data) ) {
 
 		# [0 Constant] Displine (420)
 
 		# [1] Course Name
-		# [2] Course Number
-		my $course = $Courses->get_by_number( $fields->[2] );
+		# [2] Course No.
+		
+		my $courseName = $fields->[$fieldNames{"Course Name"}];
+		my $courseNo = $fields->[$fieldNames{"Course No."}];
+		
+		my $course = $Courses->get_by_number( $courseNo );
 		unless ($course) {
 			$course =
-			  Course->new( -name => $fields->[1], -number => $fields->[2] );
+			  Course->new( -name => $courseName, -number => $courseNo );
 			$Courses->add($course);
 		}
 
 		# [3] Section Number
-		my $section = $course->get_section( $fields->[3] );
+		
+		my $sectionNum = $fields->[$fieldNames{"Section"}];
+		
+		unless(looks_like_number($sectionNum)){
+			croak "Section number needs to be a number";
+		}
+		
+		my $section = $course->get_section( $sectionNum );
 		unless ($section) {
-			$section = Section->new( -number => $fields->[3], -hours => 0 );
+			$section = Section->new( -number => $sectionNum, -hours => 0 );
 			$course->add_section($section);
 		}
 
@@ -278,8 +289,9 @@ sub import_csv {
 
 		# [5] Start Time
 		# [6] End Time
-		my $start    = _to_hours( $fields->[5] );
-		my $end      = _to_hours( $fields->[6] );
+		
+		my $start    = _to_hours( $fields->[$fieldNames{"Start Time"}] );
+		my $end      = _to_hours( $fields->[$fieldNames{"End Time"}] );
 		my $duration = $end - $start;
 
 		my $startTime;
@@ -287,19 +299,19 @@ sub import_csv {
 		  if int($start) != $start;
 		$startTime = $start . ":00" if int($start) == $start;
 
-		
-
 		$section->add_hours($duration);
 
 		# [7] Day
+		my $dayInput = $fields->[$fieldNames{"Day"}];
+		
 		my $day      = "";
 		my %day_dict = (qw(m Mon tu Tue w Wed th Thu f Fri sa Sat su Sun));
 		foreach my $k ( keys %day_dict ) {
-			do { $day = $day_dict{$k}; last } if $fields->[7] =~ /^$k/i;
+			do { $day = $day_dict{$k}; last } if $dayInput =~ /^$k/i;
 		}
 
 		my $blockNumber = $section->get_new_number;
-
+		
 		my $block = Block->new(
 			-day      => $day,
 			-start    => $startTime,
@@ -315,10 +327,29 @@ sub import_csv {
 		# [11] Teach First Name
 		# [12] Teacher ID
 		my $teacher;
-		my $firstname = $fields->[11];
-		my $lastname  = $fields->[10];
-		my $teachID   = $fields->[12];
-		if ( $teachID ne "" ) {
+		my $firstname = $fields->[$fieldNames{"Teacher First Name"}];
+		my $lastname  = $fields->[$fieldNames{"Teacher Last Name"}];
+		my $teachID   = $fields->[$fieldNames{"Teacher ID"}];
+		
+		unless ( $teachID ) {
+			my $byName = $Teachers->get_by_name( $firstname, $lastname );
+			unless ($byName) {
+				$teacher = Teacher->new(
+					-firstname => $firstname,
+					-lastname  => $lastname
+				);
+				$Teachers->add($teacher);
+			}
+			else {
+				$teacher = $byName;
+			}
+		}
+		else {
+			
+			unless(looks_like_number($teachID)){
+				croak "Teacher ID needs to be a number";
+			}
+			
 			unless ( $repeateTeacherName{ $firstname . $lastname }{$teachID} ) {
 				$teacher = Teacher->new(
 					-firstname => $firstname,
@@ -333,24 +364,12 @@ sub import_csv {
 				  $repeateTeacherName{ $firstname . $lastname }{$teachID};
 			}
 		}
-		else {
-			my $byName = $Teachers->get_by_name( $firstname, $lastname );
-			unless ($byName) {
-				$teacher = Teacher->new(
-					-firstname => $firstname,
-					-lastname  => $lastname
-				);
-				$Teachers->add($teacher);
-			}
-			else {
-				$teacher = $byName;
-			}
-		}
 
 		$block->assign_teacher($teacher);
 
 		# [13] room
-		my $room = $fields->[13];
+		my $room = $fields->[$fieldNames{"Room"}];
+		
 		$room =~ s/\s*(.*?)\s*/$1/;
 		if ($room) {
 			
@@ -395,6 +414,10 @@ sub _military_time {
 
 sub _to_hours {
 	my $time = shift;
+
+	unless(looks_like_number($time)){
+			croak "Times needs to be a number eg. (13h30 -> 1330)";
+	}
 
 	my $hour = int( $time / 100 );
 	if ( $time % 100 ) {

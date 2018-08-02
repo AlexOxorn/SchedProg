@@ -1,0 +1,227 @@
+--- !!perl/hash:Schedule
+-conflicts: !!perl/hash:Conflicts
+  -list:
+    - !!perl/hash:Conflict
+      -blocks: []
+      -type: 4
+    - !!perl/hash:Conflict
+      -blocks: []
+      -type: 4
+    - !!perl/hash:Conflict
+      -blocks: []
+      -type: 4
+    - !!perl/hash:Conflict
+      -blocks: []
+      -type: 4
+-courses: !!perl/hash:Courses
+  -list:
+    6: &1 !!perl/hash:Course
+      -id: 6
+      -name: Testing Course Creation
+      -number: TEST 101
+      -sections:
+        1: &2 !!perl/hash:Section
+          -blocks:
+            23: !!perl/hash:Block
+              -conflicted: 0
+              -day: mon
+              -day_number: 1
+              -duration: 1.5
+              -id: 23
+              -labs:
+                4: &3 !!perl/hash:Lab
+                  -descr: Lecture Hall
+                  -id: 4
+                  -number: MC201
+              -movable: 1
+              -number: 1
+              -section: *2
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            24: !!perl/hash:Block
+              -conflicted: 0
+              -day: mon
+              -day_number: 1
+              -duration: 1.5
+              -id: 24
+              -labs: {}
+              -movable: 1
+              -number: 2
+              -section: *2
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            25: !!perl/hash:Block
+              -conflicted: 0
+              -day: mon
+              -day_number: 1
+              -duration: 2
+              -id: 25
+              -labs:
+                4: *3
+              -movable: 1
+              -number: 3
+              -section: *2
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+          -course: *1
+          -hours: 1.5
+          -id: 11
+          -name: Section 1
+          -number: 1
+          -streams:
+            3: &4 !!perl/hash:Stream
+              -descr: Honours 1
+              -id: 3
+              -number: 101
+            4: &5 !!perl/hash:Stream
+              -descr: Honours 2
+              -id: 4
+              -number: 102
+        2: &6 !!perl/hash:Section
+          -blocks:
+            26: !!perl/hash:Block
+              -conflicted: 0
+              -day: mon
+              -day_number: 1
+              -duration: 1.5
+              -id: 26
+              -labs: {}
+              -movable: 1
+              -number: 1
+              -section: *6
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            27: !!perl/hash:Block
+              -conflicted: 0
+              -day: mon
+              -day_number: 1
+              -duration: 1.5
+              -id: 27
+              -labs: {}
+              -movable: 1
+              -number: 2
+              -section: *6
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            28: !!perl/hash:Block
+              -conflicted: 0
+              -day: mon
+              -day_number: 1
+              -duration: 2
+              -id: 28
+              -labs: {}
+              -movable: 1
+              -number: 3
+              -section: *6
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+          -course: *1
+          -hours: 1.5
+          -id: 12
+          -name: Section 2
+          -number: 2
+          -streams:
+            3: *4
+        3: &7 !!perl/hash:Section
+          -blocks:
+            29: !!perl/hash:Block
+              -conflicted: 0
+              -day: mon
+              -day_number: 1
+              -duration: 1.5
+              -id: 29
+              -labs: {}
+              -movable: 1
+              -number: 1
+              -section: *7
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            30: !!perl/hash:Block
+              -conflicted: 0
+              -day: mon
+              -day_number: 1
+              -duration: 1.5
+              -id: 30
+              -labs: {}
+              -movable: 1
+              -number: 2
+              -section: *7
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+            31: !!perl/hash:Block
+              -conflicted: 0
+              -day: mon
+              -day_number: 1
+              -duration: 2
+              -id: 31
+              -labs: {}
+              -movable: 1
+              -number: 3
+              -section: *7
+              -start: 8:00
+              -start_number: 8
+              -sync: []
+              -teachers: {}
+          -course: *1
+          -hours: 1.5
+          -id: 13
+          -name: Section 3
+          -number: 3
+          -streams:
+            3: *4
+-labs: !!perl/hash:Labs
+  -list:
+    3: !!perl/hash:Lab
+      -descr: Computer Lab
+      -id: 3
+      -number: TR1001
+    4: *3
+-streams: !!perl/hash:Streams
+  -list:
+    3: *4
+    4: *5
+-teachers: !!perl/hash:Teachers
+  -list:
+    3: !!perl/hash:Teacher
+      -dept: ''
+      -fname: John
+      -id: 3
+      -lname: Smith
+    4: !!perl/hash:Teacher
+      -dept: ''
+      -fname: John
+      -id: 4
+      -lname: Doe
+    5: !!perl/hash:Teacher
+      -dept: ''
+      -fname: Jane
+      -id: 5
+      -lname: Smith
+    6: !!perl/hash:Teacher
+      -dept: ''
+      -fname: Jane
+      -id: 6
+      -lname: Doe
+--- 31
+--- 6
+--- 4
+--- 13
+--- 6
+--- 31
+--- 4
