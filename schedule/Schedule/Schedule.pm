@@ -759,7 +759,7 @@ sub remove_stream {
     # remove stream from all the sections
     foreach my $course ($self->all_courses) {
         foreach my $section ($course->sections) {
-            $section->remove_stream($section);
+            $section->remove_stream($stream);
         }
     }
     

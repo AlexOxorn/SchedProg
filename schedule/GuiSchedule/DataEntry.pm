@@ -109,9 +109,9 @@ sub new {
         $sortby = 'number';
     }
 
-    $self->{-sortby}=$sortby;
-    $self->{-methods}=\@methods;
-    $self->{-disabled}=\@disabled;
+    $self->{-sortby}   = $sortby;
+    $self->{-methods}  = \@methods;
+    $self->{-disabled} = \@disabled;
 
     # ---------------------------------------------------------------
     # create the table entry object
@@ -126,8 +126,8 @@ sub new {
                             )->pack( -side => 'top', -expand => 1, -fill => 'both' );
 
     $self->{-table} = $de;
-    _fill_table ($self);    
-    
+    _fill_table($self);
+
     # ---------------------------------------------------------------
     # create the edit and save buttons
     # ---------------------------------------------------------------
@@ -164,12 +164,12 @@ sub new {
 # =================================================================
 sub refresh {
     my $self = shift;
-    my $obj = shift;
+    my $obj  = shift;
     $self->{-obj} = $obj if $obj;
-    
+
     undef @Delete_queue;
     $self->{-table}->empty();
-    $self->_fill_table(); 
+    $self->_fill_table();
     $self->no_edit();
 }
 
@@ -177,7 +177,7 @@ sub refresh {
 # fill table with data
 # =================================================================
 sub _fill_table {
-    my $self = shift;
+    my $self    = shift;
     my $de      = $self->{-table};
     my $sortby  = $self->{-sortby};
     my $objs    = $self->{-obj}->list;
@@ -260,63 +260,59 @@ sub save {
         # corresponding object
         else {
             my $obj = $self->{-obj};
-            unless($obj->isa('Labs') && $obj->get_by_number($data[ 1 ])){
-	            	my %parms;
-	            my $col = 1;
-	            foreach my $method ( @{ $self->{-methods} } ) {
-	                $parms{ '-' . $method } = $data[ $col - 1 ];
-	                $col++;
-	            }
-	            my $new = $self->{-type}->new(%parms);
-	            $obj->add($new);
+            unless ( $obj->isa('Labs') && $obj->get_by_number( $data[1] ) ) {
+                my %parms;
+                my $col = 1;
+                foreach my $method ( @{ $self->{-methods} } ) {
+                    $parms{ '-' . $method } = $data[ $col - 1 ];
+                    $col++;
+                }
+                my $new = $self->{-type}->new(%parms);
+                $obj->add($new);
             }
         }
     }
-    
-    # go through delete queue and apply changes
-    while (my $d = shift @Delete_queue) {
-    
-    no strict 'refs';
-    my $obj = shift @$d;
-    my $o   = shift @$d;
-    
-    if ($o) {
-         if ( $obj->isa('Teachers') ) {
-        $schedule->remove_teacher($o);
-    }
-    elsif ( $obj->isa('Streams') ) {
-        $schedule->remove_stream($o);
-    }
-    elsif ( $obj->isa('Labs') ) {
-        $schedule->remove_lab($o);
-    }
-    
-    
-    
 
-     
+    # go through delete queue and apply changes
+    while ( my $d = shift @Delete_queue ) {
+
+        no strict 'refs';
+        my $obj = shift @$d;
+        my $o   = shift @$d;
+
+        if ($o) {
+            if ( $obj->isa('Teachers') ) {
+                $schedule->remove_teacher($o);
+            }
+            elsif ( $obj->isa('Streams') ) {
+                $schedule->remove_stream($o);
+            }
+            elsif ( $obj->isa('Labs') ) {
+                $schedule->remove_lab($o);
+            }
+
+        }
     }
-    }
+
     # now we have to update the id's in the rows, or else it just won't
     # work for other things
     $self->refresh;
-    
+
     $self->set_dirty();
-    
-    
+
 }
 
 # =================================================================
 # delete object
 # =================================================================
 sub delete_obj {
-    my $self     = shift;
-    my $data     = shift;
-    
+    my $self = shift;
+    my $data = shift;
+
     # create a queue so that we can delete the objects
     # ONLY when the user 'applies changes'
-    push @Delete_queue, [$self->{-obj},$self->{-obj}->get($data->[0])];
-}    
+    push @Delete_queue, [ $self->{-obj}, $self->{-obj}->get( $data->[0] ) ];
+}
 
 # =================================================================
 # set dirty flag
