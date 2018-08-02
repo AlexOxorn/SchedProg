@@ -1,5 +1,11 @@
+Legend:
+() for Sandy
+- TODO
+X Done
++ Done with possibility of bug
 
-Sandy's priority lis
+
+
 X Drag Teach on course
 X In new course menu => 'create' and 'create and edit'
 + Inside menu2s , add a delete button with close button
@@ -15,14 +21,14 @@ X Change max id >= 1
 X Import CSV
 X CSV Icon
 X last opened change (current schedule something)
-- Invalid CSV
++ Invalid CSV
 X Deleting view
 
 X Disallow multiple labs with same room number
 
 X Fallback
 + Pretty up menu2s
-	- Line up label with drop down menu (Mom)
+	+ Line up label with drop down menu (Mom)
 - get rid of trash icon / code
 + fix weird variable names
 + add missing dirty flags
@@ -30,6 +36,14 @@ X Fallback
 - Limit number of things that can be added
 - Add scrolled object
 
-
-
+- Edit Course -> change sec name: doesn't update section list
+- Section->rightclick: add change section name
+- Edit Course -> make sure course number is unique
+- Edit menus (default section/blocks selected if exists)
+- Right click Course->remove teacher/stream (glitched)
+(-) Streams -> DELETE NOT WORKING
+- Dragging Lab on course, BUG (assign lab Courses)
+- Clear Max ID
+(-) Edit course template, left side larger right
+(-) get rid of edit and apply changes to data entry tabs
 
