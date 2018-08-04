@@ -32,6 +32,8 @@ Version 1.00
 our $Max_id = 0;
 my @Delete_queue;
 my $guiSchedule;
+my $room_index = 1;
+my $id_index   = 0;
 
 # =================================================================
 # new
@@ -51,19 +53,19 @@ data entry object
 # new
 # ===================================================================
 sub new {
-    my $class     = shift;
-    my $frame     = shift;
-    my $obj       = shift;
-    my $type      = shift;
-    my $schedule  = shift;
-    my $dirty_ptr = shift;
-    $guiSchedule = shift;
+    my $class    = shift; # class
+    my $frame    = shift; # frame where new GUI stuff is attached to
+    my $list_obj = shift; # composite list object (teachers, labs, streasm, etc)
+    my $type     = shift; # what type of data entry
+    my $schedule = shift; # the actual schedule object
+    my $dirty_ptr = shift;    # has the data changed
+    $guiSchedule = shift;     # the object containing all GUI stuff
     undef @Delete_queue;
 
     my $self = {
                  -dirty    => $dirty_ptr,
                  -type     => $type,
-                 -obj      => $obj,
+                 -list_obj => $list_obj,
                  -frame    => $frame,
                  -schedule => $schedule
                };
@@ -71,7 +73,7 @@ sub new {
     # ---------------------------------------------------------------
     # get objects to process?
     # ---------------------------------------------------------------
-    my @objs = $obj->list;
+    my @objs = $list_obj->list;
     my $rows = scalar(@objs);
 
     # ---------------------------------------------------------------
@@ -88,7 +90,6 @@ sub new {
     if ( $type eq 'Teacher' ) {
         push @methods, qw(id firstname lastname release);
         push @titles, ( 'id', 'first name', 'last name', 'RT' );
-        push @disabled, qw(1 1 1 1);
         push @sizes,    qw(4 20 20 8);
         $sortby = 'lastname';
     }
@@ -96,7 +97,6 @@ sub new {
     if ( $type eq 'Lab' ) {
         push @methods, qw(id number descr);
         push @titles, ( 'id', 'room', 'description' );
-        push @disabled, qw(1 1 1 );
         push @sizes,    qw(4 7 40 );
         $sortby = 'number';
     }
@@ -104,14 +104,13 @@ sub new {
     if ( $type eq 'Stream' ) {
         push @methods, qw(id number descr);
         push @titles, ( 'id', 'number', 'description' );
-        push @disabled, qw(1 1 1 );
         push @sizes,    qw(4 10 40 );
         $sortby = 'number';
     }
 
     $self->{-sortby}   = $sortby;
     $self->{-methods}  = \@methods;
-    $self->{-disabled} = \@disabled;
+    $self->{-titles} = \@titles;
 
     # ---------------------------------------------------------------
     # create the table entry object
@@ -121,67 +120,51 @@ sub new {
                               -columns   => scalar(@titles),
                               -titles    => \@titles,
                               -colwidths => \@sizes,
-                              -disabled  => \@disabled,
                               -delete    => [ \&delete_obj, $self ],
                             )->pack( -side => 'top', -expand => 1, -fill => 'both' );
+print "Created new DataEntry for $type\n";
+    @disabled = (1);
+    foreach my $c ( 2 .. $de->columns ) {
+        push @disabled, 0;
+    }
+    print "configure disable\n";
+    $de->configure( -disabled => \@disabled );
+    print "done configure disabled\n";
 
+    # --------------------------------------------------------------------------
+    # NOTE: If weird shit is happening, give up and use a 'Save' button
+    # ... clicking the 'Delete' triggers a 'Leave'...
+    # --------------------------------------------------------------------------
     $self->{-table} = $de;
-    _fill_table($self);
+    $self->{-table}->bind('<Leave>',[ \&save, $self ]);
 
-    # ---------------------------------------------------------------
-    # create the edit and save buttons
-    # ---------------------------------------------------------------
-    my $bf = $frame->Frame()->pack(
-                                    -fill  => 'y',
-                                    -side  => 'bottom',
-                                    -ipady => 10
-                                  );
-
-    my $edit = $bf->Button(
-                            -text    => 'Edit',
-                            -width   => 15,
-                            -command => [ \&edit, $self ]
-                          )->pack( -side => 'left' );
-    my $save = $bf->Button(
-                            -text    => 'Apply Changes',
-                            -width   => 15,
-                            -command => [ \&save, $self ],
-                            -state   => 'disabled'
-                          )->pack( -side => 'left' );
-
+    # --------------------------------------------------------------------------
     # create the object
-    $self->{-id}          = $Max_id++;
-    $self->{-edit_button} = $edit;
-    $self->{-save_button} = $save;
-    $self->{-data_obj}    = $de;
-    $self->{-methods}     = \@methods;
+    # --------------------------------------------------------------------------
+    $self->{-table}   = $de;
+    $self->{-methods} = \@methods;
 
-    return bless $self, $class;
+    bless $self, $class;
+    my $row = $self->refresh;
+
+    return $self;
 }
 
 # =================================================================
 # refresh the tables
 # =================================================================
 sub refresh {
-    my $self = shift;
-    my $obj  = shift;
-    $self->{-obj} = $obj if $obj;
+    my $self     = shift;
+    my $list_obj = shift;
+    $self->{-list_obj} = $list_obj if $list_obj;
 
-    undef @Delete_queue;
-    $self->{-table}->empty();
-    $self->_fill_table();
-    $self->no_edit();
-}
-
-# =================================================================
-# fill table with data
-# =================================================================
-sub _fill_table {
-    my $self    = shift;
     my $de      = $self->{-table};
     my $sortby  = $self->{-sortby};
-    my $objs    = $self->{-obj}->list;
+    my $objs    = $self->{-list_obj}->list;
     my $methods = $self->{-methods};
+
+    undef @Delete_queue;
+    $de->empty();
 
     # ---------------------------------------------------------------
     # fill in the data
@@ -195,110 +178,122 @@ sub _fill_table {
         }
         $row++;
     }
-    $self->{-table}->add_empty_row($row);
+    $de->add_empty_row($row);
+    return $row;
 
-}
-
-# =================================================================
-# Disable Editing
-# =================================================================
-sub no_edit {
-    my $self = shift;
-
-    $self->{-save_button}->configure( -state => 'disabled' );
-    my @disabled;
-    foreach my $c ( 1 .. $self->{-data_obj}->columns ) {
-        push @disabled, 1;
-    }
-    $self->{-data_obj}->configure( -disabled => \@disabled );
-    $self->{-data_obj}->update;
-}
-
-# =================================================================
-# Go to Edit Mode
-# =================================================================
-sub edit {
-    my $self = shift;
-    $self->{-save_button}->configure( -state => 'normal' );
-
-    my @disabled = (1);
-    foreach my $c ( 2 .. $self->{-data_obj}->columns ) {
-        push @disabled, 0;
-    }
-    $self->{-data_obj}->configure( -disabled => \@disabled );
 }
 
 # =================================================================
 # Save updated data
 # =================================================================
+my $currently_saving = 0;
 sub save {
-    my $self = shift;
-    $self->no_edit;
-    my $schedule = $self->{-schedule};
+    
+    # keep saving from possible recursion
+    return if $currently_saving;
+    $currently_saving++;
+
+    # get inputs
+    my $frame      = shift;
+    my $self       = shift;
+    my $schedule   = $self->{-schedule};    
+    
+    my $dirty_flag = 0;
 
     # read data from data object
-    foreach my $r ( 1 .. $self->{-data_obj}->rows ) {
-        my @data = $self->{-data_obj}->read_row($r);
-
+    foreach my $r ( 1 .. $self->{-table}->rows ) {
+        my @data = $self->{-table}->read_row($r);
+        
         # if this is an empty row, do nothing
         next if @data == grep { !$_ } @data;
 
+        # --------------------------------------------------------------------
         # if this row has an ID, then we need to update the
         # corresponding object
-        if ( defined $data[0] && !( $data[0] eq '' ) ) {
+        # --------------------------------------------------------------------
+        if ( defined $data[$id_index] && !( $data[$id_index] eq '' ) ) {
+            
             no strict 'refs';
-            my $obj = $self->{-obj};
-            my $o   = $obj->get( $data[0] );
-            my $col = 1;
+            my $list_obj = $self->{-list_obj};
+            my $o        = $list_obj->get( $data[$id_index] );
+            
+            # loop over each method used to get info about this object
+            my $col      = 1;
             foreach my $method ( @{ $self->{-methods} } ) {
-                $o->$method( $data[ $col - 1 ] );
+                no warnings;
+                
+                # set dirty flag if new data is not the same as the currently set 
+                # property
+                $dirty_flag++ if $o->$method() ne $data[ $col - 1 ];
+                
+                # set the property to the data
+                eval {$o->$method( $data[ $col - 1 ] )};
+                
+                # just in case above fails, set data to property of object
+                $self->{-table}->put($r,$col,$o->$method());
                 $col++;
             }
         }
 
+        # --------------------------------------------------------------------
         # if this row does not have an ID, then we need to create
         # corresponding object
+        # --------------------------------------------------------------------
         else {
-            my $obj = $self->{-obj};
-            unless ( $obj->isa('Labs') && $obj->get_by_number( $data[1] ) ) {
-                my %parms;
-                my $col = 1;
-                foreach my $method ( @{ $self->{-methods} } ) {
-                    $parms{ '-' . $method } = $data[ $col - 1 ];
-                    $col++;
-                }
-                my $new = $self->{-type}->new(%parms);
-                $obj->add($new);
+            my $list_obj = $self->{-list_obj};
+
+            # create parameters to pass to new
+            my %parms;
+            my $col = 1;
+            foreach my $method ( @{ $self->{-methods} } ) {
+                $parms{ '-' . $method } = $data[ $col - 1 ];
+                $col++;
             }
-        }
+
+            # create new object and add to the list
+            my $new;
+            eval {
+                $new = $self->{-type}->new(%parms);
+                $list_obj->add($new);
+            };
+
+            # No errors?
+            if ($new && !$@) {
+                $dirty_flag++;
+                $self->{-table}->put( $r, $id_index+1, $new->id() );
+            }
+
+       }
     }
 
+
+    # ------------------------------------------------------------------------
     # go through delete queue and apply changes
+    # ------------------------------------------------------------------------
     while ( my $d = shift @Delete_queue ) {
 
         no strict 'refs';
-        my $obj = shift @$d;
-        my $o   = shift @$d;
+        my $list_obj = shift @$d;
+        my $o        = shift @$d;
 
         if ($o) {
-            if ( $obj->isa('Teachers') ) {
+            $dirty_flag++;
+            if ( $list_obj->isa('Teachers') ) {
                 $schedule->remove_teacher($o);
             }
-            elsif ( $obj->isa('Streams') ) {
+            elsif ( $list_obj->isa('Streams') ) {
                 $schedule->remove_stream($o);
             }
-            elsif ( $obj->isa('Labs') ) {
+            elsif ( $list_obj->isa('Labs') ) {
                 $schedule->remove_lab($o);
             }
 
         }
     }
 
-    # now we have to update the id's in the rows, or else it just won't
-    # work for other things
-    $self->refresh;
-
-    $self->set_dirty();
+    # if there have been chnages, set global dirty flag, and do what is necessary
+    $self->set_dirty() if $dirty_flag;
+    $currently_saving = 0;
 
 }
 
@@ -310,8 +305,11 @@ sub delete_obj {
     my $data = shift;
 
     # create a queue so that we can delete the objects
-    # ONLY when the user 'applies changes'
-    push @Delete_queue, [ $self->{-obj}, $self->{-obj}->get( $data->[0] ) ];
+    # when the new info is saved
+    
+    my $obj = $self->{-list_obj}->get( $data->[$id_index] );
+    push @Delete_queue,
+      [ $self->{-list_obj}, $obj ] if $obj;
 }
 
 # =================================================================
@@ -345,4 +343,5 @@ and/or modified under the terms of the Perl Artistic License
 =cut
 
 1;
+
 

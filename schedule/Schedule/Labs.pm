@@ -75,13 +75,18 @@ Returns Labs object
 sub add {
     my $self = shift;
     $self->{-list} = $self->{-list} || {};
-    while (my $lab = shift) {
-        confess "<"
-          . ref($lab)
-          . ">: invalid lab - must be a Lab object"
+    while ( my $lab = shift ) {
+        confess "<" . ref($lab) . ">: invalid lab - must be a Lab object"
           unless ref($lab) && $lab->isa("Lab");
-        
-        $self->{-list}{$lab->id}=$lab;
+
+        # cannot have two distinct labs with the same room #
+        my $obj = $self->get_by_number( $lab->number );
+        if ( $obj && $obj->id != $lab->id ) {
+            confess "<" . $lab->number . ">"
+              . ": another lab/resource already exists with this number";
+        }
+
+        $self->{-list}{ $lab->id } = $lab;
     }
     return $self;
 }
@@ -98,7 +103,7 @@ Returns Labs object with id
 
 sub get {
     my $self = shift;
-    my $id = shift;
+    my $id   = shift;
     return $self->{-list}->{$id};
 }
 
@@ -113,24 +118,22 @@ Return lab which matches this lab number
 =cut
 
 sub get_by_number {
-    my $self = shift;
+    my $self   = shift;
     my $number = shift;
     return unless $number;
-    
-    foreach my $lab ($self->list) {
-        if ($lab->number eq $number) {
+
+    foreach my $lab ( $self->list ) {
+        if ( $lab->number eq $number ) {
             return $lab;
         }
     }
-    
+
     return;
-    
+
 }
 
-
-
 # =================================================================
-# remove lab 
+# remove lab
 # =================================================================
 
 =head2 remove ($lab_object)
@@ -143,21 +146,21 @@ Returns labs object
 
 sub remove {
     my $self = shift;
-    my $lab = shift;
-    
+    my $lab  = shift;
+
     confess "<" . ref($lab) . ">: invalid lab - must be a Lab object"
       unless ref($lab) && $lab->isa("Lab");
 
     delete $self->{-list}{ $lab->id }
       if exists $self->{-list}{ $lab->id };
-    
+
     undef $lab;
 
     return $self;
 }
 
 # =================================================================
-# list 
+# list
 # =================================================================
 
 =head2 list ()
@@ -172,10 +175,9 @@ sub list {
         return values %{ $self->{-list} };
     }
     else {
-        return [values %{ $self->{-list} }];
+        return [ values %{ $self->{-list} } ];
     }
 }
-
 
 # =================================================================
 # footer

@@ -670,8 +670,6 @@ sub exit_schedule {
 sub import_schedule{
 	my $file = shift;
 
-	print "HAHA\n";
-
 	# TODO: close all views, empty the GuiSchedule array of views, etc.
 	$guiSchedule->destroy_all;
 
@@ -954,7 +952,6 @@ sub write_ini {
 				  DataEntry->new( $f, $Schedule->streams, 'Stream', $Schedule,
 					\$Dirtyflag, $guiSchedule );
 			}
-
 		}
 	}
 }

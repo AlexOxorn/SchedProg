@@ -41,9 +41,10 @@ X Fallback
 - Edit Course -> make sure course number is unique
 - Edit menus (default section/blocks selected if exists)
 - Right click Course->remove teacher/stream (glitched)
-(-) Streams -> DELETE NOT WORKING
+(X) Streams -> DELETE NOT WORKING
 - Dragging Lab on course, BUG (assign lab Courses)
 - Clear Max ID
-(-) Edit course template, left side larger right
-(-) get rid of edit and apply changes to data entry tabs
+(X) Edit course template, left side larger right
+(X) get rid of edit and apply changes to data entry tabs
+(-) Add Section Name to CSV file
 

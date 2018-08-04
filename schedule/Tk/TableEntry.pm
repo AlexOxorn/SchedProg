@@ -247,7 +247,7 @@ sub disabled {
 		else {
 			foreach my $row ( 1 .. $t->rows ) {
 				my $w = $t->get_widget( $row, 0 );
-				$w->configure( -state => 'normal' );
+				$w->configure( -state => 'normal' ) if $w;
 			}
 		}
 
@@ -262,6 +262,7 @@ sub are_all_disabled {
 	my $t        = shift;
 	my $disabled = $t->disabled;
 	my $flag     = 1;
+	$flag = 0 unless scalar(@$disabled);
 	foreach my $d (@$disabled) {
 		$flag = 0 unless $d;
 	}

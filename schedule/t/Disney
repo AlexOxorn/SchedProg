@@ -1,0 +1,344 @@
+--- !!perl/hash:Schedule
+-conflicts: !!perl/hash:Conflicts
+  -list:
+    - !!perl/hash:Conflict
+      -blocks:
+        - &1 !!perl/hash:Block
+          -conflicted: 4
+          -day: wed
+          -day_number: 3
+          -duration: 3
+          -id: 6
+          -labs:
+            2: &2 !!perl/hash:Lab
+              -descr: ''
+              -id: 2
+              -number: Lake
+          -movable: 1
+          -number: 2
+          -section: &3 !!perl/hash:Section
+            -blocks:
+              5: &4 !!perl/hash:Block
+                -conflicted: 4
+                -day: tue
+                -day_number: 2
+                -duration: 1.5
+                -id: 5
+                -labs:
+                  2: *2
+                -movable: 1
+                -number: 1
+                -section: *3
+                -start: 9:30
+                -start_number: 9.5
+                -sync: []
+                -teachers:
+                  1: &5 !!perl/hash:Teacher
+                    -dept: ''
+                    -fname: Daffy
+                    -id: 1
+                    -lname: Duck
+              6: *1
+            -course: &6 !!perl/hash:Course
+              -id: 1
+              -name: First Year English Class
+              -number: English 101
+              -sections:
+                1: &7 !!perl/hash:Section
+                  -blocks:
+                    1: !!perl/hash:Block
+                      -conflicted: 0
+                      -day: mon
+                      -day_number: 1
+                      -duration: 1.5
+                      -id: 1
+                      -labs:
+                        1: &8 !!perl/hash:Lab
+                          -descr: ''
+                          -id: 1
+                          -number: Desert
+                      -movable: 1
+                      -number: 1
+                      -section: *7
+                      -start: 11:00
+                      -start_number: 11
+                      -sync: []
+                      -teachers:
+                        4: &9 !!perl/hash:Teacher
+                          -dept: ''
+                          -fname: Wile E.
+                          -id: 4
+                          -lname: Coyote
+                    3: !!perl/hash:Block
+                      -conflicted: 0
+                      -day: thu
+                      -day_number: 4
+                      -duration: 3
+                      -id: 3
+                      -labs:
+                        1: *8
+                      -movable: 1
+                      -number: 2
+                      -section: *7
+                      -start: 10:30
+                      -start_number: 10.5
+                      -sync: []
+                      -teachers:
+                        4: *9
+                  -course: *6
+                  -hours: 1.5
+                  -id: 1
+                  -name: Lessons in Futiltiy
+                  -number: 1
+                  -streams: {}
+                2: &10 !!perl/hash:Section
+                  -blocks:
+                    2: !!perl/hash:Block
+                      -conflicted: 0
+                      -day: tue
+                      -day_number: 2
+                      -duration: 1.5
+                      -id: 2
+                      -labs:
+                        1: *8
+                      -movable: 1
+                      -number: 1
+                      -section: *10
+                      -start: 8:00
+                      -start_number: 8
+                      -sync: []
+                      -teachers:
+                        4: *9
+                    4: !!perl/hash:Block
+                      -conflicted: 0
+                      -day: wed
+                      -day_number: 3
+                      -duration: 3
+                      -id: 4
+                      -labs:
+                        1: *8
+                      -movable: 1
+                      -number: 2
+                      -section: *10
+                      -start: 9:00
+                      -start_number: 9
+                      -sync: []
+                      -teachers:
+                        4: *9
+                  -course: *6
+                  -hours: 1.5
+                  -id: 2
+                  -name: Lessons in Futility
+                  -number: 2
+                  -streams: {}
+                3: *3
+                4: &11 !!perl/hash:Section
+                  -blocks:
+                    7: !!perl/hash:Block
+                      -conflicted: 0
+                      -day: tue
+                      -day_number: 2
+                      -duration: 1.5
+                      -id: 7
+                      -labs:
+                        3: &12 !!perl/hash:Lab
+                          -descr: ''
+                          -id: 3
+                          -number: Studio
+                      -movable: 1
+                      -number: 1
+                      -section: *11
+                      -start: 11:00
+                      -start_number: 11
+                      -sync: []
+                      -teachers:
+                        2: &13 !!perl/hash:Teacher
+                          -dept: ''
+                          -fname: Mickey
+                          -id: 2
+                          -lname: Mouse
+                    8: !!perl/hash:Block
+                      -conflicted: 0
+                      -day: mon
+                      -day_number: 1
+                      -duration: 3
+                      -id: 8
+                      -labs:
+                        3: *12
+                      -movable: 1
+                      -number: 2
+                      -section: *11
+                      -start: 8:00
+                      -start_number: 8
+                      -sync: []
+                      -teachers:
+                        2: *13
+                  -course: *6
+                  -hours: 1.5
+                  -id: 4
+                  -name: Disney vs Anime
+                  -number: 4
+                  -streams: {}
+                5: &14 !!perl/hash:Section
+                  -blocks:
+                    10: !!perl/hash:Block
+                      -conflicted: 0
+                      -day: thu
+                      -day_number: 4
+                      -duration: 3
+                      -id: 10
+                      -labs:
+                        1: *8
+                      -movable: 1
+                      -number: 2
+                      -section: *14
+                      -start: 9:30
+                      -start_number: 9.5
+                      -sync: []
+                      -teachers:
+                        3: &15 !!perl/hash:Teacher
+                          -dept: ''
+                          -fname: Road
+                          -id: 3
+                          -lname: Runner
+                    9: !!perl/hash:Block
+                      -conflicted: 0
+                      -day: tue
+                      -day_number: 2
+                      -duration: 1.5
+                      -id: 9
+                      -labs:
+                        1: *8
+                      -movable: 1
+                      -number: 1
+                      -section: *14
+                      -start: 10:00
+                      -start_number: 10
+                      -sync: []
+                      -teachers:
+                        3: *15
+                  -course: *6
+                  -hours: 1.5
+                  -id: 5
+                  -name: Magic in Cinema
+                  -number: 5
+                  -streams: {}
+                6: &16 !!perl/hash:Section
+                  -blocks:
+                    11: !!perl/hash:Block
+                      -conflicted: 0
+                      -day: mon
+                      -day_number: 1
+                      -duration: 1.5
+                      -id: 11
+                      -labs:
+                        1: *8
+                      -movable: 1
+                      -number: 1
+                      -section: *16
+                      -start: 8:00
+                      -start_number: 8
+                      -sync: []
+                      -teachers:
+                        3: *15
+                    12: !!perl/hash:Block
+                      -conflicted: 0
+                      -day: wed
+                      -day_number: 3
+                      -duration: 3
+                      -id: 12
+                      -labs:
+                        1: *8
+                      -movable: 1
+                      -number: 2
+                      -section: *16
+                      -start: 12:30
+                      -start_number: 12.5
+                      -sync: []
+                      -teachers:
+                        3: *15
+                  -course: *6
+                  -hours: 1.5
+                  -id: 6
+                  -name: Magic in Cinema
+                  -number: 6
+                  -streams: {}
+                7: &17 !!perl/hash:Section
+                  -blocks:
+                    13: !!perl/hash:Block
+                      -conflicted: 0
+                      -day: thu
+                      -day_number: 4
+                      -duration: 1.5
+                      -id: 13
+                      -labs:
+                        3: *12
+                      -movable: 1
+                      -number: 1
+                      -section: *17
+                      -start: 10:00
+                      -start_number: 10
+                      -sync: []
+                      -teachers:
+                        2: *13
+                    14: !!perl/hash:Block
+                      -conflicted: 0
+                      -day: wed
+                      -day_number: 3
+                      -duration: 3
+                      -id: 14
+                      -labs:
+                        3: *12
+                      -movable: 1
+                      -number: 2
+                      -section: *17
+                      -start: 8:30
+                      -start_number: 8.5
+                      -sync: []
+                      -teachers:
+                        2: *13
+                  -course: *6
+                  -hours: 1.5
+                  -id: 7
+                  -name: Fame and Fortune
+                  -number: 7
+                  -streams: {}
+            -hours: 1.5
+            -id: 3
+            -name: Diction
+            -number: 3
+            -streams: {}
+          -start: 8:30
+          -start_number: 8.5
+          -sync: []
+          -teachers:
+            1: *5
+        - *4
+      -type: 4
+-courses: !!perl/hash:Courses
+  -list:
+    1: *6
+-labs: !!perl/hash:Labs
+  -list:
+    1: *8
+    2: *2
+    3: *12
+    4: !!perl/hash:Lab
+      -descr: ''
+      -id: 4
+      -number: Cave
+-streams: !!perl/hash:Streams
+  -list: {}
+-teachers: !!perl/hash:Teachers
+  -list:
+    1: *5
+    2: *13
+    3: *15
+    4: *9
+--- 14
+--- 1
+--- 4
+--- 7
+--- 4
+--- 14
+--- 0

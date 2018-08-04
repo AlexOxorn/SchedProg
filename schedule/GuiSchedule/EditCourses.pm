@@ -91,7 +91,6 @@ sub new {
 	);
 
 	eval {
-		#print "$image_dir/small_trash.gif\n";
 		$Trash1_photo = $frame->Photo(
 			-format => 'gif',
 			-file   => "$image_dir/small_trash.gif"
@@ -104,31 +103,47 @@ sub new {
 		) unless $Trash2_photo;
 	};
 
-	# ----------------------------------------------------------------
-	# always start from scratch (- means we are always up to date)
-	# ----------------------------------------------------------------
-	foreach my $sl ( $frame->packSlaves ) {
-		$sl->destroy;
-	}
+    # ----------------------------------------------------------------
+    # using grid, create right and left panels
+    # ----------------------------------------------------------------
+    # always start from scratch (- means we are always up to date)
+    foreach my $sl ( $frame->gridSlaves ) {
+        $sl->destroy;
+    }
+    my $right_panel = $frame->Frame(-bg=>'pink')->grid(-row=>0,-column=>1,-sticky=>'nsew');
+    my $left_panel = $frame->Frame(-bg=>'blue')->grid(-row=>0,-column=>0,-sticky=>'nsew');
+    
+    # calculate min_width of left panel based on screen size
+    my @x = ($frame->toplevel->geometry() =~ /^=?(\d+)x(\d+)?([+-]\d+[+-]\d+)?$/);
+    my $min_width =7/16 * $x[0];
+
+    # relative weights etc to widths
+    $frame->gridColumnconfigure(0, -minsize=>$min_width,-weight => 1);
+    $frame->gridColumnconfigure(1, -weight => 1);
+    $frame->gridRowconfigure(0, -weight => 1);
+
 
 	# ----------------------------------------------------------------
 	# make Schedule tree
 	# ----------------------------------------------------------------
 	my $tree;
-	my $treescrolled = $frame->Scrolled(
+	my $treescrolled = $left_panel->Scrolled(
 		'DynamicTree',
 		-scrollbars => 'osoe',
 		-separator  => '/',
 		-command    => [ \&_double_click, $frame, \$tree ],
-	)->pack( -expand => 1, -fill => 'both', -side => 'left' );
+	)->pack(-expand => 1, -fill => 'both', -side => 'left' );
 	$tree = $treescrolled->Subwidget('dynamictree');
 	$tree->bind( '<Key-Return>', [ \&_return, $frame ] );
 
 	# ----------------------------------------------------------------
 	# make panel for modifying Schedule
 	# ----------------------------------------------------------------
+    my $panel =
+      $right_panel->Frame()->pack( -expand => 1, -fill => 'both', -side => 'right' );
+
 	my ( $labs_list, $streams_list, $teachers_list, $trash_label ) =
-	  create_panel_for_modifying( $Trash1_photo, $tree, $frame );
+	  create_panel_for_modifying( $Trash1_photo, $tree, $panel );
 
 	#-------------------------------
 	# Alex Code
@@ -165,10 +180,7 @@ sub create_panel_for_modifying {
 
 	my $Trash1_photo = shift;
 	my $tree         = shift;
-	my $frame        = shift;
-
-	my $panel =
-	  $frame->Frame()->pack( -expand => 1, -fill => 'both', -side => 'right' );
+	my $panel        = shift;
 
 	# ---------------------------------------------------------------
 	# button row
@@ -187,8 +199,8 @@ sub create_panel_for_modifying {
 	if ($Trash1_photo) {
 		$trash_label = $button_row->Label(
 			-image  => $Trash1_photo,
-			-width  => 68,
-			-height => 68
+			-width  => 20,
+			-height => 20
 		)->pack( -side => 'left' );
 	}
 	else {
@@ -207,14 +219,14 @@ sub create_panel_for_modifying {
 	# ---------------------------------------------------------------
 	my $new_classNew = $button_row->Button(
 		-text    => "New Course",
-		-width   => 12,
-		-command => [ \&new_course, $frame, $tree ]
+		-width   => 11,
+		-command => [ \&new_course, $panel, $tree ]
 	)->pack( -side => 'left' );
 
 	my $new_classEdit = $button_row->Button(
 		-text    => "Edit Selection",
-		-width   => 12,
-		-command => [ \&edit_course, $frame, $tree ]
+		-width   => 11,
+		-command => [ \&edit_course, $panel, $tree ]
 	)->pack( -side => 'left' );
 
 	# ---------------------------------------------------------------

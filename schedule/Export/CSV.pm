@@ -12,6 +12,9 @@ use Scalar::Util qw(looks_like_number);
 use Carp;
 use Data::Dumper;
 
+# package variables
+our $CSV_INPUT_ERRORS;
+
 =head1 NAME
 
 Excel - export Schedule to Excel format. 
@@ -128,6 +131,7 @@ sub export {
 		"Course Name",
 		"Course No.",
 		"Section",
+		"Section Name",
 		"Ponderation",
 		"Start Time",
 		"End Time",
@@ -180,7 +184,8 @@ sub export {
 							"420"    # Discipline
 							, $course->name                   # Course Name
 							, $course->number                 # Course No.
-							, $section->number                # Sections
+							, $section->number                # Section Number
+							, $section->name                  # Section Name
 							, 90                              # Ponderation
 							, $start                          # Start time
 							, $end                            # End time
@@ -203,21 +208,35 @@ sub export {
 		}
 	}
 
-	open my $fh, ">", $self->output_file or die $!;
+	open my $fh, ">", $self->output_file or croak $!;
+	print "opened file for writing\n";
 	my $csv = Text::CSV->new();
 	foreach my $flatBlock (@flatBlocks) {
-		
 		$csv->print( $fh, $flatBlock );
+		print $fh "\n";   # sandy added this... sometimes CSV doesn't work.  why?
 		
 	}
-	close $fh or die $!;
+	close $fh or croak $!;
 }
 
 # =====================================================
 # import CSV
+# NOTE: croaks on Errors, so use eval blocks when
+#       calling this method
 # =====================================================
 
 sub import_csv {
+    my @required_headers = (
+    "Course Name",
+    "Course No.",
+    "Section",
+    "Start Time",
+    "End Time",
+    "Day",
+    "Teacher First Name",
+    "Teacher Last Name",
+    );
+    
 	my $Schedule2 = Schedule->new();
 	my $Courses   = $Schedule2->courses;
 	my $Teachers  = $Schedule2->teachers;
@@ -227,13 +246,14 @@ sub import_csv {
 	my %repeateTeacherName;
 	my %fieldNames;
 
+    # get parameters
 	my $class = shift;
 	my $file  = shift;
 	unless ($file) {
-		print "Need CSV file\n";
-		return;
+		croak( "Need an input file!");
 	}
 
+    # create a csv object
 	my $csv = Text::CSV->new(
 		{
 			binary    => 1,
@@ -242,27 +262,30 @@ sub import_csv {
 		}
 	);
 
-	
+	# read the data file
 	open( my $data, '<:encoding(utf8)', $file )
-	  or die "Could not open '$file' $!\n";
+	  or croak "Could not open '$file' $!\n";
 	
 
+	# get the first line so that we can get the field names
 	my $fields = $csv->getline($data);
-
-	print @{$fields} . "\n\n";
+	print "[",join("] [",@{$fields}) . "]\n\n";
 	foreach my $i (1...scalar @{$fields}){
-		$fieldNames{$fields->[$i-1]} = $i-1;
+		$fieldNames{lc($fields->[$i-1])} = $i-1;
+	}
+	
+	# validate that we have all the necessary field names
+	foreach my $req (@required_headers) {
+	    croak "Missing column <$req>" unless exists $fieldNames{lc($req)};
 	}
 
+    # now start reading the data, and interpreting it
 	while ( my $fields = $csv->getline($data) ) {
 
-		# [0 Constant] Displine (420)
-
-		# [1] Course Name
-		# [2] Course No.
+		# Course Name and Course No.
 		
-		my $courseName = $fields->[$fieldNames{"Course Name"}];
-		my $courseNo = $fields->[$fieldNames{"Course No."}];
+		my $courseName = $fields->[$fieldNames{"course name"}];
+		my $courseNo = $fields->[$fieldNames{"course no."}];
 		
 		my $course = $Courses->get_by_number( $courseNo );
 		unless ($course) {
@@ -271,17 +294,19 @@ sub import_csv {
 			$Courses->add($course);
 		}
 
-		# [3] Section Number
+		# Section Number & Name
 		
-		my $sectionNum = $fields->[$fieldNames{"Section"}];
+		my $sectionNum = $fields->[$fieldNames{"section"}];
+		my $sectionName = "";
+		$sectionName = $fields->[$fieldNames{"section name"}] if exists $fieldNames{"section name"};
 		
 		unless(looks_like_number($sectionNum)){
-			croak "Section number needs to be a number";
+			croak "Section number <$sectionNum> needs to be a number";
 		}
 		
 		my $section = $course->get_section( $sectionNum );
 		unless ($section) {
-			$section = Section->new( -number => $sectionNum, -hours => 0 );
+			$section = Section->new( -number => $sectionNum, -hours => 0, -name => $sectionName );
 			$course->add_section($section);
 		}
 
@@ -290,9 +315,10 @@ sub import_csv {
 		# [5] Start Time
 		# [6] End Time
 		
-		my $start    = _to_hours( $fields->[$fieldNames{"Start Time"}] );
-		my $end      = _to_hours( $fields->[$fieldNames{"End Time"}] );
+		my $start    = _to_hours( $fields->[$fieldNames{"start time"}] );
+		my $end      = _to_hours( $fields->[$fieldNames{"end time"}] );
 		my $duration = $end - $start;
+		croak "$courseName, $sectionName has starts before it ends" if $duration<0;
 
 		my $startTime;
 		$startTime = int($start) . ":" . ( ( $start - int($start) ) * 60 )
@@ -302,7 +328,7 @@ sub import_csv {
 		$section->add_hours($duration);
 
 		# [7] Day
-		my $dayInput = $fields->[$fieldNames{"Day"}];
+		my $dayInput = $fields->[$fieldNames{"day"}];
 		
 		my $day      = "";
 		my %day_dict = (qw(m Mon tu Tue w Wed th Thu f Fri sa Sat su Sun));
@@ -327,10 +353,18 @@ sub import_csv {
 		# [11] Teach First Name
 		# [12] Teacher ID
 		my $teacher;
-		my $firstname = $fields->[$fieldNames{"Teacher First Name"}];
-		my $lastname  = $fields->[$fieldNames{"Teacher Last Name"}];
-		my $teachID   = $fields->[$fieldNames{"Teacher ID"}];
+		my $firstname = $fields->[$fieldNames{"teacher first name"}];
+		my $lastname  = $fields->[$fieldNames{"teacher last name"}];
 		
+		# this is an optional field, so must check if it exists
+		my $teachID = "";
+	    $teachID   = $fields->[$fieldNames{"teacher id"}] if $fieldNames{"teacher id"};
+		
+		# must have a last name or teacher isn't assign to this block
+		if ($lastname) {
+		
+		
+		# ********* ALEX MUST COMMENT AND CLEAN UP THIS CODE! **********
 		unless ( $teachID ) {
 			my $byName = $Teachers->get_by_name( $firstname, $lastname );
 			unless ($byName) {
@@ -366,9 +400,10 @@ sub import_csv {
 		}
 
 		$block->assign_teacher($teacher);
+		}
 
 		# [13] room
-		my $room = $fields->[$fieldNames{"Room"}];
+		my $room = $fields->[$fieldNames{"room"}];
 		
 		$room =~ s/\s*(.*?)\s*/$1/;
 		if ($room) {

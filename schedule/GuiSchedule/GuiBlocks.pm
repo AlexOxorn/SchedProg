@@ -179,7 +179,7 @@ sub new {
     # define what to display
     # ===============================================================
 
-    my $blockText = "$blockNum\n$blockSectionName\n";
+    my $blockText = "$blockNum.$blockSec\n$blockSectionName\n";
     $blockText .= "$blockTeacher\n"
       if ( $view->type ne "teacher" && $blockTeacher );
     $blockText .= "$blockLab\n" if ( $view->type ne "lab" && $blockLab );
