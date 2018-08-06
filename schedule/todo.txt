@@ -48,4 +48,9 @@ X Dragging Lab on course, BUG (assign lab Courses)
 (X) Edit course template, left side larger right
 (X) get rid of edit and apply changes to data entry tabs
 (X) Add Section Name to CSV file
+X Remove Block from new course not enabled
+
+- Attempting to edit something in the tree as it is being updated will give a pathname error
+- Section/Section->clear all doesn't clear all (LABs)
+<> Optimize tree
 

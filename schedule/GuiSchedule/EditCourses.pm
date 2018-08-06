@@ -3490,7 +3490,7 @@ sub new_course_dialog {
 		my $rmBTN = $self->{-remove_block_button};
 
 		if ( $num > 1 ) {
-			$rmBTN->configure( -state => 'disabled' );
+			$rmBTN->configure( -state => 'normal' );
 		}
 
 		my $info_row = $self->{-info_row};
