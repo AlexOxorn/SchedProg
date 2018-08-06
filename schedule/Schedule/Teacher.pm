@@ -77,10 +77,11 @@ sub new {
     
     my $self = { };
     bless $self, $class;
-    $self->{-id} = ++$Max_id;
+    
     $self->firstname($fname);
     $self->lastname($lname);
     $self->dept($dept);
+    $self->{-id} = ++$Max_id;
     
     return $self;
 }

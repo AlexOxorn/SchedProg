@@ -615,11 +615,11 @@ sub _show_tree_menu {
 		my @teachers;
 		foreach my $sec (@sections) {
 			my @temp = $sec->teachers;
-			foreach my $i (@temp){
-				$teacher{$i->id} = $i->id;
+			foreach my $i (@temp) {
+				$teacher{ $i->id } = $i->id;
 			}
 		}
-		
+
 		@teachers = values %teacher;
 		my $AllTeachers = $Schedule->teachers;
 		foreach my $id (@teachers) {
@@ -628,7 +628,7 @@ sub _show_tree_menu {
 				-label   => $teacher->firstname . " " . $teacher->lastname,
 				-command => sub {
 					$obj->remove_teacher($teacher);
-					refresh_course( $tree, $obj, $input, 1);
+					refresh_course( $tree, $obj, $input, 1 );
 					set_dirty();
 				}
 			);
@@ -684,11 +684,11 @@ sub _show_tree_menu {
 		my @streams;
 		foreach my $sec (@sections) {
 			my @temp = $sec->streams;
-			foreach my $i (@temp){
-				$stream{$i->id} = $i->id;
+			foreach my $i (@temp) {
+				$stream{ $i->id } = $i->id;
 			}
 		}
-		
+
 		@streams = values %stream;
 		my $AllStreams = $Schedule->streams;
 		foreach my $id (@streams) {
@@ -697,7 +697,7 @@ sub _show_tree_menu {
 				-label   => $stream->print_description2,
 				-command => sub {
 					$obj->remove_stream($stream);
-					refresh_schedule( $tree );
+					refresh_schedule($tree);
 					set_dirty();
 				}
 			);
@@ -1408,11 +1408,11 @@ sub _dropped_on_course {
 	}
 
 	if ( $Dragged_from eq 'Lab' ) {
-		unless($obj->isa("Course")){
+		unless ( $obj->isa("Course") ) {
 			my $add_obj = $Schedule->labs->get($id);
-			$obj->assign_lab($add_obj);	
+			$obj->assign_lab($add_obj);
 		}
-		else{	
+		else {
 			$tree->bell;
 		}
 	}
@@ -1900,7 +1900,10 @@ sub _edit_course2 {
 	$courseNumberEntry = $edit_dialog->Entry(
 		-textvariable    => \$cNum,
 		-validate        => 'key',
-		-validatecommand => [ \&_unique_number, $startNum, $close, \$courseNumberEntry , \$courseMessage]
+		-validatecommand => [
+			\&_unique_number,    $startNum, $close,
+			\$courseNumberEntry, \$courseMessage
+		]
 	);
 
 	$top->Label( -text => "Course Number", -anchor => 'w' )
@@ -1910,7 +1913,8 @@ sub _edit_course2 {
 	  ->grid( $edit_dialog->Entry( -textvariable => \$desc, ),
 		'-', '-', -sticky => "nsew" );
 
-	$courseMessage = $top->Label( -text => "" )->grid( -columnspan => 4, -sticky => "nsew" );
+	$courseMessage =
+	  $top->Label( -text => "" )->grid( -columnspan => 4, -sticky => "nsew" );
 
 	#-----------------------------------------
 	# Section Add/Remove/Edit
@@ -2274,23 +2278,9 @@ sub _edit_course2 {
 	}
 	elsif ( $startDesc ne $desc || $startNum ne $cNum ) {
 		$obj->name($desc);
-		set_dirty();
-		if ( $startNum ne $cNum ) {
-			unless ( $Schedule->courses->get_by_number($cNum) ) {
-				$obj->number($cNum);
-			}
-			else {
-				$tree->toplevel->messageBox(
-					-title   => 'Edit Course',
-					-message => 'Course Number is NOT unique!',
-					-type    => 'OK',
-					-icon    => 'error'
-				);
-				refresh_schedule($tree);
-				return _edit_course2( $frame, $tree, $obj, $path ) || 1;
-			}
-		}
+		$obj->number($cNum);
 		refresh_schedule($tree);
+		set_dirty();
 		return 1;
 	}
 	else {
@@ -3585,24 +3575,26 @@ sub is_integer {
 # (alway return true, just change input to red and disable close button)
 # ================================================================
 sub _unique_number {
+
 	#no warnings;
 	my $oldName   = shift;
 	my $button    = shift;
-	my $entry	  = ${+shift};
-	my $message   = ${+shift};
+	my $entry     = ${ +shift };
+	my $message   = ${ +shift };
 	my $toCompare = shift;
-	if($entry){
+	if ($entry) {
 		if (   $toCompare ne $oldName
 			&& $Schedule->courses->get_by_number($toCompare) )
 		{
-			$button->configure(-state=>'disabled');
-			$entry->configure(-bg=>'red');
-			$message->configure(-text=>"Number Not Unique");
+			$button->configure( -state => 'disabled' );
+			$entry->configure( -bg => 'red' );
+			$message->configure( -text => "Number Not Unique" );
 			$entry->bell;
-		}else{
-			$button->configure(-state=>'normal');
-			$entry->configure(-bg=>'white');
-			$message->configure(-text=>"");
+		}
+		else {
+			$button->configure( -state => 'normal' );
+			$entry->configure( -bg => 'white' );
+			$message->configure( -text => "" );
 		}
 	}
 

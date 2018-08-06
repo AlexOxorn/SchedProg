@@ -21,6 +21,8 @@ use Schedule::Streams;
 use Schedule::Stream;
 use Scalar::Util 'refaddr';
 
+my @Schedule_classes = map {s/Schedule\/(.+).pm/$1/;$_} grep {/Schedule\//} keys %INC;
+
 use List::Util qw/all min max/;
 
 =head1 NAME
@@ -90,18 +92,25 @@ sub new {
                  -streams   => Streams->new(),
                };
                
+    # reset MAX_ID for all classes that have Max_id
+    foreach my $class (@Schedule_classes) {
+        no strict 'refs';
+        my $m = $class."::Max_id";
+        ${$m} = 0 if defined ${$m};
+    }           
+               
     #$GuiBlocks::Max_id=0;
 	#$GuiSchedule::Max_id=0;
 	#$Undo::Max_id=0;
 	#$View::Max_id=0;
 	
-	$Block::Max_id=0;
-	$Course::Max_id=0;
-	$Lab::Max_id=0;
-	$Section::Max_id=0;
-	$Stream::Max_id=0;
-	$Teacher::Max_id=0;
-	$Time_slot::Max_id=0;
+	#$Block::Max_id=0;
+	#$Course::Max_id=0;
+	#$Lab::Max_id=0;
+	#$Section::Max_id=0;
+	#$Stream::Max_id=0;
+	#$Teacher::Max_id=0;
+	#$Time_slot::Max_id=0;
 
     bless $self, $class;
     return $self;

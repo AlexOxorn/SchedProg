@@ -75,9 +75,10 @@ sub new {
 
     my $self = {};
     bless $self;
-    $self->{-id} = ++$Max_id;
+    
     $self->number ($number);
     $self->descr  ($desc);
+	$self->{-id} = ++$Max_id;
 
     return $self;
 }
