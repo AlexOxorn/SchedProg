@@ -89,6 +89,19 @@ sub new {
                  -labs      => Labs->new(),
                  -streams   => Streams->new(),
                };
+               
+    #$GuiBlocks::Max_id=0;
+	#$GuiSchedule::Max_id=0;
+	#$Undo::Max_id=0;
+	#$View::Max_id=0;
+	
+	$Block::Max_id=0;
+	$Course::Max_id=0;
+	$Lab::Max_id=0;
+	$Section::Max_id=0;
+	$Stream::Max_id=0;
+	$Teacher::Max_id=0;
+	$Time_slot::Max_id=0;
 
     bless $self, $class;
     return $self;

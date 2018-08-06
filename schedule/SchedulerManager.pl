@@ -497,6 +497,7 @@ sub new_schedule {
 	# TODO: save previous schedule?
 
 	$Schedule = Schedule->new();
+	
 	undef $Current_schedule_file;
 
 	# if we are in standard view, update the overview page
@@ -504,6 +505,7 @@ sub new_schedule {
 		$Notebook->raise('overview');
 		draw_overview();
 	}
+	$Dirtyflag = 0;
 }
 
 # ==================================================================
@@ -611,6 +613,7 @@ sub open_schedule {
 		create_standard_page();
 	}
 
+	$Dirtyflag = 0;
 	return;
 }
 
@@ -717,7 +720,7 @@ sub import_schedule{
 		$Front_page_frame->packForget();
 		create_standard_page();
 	}
-
+	$Dirtyflag = 0;
 	return;
 }
 

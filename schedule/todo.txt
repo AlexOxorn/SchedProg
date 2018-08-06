@@ -1,6 +1,7 @@
 Legend:
 () for Sandy
 - TODO
+~ TODO minimal priority
 X Done
 + Done with possibility of bug
 
@@ -33,18 +34,18 @@ X Fallback
 + fix weird variable names
 + add missing dirty flags
 
-- Limit number of things that can be added
+X Limit number of things that can be added
 - Add scrolled object
 
-- Edit Course -> change sec name: doesn't update section list
-- Section->rightclick: add change section name
-- Edit Course -> make sure course number is unique
-- Edit menus (default section/blocks selected if exists)
-- Right click Course->remove teacher/stream (glitched)
+X Edit Course -> change sec name: doesn't update section list
+~ Section/Course->rightclick: add change name
+X Edit Course -> make sure course number is unique
+~ Edit menus (default section/blocks selected if exists)
+X Right click Course->remove teacher/stream (glitched)
 (X) Streams -> DELETE NOT WORKING
-- Dragging Lab on course, BUG (assign lab Courses)
-- Clear Max ID
+X Dragging Lab on course, BUG (assign lab Courses)
++ Clear Max ID
 (X) Edit course template, left side larger right
 (X) get rid of edit and apply changes to data entry tabs
-(-) Add Section Name to CSV file
+(X) Add Section Name to CSV file
 

@@ -103,25 +103,27 @@ sub new {
 		) unless $Trash2_photo;
 	};
 
-    # ----------------------------------------------------------------
-    # using grid, create right and left panels
-    # ----------------------------------------------------------------
-    # always start from scratch (- means we are always up to date)
-    foreach my $sl ( $frame->gridSlaves ) {
-        $sl->destroy;
-    }
-    my $right_panel = $frame->Frame(-bg=>'pink')->grid(-row=>0,-column=>1,-sticky=>'nsew');
-    my $left_panel = $frame->Frame(-bg=>'blue')->grid(-row=>0,-column=>0,-sticky=>'nsew');
-    
-    # calculate min_width of left panel based on screen size
-    my @x = ($frame->toplevel->geometry() =~ /^=?(\d+)x(\d+)?([+-]\d+[+-]\d+)?$/);
-    my $min_width =7/16 * $x[0];
+	# ----------------------------------------------------------------
+	# using grid, create right and left panels
+	# ----------------------------------------------------------------
+	# always start from scratch (- means we are always up to date)
+	foreach my $sl ( $frame->gridSlaves ) {
+		$sl->destroy;
+	}
+	my $right_panel = $frame->Frame( -bg => 'pink' )
+	  ->grid( -row => 0, -column => 1, -sticky => 'nsew' );
+	my $left_panel = $frame->Frame( -bg => 'blue' )
+	  ->grid( -row => 0, -column => 0, -sticky => 'nsew' );
 
-    # relative weights etc to widths
-    $frame->gridColumnconfigure(0, -minsize=>$min_width,-weight => 1);
-    $frame->gridColumnconfigure(1, -weight => 1);
-    $frame->gridRowconfigure(0, -weight => 1);
+	# calculate min_width of left panel based on screen size
+	my @x =
+	  ( $frame->toplevel->geometry() =~ /^=?(\d+)x(\d+)?([+-]\d+[+-]\d+)?$/ );
+	my $min_width = 7 / 16 * $x[0];
 
+	# relative weights etc to widths
+	$frame->gridColumnconfigure( 0, -minsize => $min_width, -weight => 1 );
+	$frame->gridColumnconfigure( 1, -weight => 1 );
+	$frame->gridRowconfigure( 0, -weight => 1 );
 
 	# ----------------------------------------------------------------
 	# make Schedule tree
@@ -132,15 +134,16 @@ sub new {
 		-scrollbars => 'osoe',
 		-separator  => '/',
 		-command    => [ \&_double_click, $frame, \$tree ],
-	)->pack(-expand => 1, -fill => 'both', -side => 'left' );
+	)->pack( -expand => 1, -fill => 'both', -side => 'left' );
 	$tree = $treescrolled->Subwidget('dynamictree');
 	$tree->bind( '<Key-Return>', [ \&_return, $frame ] );
 
 	# ----------------------------------------------------------------
 	# make panel for modifying Schedule
 	# ----------------------------------------------------------------
-    my $panel =
-      $right_panel->Frame()->pack( -expand => 1, -fill => 'both', -side => 'right' );
+	my $panel =
+	  $right_panel->Frame()
+	  ->pack( -expand => 1, -fill => 'both', -side => 'right' );
 
 	my ( $labs_list, $streams_list, $teachers_list, $trash_label ) =
 	  create_panel_for_modifying( $Trash1_photo, $tree, $panel );
@@ -608,24 +611,25 @@ sub _show_tree_menu {
 		);
 		$remove_teach->separator;
 
+		my %teacher;
 		my @teachers;
 		foreach my $sec (@sections) {
 			my @temp = $sec->teachers;
-			push( @teachers, @temp );
+			foreach my $i (@temp){
+				$teacher{$i->id} = $i->id;
+			}
 		}
-
-		foreach my $teach (@teachers) {
+		
+		@teachers = values %teacher;
+		my $AllTeachers = $Schedule->teachers;
+		foreach my $id (@teachers) {
+			my $teacher = $AllTeachers->get($id);
 			$remove_teach->command(
-				-label   => $teach->firstname . " " . $teach->lastname,
+				-label   => $teacher->firstname . " " . $teacher->lastname,
 				-command => sub {
-					$tree->bell;
-
-					#my @sections = $obj->sections;
-					#foreach my $sec (@sections){
-					#	$sec->remove_teacher($teach);
-					#	refresh_section( $tree, $sec, $input, 1 );
-					#}
-					#set_dirty();
+					$obj->remove_teacher($teacher);
+					refresh_course( $tree, $obj, $input, 1);
+					set_dirty();
 				}
 			);
 		}
@@ -676,24 +680,25 @@ sub _show_tree_menu {
 		);
 		$remove_stream->separator;
 
+		my %stream;
 		my @streams;
 		foreach my $sec (@sections) {
 			my @temp = $sec->streams;
-			push( @teachers, @temp );
+			foreach my $i (@temp){
+				$stream{$i->id} = $i->id;
+			}
 		}
-
-		foreach my $stream (@streams) {
+		
+		@streams = values %stream;
+		my $AllStreams = $Schedule->streams;
+		foreach my $id (@streams) {
+			my $stream = $AllStreams->get($id);
 			$remove_stream->command(
-				-label   => $stream->id . ": " . $stream->descr,
+				-label   => $stream->print_description2,
 				-command => sub {
-					$tree->bell;
-
-					#my @sections = $obj->sections;
-					#foreach my $sec (@sections){
-					#	$sec->remove_stream($stream);
-					#}
-					#refresh_schedule( $tree );
-					#set_dirty();
+					$obj->remove_stream($stream);
+					refresh_schedule( $tree );
+					set_dirty();
 				}
 			);
 		}
@@ -706,7 +711,7 @@ sub _show_tree_menu {
 		$tree_menu->cascade( -label => "Add Teacher" );
 		$tree_menu->cascade( -label => "Set Stream" );
 		$tree_menu->command(
-			-label   => "Add Block(s) (In progress)",
+			-label   => "Add Block(s)",
 			-command => [ \&_add_block, $tree_menu, $tree, $obj, $input ]
 		);
 		$tree_menu->command(
@@ -881,7 +886,7 @@ sub _show_tree_menu {
 		);
 		$tree_menu->separator;
 		$tree_menu->command(
-			-label   => "Change Number of Hours(In progress)",
+			-label   => "Change Number of Hours",
 			-command => sub {
 				my $num;
 				my $db1 = $tree_menu->DialogBox(
@@ -1403,23 +1408,20 @@ sub _dropped_on_course {
 	}
 
 	if ( $Dragged_from eq 'Lab' ) {
-		my $add_obj = $Schedule->labs->get($id);
-		$obj->assign_lab($add_obj);
+		unless($obj->isa("Course")){
+			my $add_obj = $Schedule->labs->get($id);
+			$obj->assign_lab($add_obj);	
+		}
+		else{	
+			$tree->bell;
+		}
 	}
 
 	if ( $Dragged_from eq 'Stream' ) {
-
-		#print "Dragged from stream\n";
 		my $add_obj = $Schedule->streams->get($id);
-
-		#print "$obj\n";
 		if ( $obj->isa('Block') ) {
 			$obj = $obj->section;
-
-			#print "changed to section: $obj\n";
 		}
-
-		#print "Assigning $add_obj to $obj\n";
 		$obj->assign_stream($add_obj);
 
 	}
@@ -1848,7 +1850,8 @@ sub _edit_course2 {
 
 		#-bg=>'pink',
 	);
-	my $top = $edit_dialog->Subwidget("top");
+	my $top   = $edit_dialog->Subwidget("top");
+	my $close = $edit_dialog->Subwidget("B_Close");
 
 	#my $frame1  = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
 	#my $frame1A = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
@@ -1892,15 +1895,22 @@ sub _edit_course2 {
 	#Course number and name entry entry
 	#-----------------------------------------
 
+	my $courseNumberEntry;
+	my $courseMessage;
+	$courseNumberEntry = $edit_dialog->Entry(
+		-textvariable    => \$cNum,
+		-validate        => 'key',
+		-validatecommand => [ \&_unique_number, $startNum, $close, \$courseNumberEntry , \$courseMessage]
+	);
+
 	$top->Label( -text => "Course Number", -anchor => 'w' )
-	  ->grid( $edit_dialog->Entry( -textvariable => \$cNum, ),
-		'-', '-', -sticky => "nsew" );
+	  ->grid( $courseNumberEntry, '-', '-', -sticky => "nsew" );
 
 	$top->Label( -text => "Course Name", -anchor => 'w' )
 	  ->grid( $edit_dialog->Entry( -textvariable => \$desc, ),
 		'-', '-', -sticky => "nsew" );
 
-	$top->Label( -text => "" )->grid( -columnspan => 4, -sticky => "nsew" );
+	$courseMessage = $top->Label( -text => "" )->grid( -columnspan => 4, -sticky => "nsew" );
 
 	#-----------------------------------------
 	# Section Add/Remove/Edit
@@ -2021,6 +2031,16 @@ sub _edit_course2 {
 					@teachersO    = @teachers2;
 					%teacherNameO = %teacherName2;
 
+					my @sections2 = $obj->sections;
+
+					my %sectionName2;
+					foreach my $i (@sections2) {
+						$sectionName2{ $i->id } = "$i";
+					}
+
+					@sections    = @sections2;
+					%sectionName = %sectionName2;
+
 					my @streams2 = $obj->streams;
 
 					my %streamName2;
@@ -2033,6 +2053,8 @@ sub _edit_course2 {
 
 					$teachDropO->configure( -choices => \%teacherNameO );
 					$streamDropO->configure( -choices => \%streamNameO );
+					$secDrop->configure( -choices => \%sectionName );
+					$curSec = "$section";
 
 					$sectionMessage->configure( -text => "Section Edited" )
 					  if $answer == 1;
@@ -2251,10 +2273,24 @@ sub _edit_course2 {
 		return 2;
 	}
 	elsif ( $startDesc ne $desc || $startNum ne $cNum ) {
-		$obj->number($cNum);
 		$obj->name($desc);
-		refresh_schedule($tree);
 		set_dirty();
+		if ( $startNum ne $cNum ) {
+			unless ( $Schedule->courses->get_by_number($cNum) ) {
+				$obj->number($cNum);
+			}
+			else {
+				$tree->toplevel->messageBox(
+					-title   => 'Edit Course',
+					-message => 'Course Number is NOT unique!',
+					-type    => 'OK',
+					-icon    => 'error'
+				);
+				refresh_schedule($tree);
+				return _edit_course2( $frame, $tree, $obj, $path ) || 1;
+			}
+		}
+		refresh_schedule($tree);
 		return 1;
 	}
 	else {
@@ -3011,7 +3047,7 @@ sub _add_block {
 		-default_button => 'Ok',
 	);
 
-	$db1->add( 'Label', -text => "How Many Blocks? (MAX 256)" )->pack;
+	$db1->add( 'Label', -text => "How Many Blocks? (MAX 10)" )->pack;
 	$db1->add(
 		'Entry',
 		-textvariable    => \$num,
@@ -3019,12 +3055,12 @@ sub _add_block {
 		-validatecommand => \&is_integer,
 		-invalidcommand  => sub { $frame->bell },
 		-width           => 20,
-	)->pack(-fill => 'x');
+	)->pack( -fill => 'x' );
 	my $answer = $db1->Show();
 	$answer = "Cancel" unless $answer;
 
 	if ( $answer eq "Ok" && defined $num && $num ne "" && $num > 0 ) {
-		$num = 256 if $num > 256;
+		$num = 10 if $num > 10;
 		my $db2 = $frame->DialogBox(
 			-title          => 'How Many Hours',
 			-buttons        => [ 'Ok', 'Cancel' ],
@@ -3048,13 +3084,13 @@ sub _add_block {
 				-sticky => 'new'
 			);
 		}
-		
-		my ($col , $row) = $top->gridSize();
+
+		my ( $col, $row ) = $top->gridSize();
 		for ( my $i = 1 ; $i < $col ; $i++ ) {
 			$top->gridColumnconfigure( $i, -weight => 1 );
 		}
 		$top->gridRowconfigure( $row - 1, -weight => 1 );
-		
+
 		$answer = "";
 		$answer = $db2->Show();
 		$answer = "Cancel" unless $answer;
@@ -3100,19 +3136,19 @@ sub _add_section {
 		#-width => 500
 	);
 
-	$db0->add( 'Label', -text => "How Many Sections? (MAX 256)" )->pack;
+	$db0->add( 'Label', -text => "How Many Sections? (MAX 10)" )->pack;
 	$db0->add(
 		'Entry',
 		-textvariable    => \$numS,
 		-validate        => 'key',
 		-validatecommand => \&is_integer,
 		-invalidcommand  => sub { $frame->bell },
-	)->pack(-fill => 'x');
+	)->pack( -fill => 'x' );
 	my $answer = $db0->Show();
 	$answer = "Cancel" unless $answer;
 
 	if ( $answer eq 'Ok' && defined $numS && $numS ne "" && $numS > 0 ) {
-		$numS = 256 if $numS > 256;
+		$numS = 10 if $numS > 10;
 
 		my $db1 = $frame->DialogBox(
 			-title          => 'How Many Blocks',
@@ -3123,7 +3159,7 @@ sub _add_section {
 			#-width => 500
 		);
 
-		$db1->add( 'Label', -text => "How Many Blocks? (MAX 256)" )->pack;
+		$db1->add( 'Label', -text => "How Many Blocks? (MAX 10)" )->pack;
 		$db1->add(
 			'Entry',
 			-textvariable    => \$numB,
@@ -3131,13 +3167,13 @@ sub _add_section {
 			-validatecommand => \&is_integer,
 			-invalidcommand  => sub { $frame->bell },
 			-width           => 20,
-		)->pack(-fill => 'x');
+		)->pack( -fill => 'x' );
 		$answer = "";
 		$answer = $db1->Show();
 		$answer = 'Cancel' unless $answer;
 
 		if ( $answer eq "Ok" && defined $numB && $numB ne "" && $numB > 0 ) {
-			$numB = 256 if $numB > 256;
+			$numB = 10 if $numB > 10;
 			my $db2 = $frame->DialogBox(
 				-title          => 'How Many Hours',
 				-buttons        => [ 'Ok', 'Cancel' ],
@@ -3146,10 +3182,10 @@ sub _add_section {
 				#-height => 300,
 				#-width => 500
 			);
-			
+
 			my $top = $db2->Subwidget("top");
 
-			$top->Label(-text => "How Many Hours Per Block?" )
+			$top->Label( -text => "How Many Hours Per Block?" )
 			  ->grid( -columnspan => 2 );
 			foreach my $i ( 1 ... $numB ) {
 				push( @hrs, "" );
@@ -3165,13 +3201,13 @@ sub _add_section {
 					-sticky => 'new'
 				);
 			}
-		
-			my ($col , $row) = $top->gridSize();
+
+			my ( $col, $row ) = $top->gridSize();
 			for ( my $i = 1 ; $i < $col ; $i++ ) {
 				$top->gridColumnconfigure( $i, -weight => 1 );
 			}
 			$top->gridRowconfigure( $row - 1, -weight => 1 );
-			
+
 			$answer = "";
 			$answer = $db2->Show();
 			$answer = "Cancel" unless $answer;
@@ -3217,7 +3253,7 @@ sub save_course_modified {
 	#--------------------------------------------
 	if (   $edit_dialog->{-number}->get eq ""
 		|| $edit_dialog->{-name}->get eq ""
-		|| $edit_dialog->{-sections}->get eq "")
+		|| $edit_dialog->{-sections}->get eq "" )
 	{
 		$tl->messageBox(
 			-title   => 'Error',
@@ -3380,6 +3416,7 @@ sub new_course_dialog {
 		-text   => "Description",
 		-anchor => 'e'
 	)->grid( -column => 0, -row => 1, -sticky => 'nwes' );
+
 	#$info_row->Label(
 	#	-text   => "Hours per week",
 	#	-anchor => 'e'
@@ -3408,6 +3445,7 @@ sub new_course_dialog {
 		sub { $self->{-number}->eventGenerate("<Tab>") } );
 	$self->{-name}
 	  ->bind( "<Key-Return>", sub { $self->{-name}->eventGenerate("<Tab>") } );
+
 	#$self->{-course_hours}->bind(
 	#	"<Key-Return>",
 	#	sub {
@@ -3540,6 +3578,35 @@ sub is_integer {
 	my $n = shift;
 	return 1 if $n =~ /^(\s*\d+\s*|)$/;
 	return 0;
+}
+
+# ================================================================
+# Validate that the course number is new/unique
+# (alway return true, just change input to red and disable close button)
+# ================================================================
+sub _unique_number {
+	#no warnings;
+	my $oldName   = shift;
+	my $button    = shift;
+	my $entry	  = ${+shift};
+	my $message   = ${+shift};
+	my $toCompare = shift;
+	if($entry){
+		if (   $toCompare ne $oldName
+			&& $Schedule->courses->get_by_number($toCompare) )
+		{
+			$button->configure(-state=>'disabled');
+			$entry->configure(-bg=>'red');
+			$message->configure(-text=>"Number Not Unique");
+			$entry->bell;
+		}else{
+			$button->configure(-state=>'normal');
+			$entry->configure(-bg=>'white');
+			$message->configure(-text=>"");
+		}
+	}
+
+	return 1;
 }
 
 #===============================================================

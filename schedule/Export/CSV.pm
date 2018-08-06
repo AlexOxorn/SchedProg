@@ -213,8 +213,8 @@ sub export {
 	my $csv = Text::CSV->new();
 	foreach my $flatBlock (@flatBlocks) {
 		$csv->print( $fh, $flatBlock );
-		print $fh "\n";   # sandy added this... sometimes CSV doesn't work.  why?
-		
+		print $fh "\n";  # sandy added this... sometimes CSV doesn't work.  why?
+
 	}
 	close $fh or croak $!;
 }
@@ -226,17 +226,17 @@ sub export {
 # =====================================================
 
 sub import_csv {
-    my @required_headers = (
-    "Course Name",
-    "Course No.",
-    "Section",
-    "Start Time",
-    "End Time",
-    "Day",
-    "Teacher First Name",
-    "Teacher Last Name",
-    );
-    
+	my @required_headers = (
+		"Course Name",
+		"Course No.",
+		"Section",
+		"Start Time",
+		"End Time",
+		"Day",
+		"Teacher First Name",
+		"Teacher Last Name",
+	);
+
 	my $Schedule2 = Schedule->new();
 	my $Courses   = $Schedule2->courses;
 	my $Teachers  = $Schedule2->teachers;
@@ -246,14 +246,14 @@ sub import_csv {
 	my %repeateTeacherName;
 	my %fieldNames;
 
-    # get parameters
+	# get parameters
 	my $class = shift;
 	my $file  = shift;
 	unless ($file) {
-		croak( "Need an input file!");
+		croak("Need an input file!");
 	}
 
-    # create a csv object
+	# create a csv object
 	my $csv = Text::CSV->new(
 		{
 			binary    => 1,
@@ -265,48 +265,51 @@ sub import_csv {
 	# read the data file
 	open( my $data, '<:encoding(utf8)', $file )
 	  or croak "Could not open '$file' $!\n";
-	
 
 	# get the first line so that we can get the field names
 	my $fields = $csv->getline($data);
-	print "[",join("] [",@{$fields}) . "]\n\n";
-	foreach my $i (1...scalar @{$fields}){
-		$fieldNames{lc($fields->[$i-1])} = $i-1;
-	}
-	
-	# validate that we have all the necessary field names
-	foreach my $req (@required_headers) {
-	    croak "Missing column <$req>" unless exists $fieldNames{lc($req)};
+	print "[", join( "] [", @{$fields} ) . "]\n\n";
+	foreach my $i ( 1 ... scalar @{$fields} ) {
+		$fieldNames{ lc( $fields->[ $i - 1 ] ) } = $i - 1;
 	}
 
-    # now start reading the data, and interpreting it
+	# validate that we have all the necessary field names
+	foreach my $req (@required_headers) {
+		croak "Missing column <$req>" unless exists $fieldNames{ lc($req) };
+	}
+
+	# now start reading the data, and interpreting it
 	while ( my $fields = $csv->getline($data) ) {
 
 		# Course Name and Course No.
-		
-		my $courseName = $fields->[$fieldNames{"course name"}];
-		my $courseNo = $fields->[$fieldNames{"course no."}];
-		
-		my $course = $Courses->get_by_number( $courseNo );
+
+		my $courseName = $fields->[ $fieldNames{"course name"} ];
+		my $courseNo   = $fields->[ $fieldNames{"course no."} ];
+
+		my $course = $Courses->get_by_number($courseNo);
 		unless ($course) {
-			$course =
-			  Course->new( -name => $courseName, -number => $courseNo );
+			$course = Course->new( -name => $courseName, -number => $courseNo );
 			$Courses->add($course);
 		}
 
 		# Section Number & Name
-		
-		my $sectionNum = $fields->[$fieldNames{"section"}];
+
+		my $sectionNum  = $fields->[ $fieldNames{"section"} ];
 		my $sectionName = "";
-		$sectionName = $fields->[$fieldNames{"section name"}] if exists $fieldNames{"section name"};
-		
-		unless(looks_like_number($sectionNum)){
+		$sectionName = $fields->[ $fieldNames{"section name"} ]
+		  if exists $fieldNames{"section name"};
+
+		unless ( looks_like_number($sectionNum) ) {
 			croak "Section number <$sectionNum> needs to be a number";
 		}
-		
-		my $section = $course->get_section( $sectionNum );
+
+		my $section = $course->get_section($sectionNum);
 		unless ($section) {
-			$section = Section->new( -number => $sectionNum, -hours => 0, -name => $sectionName );
+			$section = Section->new(
+				-number => $sectionNum,
+				-hours  => 0,
+				-name   => $sectionName
+			);
 			$course->add_section($section);
 		}
 
@@ -314,11 +317,12 @@ sub import_csv {
 
 		# [5] Start Time
 		# [6] End Time
-		
-		my $start    = _to_hours( $fields->[$fieldNames{"start time"}] );
-		my $end      = _to_hours( $fields->[$fieldNames{"end time"}] );
+
+		my $start    = _to_hours( $fields->[ $fieldNames{"start time"} ] );
+		my $end      = _to_hours( $fields->[ $fieldNames{"end time"} ] );
 		my $duration = $end - $start;
-		croak "$courseName, $sectionName has starts before it ends" if $duration<0;
+		croak "$courseName, $sectionName has starts before it ends"
+		  if $duration < 0;
 
 		my $startTime;
 		$startTime = int($start) . ":" . ( ( $start - int($start) ) * 60 )
@@ -328,8 +332,8 @@ sub import_csv {
 		$section->add_hours($duration);
 
 		# [7] Day
-		my $dayInput = $fields->[$fieldNames{"day"}];
-		
+		my $dayInput = $fields->[ $fieldNames{"day"} ];
+
 		my $day      = "";
 		my %day_dict = (qw(m Mon tu Tue w Wed th Thu f Fri sa Sat su Sun));
 		foreach my $k ( keys %day_dict ) {
@@ -337,7 +341,7 @@ sub import_csv {
 		}
 
 		my $blockNumber = $section->get_new_number;
-		
+
 		my $block = Block->new(
 			-day      => $day,
 			-start    => $startTime,
@@ -353,61 +357,66 @@ sub import_csv {
 		# [11] Teach First Name
 		# [12] Teacher ID
 		my $teacher;
-		my $firstname = $fields->[$fieldNames{"teacher first name"}];
-		my $lastname  = $fields->[$fieldNames{"teacher last name"}];
-		
+		my $firstname = $fields->[ $fieldNames{"teacher first name"} ];
+		my $lastname  = $fields->[ $fieldNames{"teacher last name"} ];
+
 		# this is an optional field, so must check if it exists
 		my $teachID = "";
-	    $teachID   = $fields->[$fieldNames{"teacher id"}] if $fieldNames{"teacher id"};
-		
+		$teachID = $fields->[ $fieldNames{"teacher id"} ]
+		  if $fieldNames{"teacher id"};
+
 		# must have a last name or teacher isn't assign to this block
 		if ($lastname) {
-		
-		
-		# ********* ALEX MUST COMMENT AND CLEAN UP THIS CODE! **********
-		unless ( $teachID ) {
-			my $byName = $Teachers->get_by_name( $firstname, $lastname );
-			unless ($byName) {
-				$teacher = Teacher->new(
-					-firstname => $firstname,
-					-lastname  => $lastname
-				);
-				$Teachers->add($teacher);
-			}
-			else {
-				$teacher = $byName;
-			}
-		}
-		else {
-			
-			unless(looks_like_number($teachID)){
-				croak "Teacher ID needs to be a number";
-			}
-			
-			unless ( $repeateTeacherName{ $firstname . $lastname }{$teachID} ) {
-				$teacher = Teacher->new(
-					-firstname => $firstname,
-					-lastname  => $lastname
-				);
-				$Teachers->add($teacher);
-				$repeateTeacherName{ $firstname . $lastname }{$teachID} =
-				  $teacher;
-			}
-			else {
-				$teacher =
-				  $repeateTeacherName{ $firstname . $lastname }{$teachID};
-			}
-		}
 
-		$block->assign_teacher($teacher);
+			# ********* ALEX MUST COMMENT AND CLEAN UP THIS CODE! **********
+			unless ($teachID) {
+
+			  # If the id is not specified get the teacher object using its name
+				$teacher = $Teachers->get_by_name( $firstname, $lastname );
+				unless ($teacher) {
+
+					#if the teacher is a new teacher, create a teacher object
+					$teacher = Teacher->new(
+						-firstname => $firstname,
+						-lastname  => $lastname
+					);
+					$Teachers->add($teacher);
+				}
+			}
+			else {
+				#if teacher id is specifiec, make sure the input is a number
+				unless ( looks_like_number($teachID) ) {
+					croak "Teacher ID needs to be a number";
+				}
+				unless (
+					$repeateTeacherName{ $firstname . $lastname }{$teachID} )
+				{
+		  #if the specific combination of name and id is not already in the hash
+		  #(not in the schedule) create a new teacher
+					$teacher = Teacher->new(
+						-firstname => $firstname,
+						-lastname  => $lastname
+					);
+					$Teachers->add($teacher);
+					$repeateTeacherName{ $firstname . $lastname }{$teachID} =
+					  $teacher;
+				}
+				else {
+		  #otherwise get the teacher associated with the name and id in the hash
+					$teacher =
+					  $repeateTeacherName{ $firstname . $lastname }{$teachID};
+				}
+			}
+
+			$block->assign_teacher($teacher);
 		}
 
 		# [13] room
-		my $room = $fields->[$fieldNames{"room"}];
-		
+		my $room = $fields->[ $fieldNames{"room"} ];
+
 		$room =~ s/\s*(.*?)\s*/$1/;
 		if ($room) {
-			
+
 			my $tmpLab = $Labs->get_by_number($room);
 			my $lab;
 			if ($tmpLab) {
@@ -428,12 +437,12 @@ sub import_csv {
 
 	}
 	if ( not $csv->eof ) {
-		
+
 		$csv->error_diag();
 		return;
 	}
 	close $data;
-	
+
 	return $Schedule2;
 }
 
@@ -450,8 +459,8 @@ sub _military_time {
 sub _to_hours {
 	my $time = shift;
 
-	unless(looks_like_number($time)){
-			croak "Times needs to be a number eg. (13h30 -> 1330)";
+	unless ( looks_like_number($time) ) {
+		croak "Times needs to be a number eg. (13h30 -> 1330)";
 	}
 
 	my $hour = int( $time / 100 );

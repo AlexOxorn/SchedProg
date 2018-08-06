@@ -82,21 +82,13 @@
                   -id: 0
                   -name: Section 1
                   -number: 1
-                  -streams:
-                    0: &10 !!perl/hash:Stream
-                      -descr: Comp Sci
-                      -id: 0
-                      -number: 301
+                  -streams: {}
                 2: *2
             -hours: 3
             -id: 1
             -name: Section 2
             -number: 2
-            -streams:
-              1: &11 !!perl/hash:Stream
-                -descr: Math
-                -id: 1
-                -number: 302
+            -streams: {}
           -start: 10:00
           -start_number: 10
           -sync: []
@@ -109,12 +101,12 @@
 -courses: !!perl/hash:Courses
   -list:
     0: *6
-    1: &12 !!perl/hash:Course
+    1: &10 !!perl/hash:Course
       -id: 1
       -name: Graph Theory
       -number: MATH 350
       -sections:
-        1: &13 !!perl/hash:Section
+        1: &11 !!perl/hash:Section
           -blocks:
             4: !!perl/hash:Block
               -conflicted: 0
@@ -125,12 +117,12 @@
               -labs: {}
               -movable: 1
               -number: 2
-              -section: *13
+              -section: *11
               -start: 9:30
               -start_number: 9.5
               -sync: []
               -teachers:
-                1: &14 !!perl/hash:Teacher
+                1: &12 !!perl/hash:Teacher
                   -dept: ''
                   -fname: Nathan
                   -id: 1
@@ -143,18 +135,18 @@
               -duration: 1
               -id: 5
               -labs:
-                1: &15 !!perl/hash:Lab
+                1: &13 !!perl/hash:Lab
                   -descr: Computer
                   -id: 1
                   -number: 102
               -movable: 1
               -number: 1
-              -section: *13
+              -section: *11
               -start: 11:30
               -start_number: 11.5
               -sync: []
               -teachers:
-                1: *14
+                1: *12
             6: !!perl/hash:Block
               -conflicted: 0
               -day: fri
@@ -164,20 +156,23 @@
               -labs: {}
               -movable: 1
               -number: 3
-              -section: *13
+              -section: *11
               -start: 14:00
               -start_number: 14
               -sync: []
               -teachers:
-                1: *14
-          -course: *12
+                1: *12
+          -course: *10
           -hours: 6
           -id: 2
           -name: Section 1
           -number: 1
           -streams:
-            1: *11
-        2: &16 !!perl/hash:Section
+            1: &14 !!perl/hash:Stream
+              -descr: Math
+              -id: 1
+              -number: 302
+        2: &15 !!perl/hash:Section
           -blocks:
             7: !!perl/hash:Block
               -conflicted: 0
@@ -186,15 +181,15 @@
               -duration: 1
               -id: 7
               -labs:
-                1: *15
+                1: *13
               -movable: 1
               -number: 3
-              -section: *16
+              -section: *15
               -start: 14:00
               -start_number: 14
               -sync: []
               -teachers:
-                1: *14
+                1: *12
             8: !!perl/hash:Block
               -conflicted: 0
               -day: mon
@@ -204,12 +199,12 @@
               -labs: {}
               -movable: 1
               -number: 1
-              -section: *16
+              -section: *15
               -start: 8:00
               -start_number: 8
               -sync: []
               -teachers:
-                1: *14
+                1: *12
             9: !!perl/hash:Block
               -conflicted: 0
               -day: tue
@@ -219,19 +214,22 @@
               -labs: {}
               -movable: 1
               -number: 2
-              -section: *16
+              -section: *15
               -start: 9:30
               -start_number: 9.5
               -sync: []
               -teachers:
-                1: *14
-          -course: *12
+                1: *12
+          -course: *10
           -hours: 6
           -id: 3
           -name: Section 2
           -number: 2
           -streams:
-            0: *10
+            0: &16 !!perl/hash:Stream
+              -descr: Comp Sci
+              -id: 0
+              -number: 301
         3: &17 !!perl/hash:Section
           -blocks:
             10: !!perl/hash:Block
@@ -241,7 +239,7 @@
               -duration: 1
               -id: 10
               -labs:
-                1: *15
+                1: *13
               -movable: 1
               -number: 1
               -section: *17
@@ -250,7 +248,7 @@
               -sync: []
               -teachers:
                 0: *5
-                1: *14
+                1: *12
             11: !!perl/hash:Block
               -conflicted: 0
               -day: tue
@@ -266,7 +264,7 @@
               -sync: []
               -teachers:
                 0: *5
-                1: *14
+                1: *12
             12: !!perl/hash:Block
               -conflicted: 0
               -day: wed
@@ -282,8 +280,8 @@
               -sync: []
               -teachers:
                 0: *5
-                1: *14
-          -course: *12
+                1: *12
+          -course: *10
           -hours: 6
           -id: 4
           -name: Section 3
@@ -360,15 +358,15 @@
 -labs: !!perl/hash:Labs
   -list:
     0: *4
-    1: *15
+    1: *13
 -streams: !!perl/hash:Streams
   -list:
-    0: *10
-    1: *11
+    0: *16
+    1: *14
 -teachers: !!perl/hash:Teachers
   -list:
     0: *5
-    1: *14
+    1: *12
     3: !!perl/hash:Teacher
       -dept: ''
       -fname: Sandy
