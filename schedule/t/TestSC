@@ -135,6 +135,7 @@
                   -fname: Nathan
                   -id: 1
                   -lname: Palmer
+                  -release: ''
             5: !!perl/hash:Block
               -conflicted: 0
               -day: thu
@@ -368,10 +369,20 @@
   -list:
     0: *5
     1: *14
+    3: !!perl/hash:Teacher
+      -dept: ''
+      -fname: Sandy
+      -id: 3
+      -lname: Bultena
+    5: !!perl/hash:Teacher
+      -dept: ''
+      -fname: yyy
+      -id: 5
+      -lname: yyy
 --- 19
 --- 4
 --- 2
 --- 9
---- 2
+--- 5
 --- 19
 --- 2

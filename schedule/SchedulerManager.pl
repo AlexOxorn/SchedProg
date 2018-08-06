@@ -9,6 +9,7 @@ package Scheduler;
 # ==================================================================
 use FindBin;
 use lib "$FindBin::Bin/";
+use lib "$FindBin::Bin/Library";
 our $BinDir = "$FindBin::Bin/";
 use Schedule::Schedule;
 use GuiSchedule::View;
@@ -36,6 +37,11 @@ my $image_dir = Tk::FindImages::get_image_dir();
 
 use Cwd 'abs_path';
 use File::Basename;
+
+#use Data::Dumper;
+#my @libraries = sort values %INC;
+#print Dumper \@libraries;
+#die;
 
 # ==================================================================
 # user preferences saved in ini file (YAML format)
