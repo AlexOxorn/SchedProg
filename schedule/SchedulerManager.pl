@@ -18,6 +18,7 @@ use GuiSchedule::DataEntry;
 use GuiSchedule::EditCourses;
 use Schedule::Conflict;
 use PerlLib::Colours;
+use Experimentation::EditLab;
 
 use Export::CSV;
 use Export::Excel;
@@ -187,7 +188,7 @@ sub menu_info {
 	# ----------------------------------------------------------
 	# button names
 	# ----------------------------------------------------------
-	my @buttons = ( 'new', 'open','CSVimport', 'save', 'print');
+	my @buttons = ( 'new', 'open','CSVimport', 'save', 'print', 'junk');
 
 	# ----------------------------------------------------------
 	# toolbar structure
@@ -212,6 +213,11 @@ sub menu_info {
 		save => {
 			cb => \&save_schedule,
 			hn => "Save Schedule File",
+		},
+		junk => {
+			#TODO lol
+			cd => \&junk,	
+			hn => "JUNK",
 		},
 	);
 
@@ -275,6 +281,14 @@ sub menu_info {
 	return \@buttons, \%b_props, $menu;
 
 }
+
+sub junk{
+
+	EditLabs->new($mw, $Schedule, \$Dirtyflag, $Colours, $Fonts,
+				$image_dir, $guiSchedule);
+	
+}
+
 
 # ==================================================================
 # create front page
