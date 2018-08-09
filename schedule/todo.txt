@@ -53,4 +53,5 @@ X Remove Block from new course not enabled
 - Attempting to edit something in the tree as it is being updated will give a pathname error
 - Section/Section->clear all doesn't clear all (LABs)
 <> Optimize tree
+-Clear All
 
