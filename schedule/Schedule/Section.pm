@@ -229,6 +229,30 @@ sub course {
 }
 
 # =================================================================
+# get_bloc_by_id
+# =================================================================
+
+=head2 get_block_by_id ( block id )
+
+gets block from this section that has block id
+
+Returns Block object
+
+=cut
+
+sub get_block_by_id {
+    my $self    = shift;
+    my $id 		= shift;
+
+    my @blocks = $self->blocks;
+    foreach my $i (@blocks){
+    		return $i if $i->id == $id;
+    }
+
+    return;
+}
+
+# =================================================================
 # get_block
 # =================================================================
 

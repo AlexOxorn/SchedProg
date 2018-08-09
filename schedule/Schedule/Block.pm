@@ -101,9 +101,10 @@ sub new {
     
     my $self = $class->SUPER::new(-day=>$day,-start=>$start,-duration=>$duration);
     
-    $self->{-id} = ++$Max_id;
+    
     $self->number($number);
-
+	$self->{-id} = ++$Max_id;
+	
     return $self;
 }
 

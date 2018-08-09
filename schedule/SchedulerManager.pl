@@ -215,8 +215,7 @@ sub menu_info {
 			hn => "Save Schedule File",
 		},
 		junk => {
-			#TODO lol
-			cd => \&junk,	
+			cb => \&junkA,	
 			hn => "JUNK",
 		},
 	);
@@ -282,8 +281,7 @@ sub menu_info {
 
 }
 
-sub junk{
-
+sub junkA{
 	EditLabs->new($mw, $Schedule, \$Dirtyflag, $Colours, $Fonts,
 				$image_dir, $guiSchedule);
 	
