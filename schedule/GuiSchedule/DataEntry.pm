@@ -90,39 +90,54 @@ sub new {
     if ( $type eq 'Teacher' ) {
         push @methods, qw(id firstname lastname release);
         push @titles, ( 'id', 'first name', 'last name', 'RT' );
-        push @sizes,    qw(4 20 20 8);
+        push @sizes, qw(4 20 20 8);
         $sortby = 'lastname';
     }
 
     if ( $type eq 'Lab' ) {
         push @methods, qw(id number descr);
         push @titles, ( 'id', 'room', 'description' );
-        push @sizes,    qw(4 7 40 );
+        push @sizes, qw(4 7 40 );
         $sortby = 'number';
     }
 
     if ( $type eq 'Stream' ) {
         push @methods, qw(id number descr);
         push @titles, ( 'id', 'number', 'description' );
-        push @sizes,    qw(4 10 40 );
+        push @sizes, qw(4 10 40 );
         $sortby = 'number';
     }
 
-    $self->{-sortby}   = $sortby;
-    $self->{-methods}  = \@methods;
-    $self->{-titles} = \@titles;
+    $self->{-sortby}  = $sortby;
+    $self->{-methods} = \@methods;
+    $self->{-titles}  = \@titles;
 
     # ---------------------------------------------------------------
     # create the table entry object
     # ---------------------------------------------------------------
-    $de = $frame->TableEntry(
-                              -rows      => 1,
-                              -columns   => scalar(@titles),
-                              -titles    => \@titles,
-                              -colwidths => \@sizes,
-                              -delete    => [ \&delete_obj, $self ],
-                            )->pack( -side => 'top', -expand => 1, -fill => 'both' );
-print "Created new DataEntry for $type\n";
+    if ( $type eq 'Lab' ) {
+        my $callback = sub { use Data::Dumper; print Dumper \@_; };
+
+        $de = $frame->TableEntry(
+                                  -rows       => 1,
+                                  -columns    => scalar(@titles),
+                                  -titles     => \@titles,
+                                  -colwidths  => \@sizes,
+                                  -delete     => [ \&delete_obj, $self ],
+                                  -buttoncmd  => $callback,
+                                  -buttontext => "Add block",
+                                )->pack( -side => 'top', -expand => 1, -fill => 'both' );
+    }
+    else {
+        $de = $frame->TableEntry(
+                                  -rows      => 1,
+                                  -columns   => scalar(@titles),
+                                  -titles    => \@titles,
+                                  -colwidths => \@sizes,
+                                  -delete    => [ \&delete_obj, $self ],
+                                )->pack( -side => 'top', -expand => 1, -fill => 'both' );
+    }
+
     @disabled = (1);
     foreach my $c ( 2 .. $de->columns ) {
         push @disabled, 0;
@@ -136,7 +151,7 @@ print "Created new DataEntry for $type\n";
     # ... clicking the 'Delete' triggers a 'Leave'...
     # --------------------------------------------------------------------------
     $self->{-table} = $de;
-    $self->{-table}->bind('<Leave>',[ \&save, $self ]);
+    $self->{-table}->bind( '<Leave>', [ \&save, $self ] );
 
     # --------------------------------------------------------------------------
     # create the object
@@ -187,23 +202,24 @@ sub refresh {
 # Save updated data
 # =================================================================
 my $currently_saving = 0;
+
 sub save {
-    
+
     # keep saving from possible recursion
     return if $currently_saving;
     $currently_saving++;
 
     # get inputs
-    my $frame      = shift;
-    my $self       = shift;
-    my $schedule   = $self->{-schedule};    
-    
+    my $frame    = shift;
+    my $self     = shift;
+    my $schedule = $self->{-schedule};
+
     my $dirty_flag = 0;
 
     # read data from data object
     foreach my $r ( 1 .. $self->{-table}->rows ) {
         my @data = $self->{-table}->read_row($r);
-        
+
         # if this is an empty row, do nothing
         next if @data == grep { !$_ } @data;
 
@@ -212,25 +228,25 @@ sub save {
         # corresponding object
         # --------------------------------------------------------------------
         if ( defined $data[$id_index] && !( $data[$id_index] eq '' ) ) {
-            
+
             no strict 'refs';
             my $list_obj = $self->{-list_obj};
             my $o        = $list_obj->get( $data[$id_index] );
-            
+
             # loop over each method used to get info about this object
-            my $col      = 1;
+            my $col = 1;
             foreach my $method ( @{ $self->{-methods} } ) {
                 no warnings;
-                
-                # set dirty flag if new data is not the same as the currently set 
-                # property
+
+               # set dirty flag if new data is not the same as the currently set
+               # property
                 $dirty_flag++ if $o->$method() ne $data[ $col - 1 ];
-                
+
                 # set the property to the data
-                eval {$o->$method( $data[ $col - 1 ] )};
-                
+                eval { $o->$method( $data[ $col - 1 ] ) };
+
                 # just in case above fails, set data to property of object
-                $self->{-table}->put($r,$col,$o->$method());
+                $self->{-table}->put( $r, $col, $o->$method() );
                 $col++;
             }
         }
@@ -258,14 +274,13 @@ sub save {
             };
 
             # No errors?
-            if ($new && !$@) {
+            if ( $new && !$@ ) {
                 $dirty_flag++;
-                $self->{-table}->put( $r, $id_index+1, $new->id() );
+                $self->{-table}->put( $r, $id_index + 1, $new->id() );
             }
 
-       }
+        }
     }
-
 
     # ------------------------------------------------------------------------
     # go through delete queue and apply changes
@@ -291,7 +306,7 @@ sub save {
         }
     }
 
-    # if there have been chnages, set global dirty flag, and do what is necessary
+   # if there have been chnages, set global dirty flag, and do what is necessary
     $self->set_dirty() if $dirty_flag;
     $currently_saving = 0;
 
@@ -306,10 +321,9 @@ sub delete_obj {
 
     # create a queue so that we can delete the objects
     # when the new info is saved
-    
+
     my $obj = $self->{-list_obj}->get( $data->[$id_index] );
-    push @Delete_queue,
-      [ $self->{-list_obj}, $obj ] if $obj;
+    push @Delete_queue, [ $self->{-list_obj}, $obj ] if $obj;
 }
 
 # =================================================================
@@ -343,5 +357,4 @@ and/or modified under the terms of the Perl Artistic License
 =cut
 
 1;
-
 
