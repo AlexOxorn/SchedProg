@@ -3116,6 +3116,7 @@ sub _add_section {
 	my $numB;
 	my @hrs;
 	my @blocks;
+	my @names;
 
 	my $db0 = $frame->DialogBox(
 		-title          => 'How Many Sections',
@@ -3140,32 +3141,34 @@ sub _add_section {
 	if ( $answer eq 'Ok' && defined $numS && $numS ne "" && $numS > 0 ) {
 		$numS = 10 if $numS > 10;
 
-		my $db1 = $frame->DialogBox(
-			-title          => 'How Many Blocks',
+		my $db3 = $frame->DialogBox(
+			-title          => 'Name The Sections',
 			-buttons        => [ 'Ok', 'Cancel' ],
 			-default_button => 'Ok',
-
-			#-height => 300,
-			#-width => 500
 		);
 
-		$db1->add( 'Label', -text => "How Many Blocks? (MAX 10)" )->pack;
-		$db1->add(
-			'Entry',
-			-textvariable    => \$numB,
-			-validate        => 'key',
-			-validatecommand => \&is_integer,
-			-invalidcommand  => sub { $frame->bell },
-			-width           => 20,
-		)->pack( -fill => 'x' );
-		$answer = "";
-		$answer = $db1->Show();
-		$answer = 'Cancel' unless $answer;
+		my $top = $db3->Subwidget("top");
 
-		if ( $answer eq "Ok" && defined $numB && $numB ne "" && $numB > 0 ) {
-			$numB = 10 if $numB > 10;
-			my $db2 = $frame->DialogBox(
-				-title          => 'How Many Hours',
+		$top->Label( -text => "Name the Sections (OPTIONAL)" )
+		  ->grid( -columnspan => 2 );
+		foreach my $i ( 1 ... $numS ) {
+			push( @names, "" );
+		}
+		foreach my $i ( 1 ... $numS ) {
+			$top->Label( -text => "Section $i" )->grid(
+				$top->Entry(
+					-textvariable => \$names[ $i - 1 ]
+				),
+				-sticky => 'new'
+			);
+		}
+
+		$answer = $db3->Show();
+		$answer = "Cancel" unless $answer;
+
+		if ( $answer eq 'Ok' ) {
+			my $db1 = $frame->DialogBox(
+				-title          => 'How Many Blocks',
 				-buttons        => [ 'Ok', 'Cancel' ],
 				-default_button => 'Ok',
 
@@ -3173,53 +3176,80 @@ sub _add_section {
 				#-width => 500
 			);
 
-			my $top = $db2->Subwidget("top");
-
-			$top->Label( -text => "How Many Hours Per Block?" )
-			  ->grid( -columnspan => 2 );
-			foreach my $i ( 1 ... $numB ) {
-				push( @hrs, "" );
-			}
-			foreach my $i ( 1 ... $numB ) {
-				$top->Label( -text => "Block $i" )->grid(
-					$top->Entry(
-						-textvariable    => \$hrs[ $i - 1 ],
-						-validate        => 'key',
-						-validatecommand => \&is_number,
-						-invalidcommand  => sub { $frame->bell },
-					),
-					-sticky => 'new'
-				);
-			}
-
-			my ( $col, $row ) = $top->gridSize();
-			for ( my $i = 1 ; $i < $col ; $i++ ) {
-				$top->gridColumnconfigure( $i, -weight => 1 );
-			}
-			$top->gridRowconfigure( $row - 1, -weight => 1 );
-
+			$db1->add( 'Label', -text => "How Many Blocks? (MAX 10)" )->pack;
+			$db1->add(
+				'Entry',
+				-textvariable    => \$numB,
+				-validate        => 'key',
+				-validatecommand => \&is_integer,
+				-invalidcommand  => sub { $frame->bell },
+				-width           => 20,
+			)->pack( -fill => 'x' );
 			$answer = "";
-			$answer = $db2->Show();
-			$answer = "Cancel" unless $answer;
+			$answer = $db1->Show();
+			$answer = 'Cancel' unless $answer;
 
-			if ( $answer eq "Ok" ) {
+			if ( $answer eq "Ok" && defined $numB && $numB ne "" && $numB > 0 )
+			{
+				$numB = 10 if $numB > 10;
+				my $db2 = $frame->DialogBox(
+					-title          => 'How Many Hours',
+					-buttons        => [ 'Ok', 'Cancel' ],
+					-default_button => 'Ok',
 
-				foreach my $j ( 1 ... $numS ) {
-					my $sectionNum = $obj->get_new_number;
-					my $section =
-					  Section->new( -number => $sectionNum, -hours => 0 );
-					$obj->add_section($section);
-					foreach my $i ( 1 ... $numB ) {
-						if ( $hrs[ $i - 1 ] ne "" && $hrs[ $i - 1 ] > 0 ) {
-							my $bl =
-							  Block->new( -number => $section->get_new_number );
-							$bl->duration( $hrs[ $i - 1 ] );
-							$section->add_block($bl);
+					#-height => 300,
+					#-width => 500
+				);
+
+				my $top = $db2->Subwidget("top");
+
+				$top->Label( -text => "How Many Hours Per Block?" )
+				  ->grid( -columnspan => 2 );
+				foreach my $i ( 1 ... $numB ) {
+					push( @hrs, "" );
+				}
+				foreach my $i ( 1 ... $numB ) {
+					$top->Label( -text => "Block $i" )->grid(
+						$top->Entry(
+							-textvariable    => \$hrs[ $i - 1 ],
+							-validate        => 'key',
+							-validatecommand => \&is_number,
+							-invalidcommand  => sub { $frame->bell },
+						),
+						-sticky => 'new'
+					);
+				}
+
+				my ( $col, $row ) = $top->gridSize();
+				for ( my $i = 1 ; $i < $col ; $i++ ) {
+					$top->gridColumnconfigure( $i, -weight => 1 );
+				}
+				$top->gridRowconfigure( $row - 1, -weight => 1 );
+
+				$answer = "";
+				$answer = $db2->Show();
+				$answer = "Cancel" unless $answer;
+
+				if ( $answer eq "Ok" ) {
+
+					foreach my $j ( 1 ... $numS ) {
+						my $sectionNum = $obj->get_new_number;
+						my $section =
+						  Section->new( -number => $sectionNum, -hours => 0 , -name => $names[$j-1]);
+						$obj->add_section($section);
+						foreach my $i ( 1 ... $numB ) {
+							if ( $hrs[ $i - 1 ] ne "" && $hrs[ $i - 1 ] > 0 ) {
+								my $bl =
+								  Block->new(
+									-number => $section->get_new_number );
+								$bl->duration( $hrs[ $i - 1 ] );
+								$section->add_block($bl);
+							}
 						}
 					}
+					refresh_course( $tree, $obj, $input, 1 );
+					set_dirty();
 				}
-				refresh_course( $tree, $obj, $input, 1 );
-				set_dirty();
 			}
 		}
 	}

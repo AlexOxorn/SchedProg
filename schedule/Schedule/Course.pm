@@ -236,6 +236,33 @@ sub get_section_by_id {
 }
 
 # =================================================================
+# get_section_by_name
+# =================================================================
+
+=head2 get_section_by_name ( section name )
+
+gets section from this course that has section name
+
+Returns Section object
+
+=cut
+
+sub get_section_by_name {
+    my $self    = shift;
+    my $name = shift;
+
+	my @toReturn;
+	if($name){
+		my @sections = $self->sections;
+    		foreach my $i (@sections){
+    			push(@toReturn,$i) if $i->name eq $name;
+    		}
+	}
+
+    return @toReturn;
+}
+
+# =================================================================
 # remove_section
 # =================================================================
 
