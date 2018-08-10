@@ -56,4 +56,7 @@ X Remove Block from new course not enabled
 -Clear All
 
 () Can't close top level
+() View scaling doesn't work properly
+() Why did change to _get_canvas_coords break code
+
 
