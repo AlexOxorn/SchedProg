@@ -1117,6 +1117,35 @@ sub _set_block_coords {
 	$guiblock->block->start_number($time);
 }
 
+=head2 _set_pixel_coords ( x, y, y2)
+
+Converts the X and Y coordinates into times.
+
+=cut
+
+sub get_block_coords {
+	my $self     = shift;
+	my $x        = shift;
+	my $y        = shift;
+	my $y2		 = shift;
+	my $Xoffset  = $self->xOffset;
+	my $Yoffset  = $self->yOffset;
+	my $wScale   = $self->wScale;
+	my $hScale   = $self->hScale;
+
+	my $day  = ( $x / $wScale ) - $Xoffset + 1;
+	my $time = ( $y / $hScale ) - $Yoffset + $EarliestTime;
+	my $duration = ($y2 + 1 - $y) / $hScale;
+	
+	if (wantarray) {
+		return [ $day, $time, $duration];
+	}
+	else {
+		(  $day, $time, $duration );
+	}
+}
+
+
 =head2 _get_time_coords ( day, start, duration )
 
 Converts the times into X and Y coordinates and returns them
