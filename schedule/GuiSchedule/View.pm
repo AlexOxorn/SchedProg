@@ -34,6 +34,12 @@ Describes a View
 =cut
 
 # =================================================================
+# global and package variables
+# =================================================================
+our $Undo_number = "";
+our $Redo_number = "";
+
+# =================================================================
 # new
 # =================================================================
 
@@ -62,6 +68,7 @@ View object
 =cut
 
 sub new {
+
     my $class    = shift;
     my $mw       = shift;
     my $blocks   = shift;
@@ -83,6 +90,7 @@ sub new {
     $self->type($type);
     $self->obj($obj);
     $self->button_ptr($btn_ptr);
+    my $tl = $self->toplevel;
 
     # ---------------------------------------------------------------
     # set the title
@@ -142,6 +150,48 @@ sub new {
     $self->popup_menu($pm);
 
     # ---------------------------------------------------------------
+    # undo/redo
+    # ---------------------------------------------------------------
+    $tl->bind( '<Control-KeyPress-z>' => [ \&undo, $self, 'undo' ] );
+    $tl->bind( '<Meta-Key-z>'         => [ \&undo, $self, 'undo' ] );
+
+    $tl->bind( '<Control-KeyPress-y>' => [ \&undo, $self, 'redo' ] );
+    $tl->bind( '<Meta-Key-y>'         => [ \&undo, $self, 'redo' ] );
+
+    # ---------------------------------------------------------------
+    # add undo/redo to main menu
+    # ---------------------------------------------------------------
+    my $mainMenu = $self->main_menu;
+    $mainMenu->add(
+                    'command',
+                    -label   => "Undo",
+                    -command => [ \&undo, $tl, $self, 'undo' ]
+                  );
+    $mainMenu->add(
+                    'command',
+                    -label   => "Redo",
+                    -command => [ \&undo, $tl, $self, 'redo' ]
+                  );
+
+    # ---------------------------------------------------------------
+    # add undo/redo to status_frame
+    # ---------------------------------------------------------------
+    my $status_frame = $self->status_bar;
+    $status_frame->Label(
+                          -textvariable => \$Undo_number,
+                          -borderwidth  => 1,
+                          -relief       => 'ridge',
+                          -width        => 15
+                        )->pack( -side => 'right', -fill => 'x' );
+
+    $status_frame->Label(
+                          -textvariable => \$Redo_number,
+                          -borderwidth  => 1,
+                          -relief       => 'ridge',
+                          -width        => 15
+                        )->pack( -side => 'right', -fill => 'x' );
+
+    # ---------------------------------------------------------------
     # refresh drawing
     # ---------------------------------------------------------------
     $self->redraw();
@@ -180,7 +230,7 @@ sub toggle_movement {
     # redraw, and set dirty flag
     $self->guiSchedule->redraw_all_views;
     my $guiSchedule = $self->guiSchedule;
-    $guiSchedule->set_dirty( $guiSchedule->dirty_flag ) if $guiSchedule;
+    $self->guiSchedule->set_dirty( $guiSchedule->dirty_flag ) if $guiSchedule;
 
 }
 
@@ -253,6 +303,12 @@ sub redraw {
     $self->SUPER::redraw();
 
     # ---------------------------------------------------------------
+    # set colour for all buttons on main window, "Schedules" tab
+    # ---------------------------------------------------------------
+    $self->set_view_button_colours();
+    $self->guiSchedule->update_for_conflicts if $self->guiSchedule;
+
+    # ---------------------------------------------------------------
     # bind events for each gui block
     # ---------------------------------------------------------------
     my $gbs = $self->guiblocks();
@@ -277,6 +333,74 @@ sub redraw {
         $self->canvas->bind( $guiblock->group, "<Double-1>",
                              [ \&_double_open_view, $self, $guiblock ] );
     }
+}
+
+# =================================================================
+# update_for_conflicts
+# =================================================================
+
+=head2 update_for_conflicts ( )
+
+Determines conflict status for all GuiBlocks on this View and colours 
+them accordingly.
+
+=cut
+
+sub update_for_conflicts {
+    my $self = shift;
+
+    # use base class to get the conflict for this view
+    my $view_conflict = $self->SUPER::update_for_conflicts;
+
+    # get reference to button that created this view
+    my $btn = $self->button_ptr;
+
+    # change button for this view to appropriate colour based on conflicts
+    my $get_rid_of_warning = $Scheduler::Colours->{ButtonBackground};
+    if ($view_conflict) {
+        $$btn->configure(
+                 -background => $Scheduler::ConflictColours->{$view_conflict} );
+    }
+    else {
+        $$btn->configure(
+                       -background => $Scheduler::Colours->{ButtonBackground} );
+    }
+}
+
+# =================================================================
+# set_view_button_colours
+# =================================================================
+
+=head2 set_view_button_colours ( )
+    
+In the main window, in the schedules tab, there are buttons that
+are used to call up the various Schedule Views.  This function
+will colour those buttons according to the maximum conflict
+for that given view    
+    
+=cut
+
+sub set_view_button_colours {
+    my $self = shift;
+
+    # get all teachers, labs and streams and update
+    # the button colours based on the new positions of guiblocks
+    my @teachers = $self->schedule->all_teachers;
+    my @labs     = $self->schedule->all_labs;
+    my @streams  = $self->schedule->all_streams;
+
+    if ( $self->guiSchedule ) {
+        $self->guiSchedule->determine_button_colours( \@teachers, 'teacher' )
+          if @teachers;
+        $self->guiSchedule->determine_button_colours( \@labs, 'lab' ) if @labs;
+        $self->guiSchedule->determine_button_colours( \@streams, 'stream' )
+          if @streams;
+    }
+
+}
+
+sub set_view_button_colors {
+    return set_view_button_colours(@_);
 }
 
 # =================================================================
@@ -515,6 +639,72 @@ sub _end_move {
 
     # set colour for all buttons on main window, "Schedules" tab
     $self->set_view_button_colours();
+}
+
+# =================================================================
+# undo
+# =================================================================
+
+=head2 undo ( Toplevel, View, Type )
+
+Undo last move action
+
+=cut
+
+sub undo {
+    my $tl   = shift;
+    my $self = shift;
+    my $type = shift;
+
+    $self->guiSchedule->undo($type);
+
+    # set colour for all buttons on main window, "Schedules" tab
+    $self->set_view_button_colours();
+
+    # update status bar
+    $self->set_status_undo_info;
+}
+
+# =================================================================
+# set_status_undo_info
+# =================================================================
+
+=head2 set_status_undo_info (  )
+
+Writes info to status bar about undo/redo status
+
+=cut
+
+sub set_status_undo_info {
+    my $self = shift;
+    $Undo_number = scalar $self->guiSchedule->undoes . " undoes left";
+
+    $Redo_number = scalar $self->guiSchedule->redoes . " redoes left";
+
+}
+
+=head2 guiSchedule ( [GuiSchedule] )
+
+Get/set the GuiSchedule of this View object.
+
+=cut
+
+sub guiSchedule {
+    my $self = shift;
+    $self->{-guiSchedule} = shift if @_;
+    return $self->{-guiSchedule};
+}
+
+=head2 _close_view ( )
+
+Close the current View.
+
+=cut
+
+sub _close_view {
+    my $self        = shift;
+    my $guiSchedule = $self->guiSchedule;
+    $guiSchedule->_close_view($self);
 }
 
 # =================================================================
