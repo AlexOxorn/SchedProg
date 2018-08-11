@@ -1020,27 +1020,27 @@ Converts the times into X and Y coordinates and returns them
 =cut
 
 sub get_time_coords {
-    my $self     = shift;
-    my $day      = shift;
-    my $start    = shift;
-    my $duration = shift;
+	my $self     = shift;
+	my $day      = shift;
+	my $start    = shift;
+	my $duration = shift;
 
-    my $Xoffset = $self->xOffset;
-    my $Yoffset = $self->yOffset;
-    my $wScale  = $self->wScale;
-    my $hScale  = $self->hScale;
+	my $Xoffset = $self->xOffset;
+	my $Yoffset = $self->yOffset;
+	my $wScale  = $self->wScale;
+	my $hScale  = $self->hScale;
 
-    my $x = ( $Xoffset + ( $day - 1 ) ) * $wScale;
-    my $y = ( $Yoffset + ( $start - $EarliestTime ) ) * $hScale;
-    my $x2 = $wScale + $x - 1;
-    my $y2 = $duration * $hScale + $y - 1;
+	my $x = ( $Xoffset + ( $day - 1 ) ) * $wScale;
+	my $y = ( $Yoffset + ( $start - $EarliestTime ) ) * $hScale;
+	my $x2 = $wScale + $x - 1;
+	my $y2 = $duration * $hScale + $y - 1;
 
-    if (wantarray) {
-        return ( $x, $y, $x2, $y2 );
-    }
-    else {
-        [ $x, $y, $x2, $y2 ];
-    }
+	if (wantarray) {
+		return ( $x, $y, $x2, $y2 );
+	}
+	else {
+		[ $x, $y, $x2, $y2 ];
+	}
 }
 
 # =================================================================
