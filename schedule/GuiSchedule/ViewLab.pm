@@ -10,11 +10,14 @@ use GuiSchedule::GuiBlocks;
 use GuiSchedule::Undo;
 use GuiSchedule::ViewBase;
 use Schedule::Conflict;
+use GuiSchedule::AssignBlock;
 use Tk;
 our @ISA = qw(ViewBase);
 
 our $EarliestTime = $ViewBase::EarliestTime;
 our $LatestTime   = $ViewBase::LatestTime;
+
+my $AssignBlocks;
 
 =head1 NAME
 
@@ -80,6 +83,7 @@ sub new {
 	$self->type("Lab");
 	$self->obj($lab);
 	$self->redraw();
+	
 }
 
 sub redraw {
@@ -98,18 +102,19 @@ sub redraw {
 	);
 
 	$self->SUPER::redraw();
+	my @allBlocks;
 
 	foreach my $day ( 1 ... 5 ) {
 		foreach my $start ( $EarliestTime * 2 ... ( $LatestTime * 2 ) - 1 ) {
-			# AssignBlock->new($self,$cn,$day,$start);
-			my @coords = $self->SUPER::get_time_coords( $day, $start / 2, 1 );
-			$cn->createRectangle(
-				@coords,
-				-outline => 'red',
-				-width   => 3,
-				-tags    => $dayTag{"$day"},
-				-fill    => 'white'
-			);
+			push(@allBlocks, AssignBlock->new($self,$day,$start/2));
+			#my @coords = $self->SUPER::get_time_coords( $day, $start / 2, 1 );
+			#$cn->createRectangle(
+			#	@coords,
+			#	-outline => 'red',
+			#	-width   => 3,
+			#	-tags    => $dayTag{"$day"},
+			#	-fill    => 'white'
+			#);
 		}
 	}
 
@@ -120,16 +125,17 @@ sub redraw {
 				my $cn = shift;
 				my $x  = shift;
 				my $y  = shift;
-				# my $assblock = AssignBlock->find($x,$y),
-				# return unless $assblock;
-				# my $day = $assblock->day();
-				my @i  = $cn->find( 'overlapping', $x, $y, $x, $y );
-				print 'IDs <', join( '>,<', @i ), ">\n";
-				my $i    = $i[0];
-				my @tags = $cn->gettags($i);
-				print 'Tags <', join( '>,<', @tags ), ">\n";
-				my $tag = $tags[0];  # your $tag is same as my $day
-				$self->_dragBind( $cn, $tag, $x, $y );
+				my $assblock = AssignBlock->find($x,$y,\@allBlocks);
+				return unless $assblock;
+				$assblock->set_colour();
+				my $day = $assblock->day();
+				#my @i  = $cn->find( 'overlapping', $x, $y, $x, $y );
+				#
+				#my $i    = $i[0];
+				#my @tags = $cn->gettags($i);
+				#
+				#my $tag = $tags[0];  # your $tag is same as my $day
+				$self->_dragBind( $cn, $day, $x, $y , \@allBlocks);
 			},
 			Ev('x'),
 			Ev('y')
@@ -144,10 +150,11 @@ sub _dragBind {
 	my $day  = shift;
 	my $lx   = shift;
 	my $ly   = shift;
-	print "<", $day, ">\n";
-	# @dayBlocks = AssignBlocks->getDayBlocks($day);
-	my @dayBlocks = $cn->find( 'withtag', $day );
-	#print "LIST: <", join( "><", @list ), ">\n";
+	my $allBlocks = shift;
+	
+	my @dayBlocks = AssignBlock->get_day_blocks($day,$allBlocks);
+	#my @dayBlocks = $cn->find( 'withtag', $day );
+	#
 
 	my $temp;
 	$cn->CanvasBind(
@@ -166,20 +173,20 @@ sub _dragBind {
 					-outline => "black"
 				);
 
-				# my @chosen = grep {$a->is_in_time_frame ($tag,$x1,$y1,$x2,$y2)}
-				#  @dayBlocks;
-				my @chosen = $cn->find( 'overlapping', $x1, $y1, $x2, $y2 );
-				#print "@i\n";
+				my @chosen = AssignBlock->in_range($x1,$y1,$x2,$y2, \@dayBlocks);
+				
+				# my @chosen = $cn->find( 'overlapping', $x1, $y1, $x2, $y2 );
+				#
 				foreach my $blk (@dayBlocks) {
-					# $blk->unfill;
-					$cn->itemconfigure( $blk, -fill => 'white' );
+					$blk->unfill;
+					#$cn->itemconfigure( $blk, -fill => 'white' );
 				}
 				foreach my $blk (@chosen) {
-					# $blk->colour('blue');
-					my @tags = $cn->gettags($blk);
-					if ( defined $tags[0] && $tags[0] eq $day ) {
-						$cn->itemconfigure( $blk, -fill => 'blue' );
-					}
+					$blk->set_colour('blue');
+					#my @tags = $cn->gettags($blk);
+					#if ( defined $tags[0] && $tags[0] eq $day ) {
+					#	$cn->itemconfigure( $blk, -fill => 'blue' );
+					#}
 				}
 			},
 			Ev('x'),
@@ -214,7 +221,7 @@ sub _endBinding {
 
 	my @time = $self->SUPER::get_block_coords( $x1, $y1, $y2 );
 	use Data::Dumper;
-	print Dumper @time;
+	
 
 }
 

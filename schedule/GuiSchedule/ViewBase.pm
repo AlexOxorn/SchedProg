@@ -1169,10 +1169,10 @@ sub get_time_coords {
 	my $y2 = $duration * $hScale + $y - 1;
 
 	if (wantarray) {
-		return [ $x, $y, $x2, $y2 ];
+		return ( $x, $y, $x2, $y2 );
 	}
 	else {
-		( $x, $y, $x2, $y2 );
+		[ $x, $y, $x2, $y2 ];
 	}
 }
 

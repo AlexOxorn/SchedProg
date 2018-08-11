@@ -100,18 +100,21 @@ sub new {
     my $day   = shift;
     my $start = shift;
     carp("You need a view!!!") unless $view;
+    
+    use Data::Dumper;
 
     # ---------------------------------------------------------------
     # draw 1/2 the block
     # ---------------------------------------------------------------
     my $cn = $view->canvas;
     my @coords = $view->get_time_coords( $day, $start, 1 / 2 );
+    
+    
     my $r = $cn->createRectangle(
                                   @coords,
                                   -outline => 'red',
-                                  -width   => 3,
+                                  -width   => 0,
                                   -tags    => $dayTag{"$day"},
-                                  -fill    => 'white'
                                 );
 
     # ---------------------------------------------------------------
@@ -131,7 +134,14 @@ sub new {
 
     # just in case, want coords to be from top left -> bottom right
     # or other logic in this class may fail
-    my ( $x1, $y1, $x2, $y2 ) = @coords;
+    
+    
+    
+    my $x1 = $coords[0];
+    my $y1 = $coords[1];
+    my $x2 = $coords[2];
+    my $y2 = $coords[3];
+    
     if ( $x1 > $x2 ) { my $tmp = $x1; $x1 = $x2; $x2 = $x1; }
     if ( $y1 > $y2 ) { my $tmp = $y1; $y1 = $y2; $y2 = $y1; }
     $self->x1($x1);
@@ -171,6 +181,7 @@ sub find {
 
     my @found;
     @found = grep { $_->at_canvas_coords( $x, $y ) } @$blocks;
+    
 
     return $found[0] if @found;
     return;
@@ -200,6 +211,8 @@ sub get_day_blocks {
     my $class  = shift;
     my $day    = shift;
     my $blocks = shift;
+    
+    my @x = @$blocks;
     return unless $blocks;
     return grep { $_->day == $day } @$blocks;
 }
@@ -231,14 +244,14 @@ sub in_range {
     my $x2     = shift || 1;
     my $y2     = shift || 1;
     my $blocks = shift;
-    return unless $blocks;
+    die unless $blocks;
 
     # make sure start in left top towards bottom right
-    if ( $x1 > $x2 ) { my $tmp = $x1; $x1 = $x2; $x2 = $x1; }
-    if ( $y1 > $y2 ) { my $tmp = $y1; $y1 = $y2; $y2 = $y1; }
+    if ( $x1 > $x2 ) { my $tmp = $x1; $x1 = $x2; $x2 = $tmp; }
+    if ( $y1 > $y2 ) { my $tmp = $y1; $y1 = $y2; $y2 = $tmp; }
 
     return
-      grep { $_->x1 < $x2 && $_->x2 > $x1 && $_->y1 < $y2 && $_->xy > $y1 }
+      grep { $_->x1 < $x2 && $_->x2 > $x1 && $_->y1 < $y2 && $_->y2 > $y1 }
       @$blocks;
 }
 
@@ -274,7 +287,7 @@ sub at_canvas_coords {
 
     return 1
       if ( $self->x1 < $x && $x < $self->x2 )
-      && ( $self->y1 < $y && $y > $self->y2 );
+      && ( $self->y1 < $y && $y < $self->y2 );
     return 0;
 }
 
@@ -322,11 +335,11 @@ block
 
 =cut
 
-sub unfill { return remove_colour(); }
+sub unfill { return remove_colour(@_); }
 
 sub remove_colour {
     my $self = shift;
-    $self->canvas->itemconfigure( $self->id, -fill => undef );
+    $self->canvas->itemconfigure( $self->id, -fill => '' );
     return $self;
 }
 
