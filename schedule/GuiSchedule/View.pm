@@ -10,6 +10,7 @@ use GuiSchedule::GuiBlocks;
 use GuiSchedule::Undo;
 use GuiSchedule::ViewBase;
 use Schedule::Conflict;
+
 use Tk;
 our @ISA = qw(ViewBase);
 
@@ -55,7 +56,7 @@ B<Parameters>
 
 -schedule => where course-sections/teachers/labs/streams are defined
 
--obj => Teacher/Lab/Stream that the View is being made for
+-teacher_lab_stream => Teacher/Lab/Stream that the View is being made for
 
 -type => Whether the view is a Teacher, Lab or Stream View
 
@@ -69,18 +70,23 @@ View object
 
 sub new {
 
-    my $class    = shift;
-    my $mw       = shift;
-    my $blocks   = shift;
-    my $schedule = shift;
-    my $obj      = shift;
-    my $type     = shift;
-    my $btn_ptr  = shift;
+    my $class              = shift;
+    my $mw                 = shift;
+    my $blocks             = shift;
+    my $schedule           = shift;
+    my $teacher_lab_stream = shift;
+    my $type               = shift;
 
     # ---------------------------------------------------------------
     # create the ViewBase
     # ---------------------------------------------------------------
     my $self = $class->SUPER::new($mw);
+    my $tl   = $self->toplevel;
+    $tl->protocol( 'WM_DELETE_WINDOW', [ \&_close_view, $self ] );
+
+    # ---------------------------------------------------------------
+    # Show Conflict Colours
+    # ---------------------------------------------------------------
 
     # ---------------------------------------------------------------
     # set some parameters
@@ -88,20 +94,19 @@ sub new {
     $self->blocks($blocks);
     $self->schedule($schedule);
     $self->type($type);
-    $self->obj($obj);
-    $self->button_ptr($btn_ptr);
-    my $tl = $self->toplevel;
+    $self->teacher_lab_stream($teacher_lab_stream);
 
     # ---------------------------------------------------------------
     # set the title
     # ---------------------------------------------------------------
     my $title;
-    if ( $obj && $obj->isa('Teacher') ) {
+    if ( $teacher_lab_stream && $teacher_lab_stream->isa('Teacher') ) {
         $self->set_title(
-                 uc( substr( $obj->firstname, 0, 1 ) ) . " " . $obj->lastname );
+                      uc( substr( $teacher_lab_stream->firstname, 0, 1 ) ) . " "
+                        . $teacher_lab_stream->lastname );
     }
-    elsif ($obj) {
-        $self->set_title( $obj->number );
+    elsif ($teacher_lab_stream) {
+        $self->set_title( $teacher_lab_stream->number );
     }
 
     # ---------------------------------------------------------------
@@ -131,19 +136,22 @@ sub new {
         }
 
         # remove object of the view
-        @array = grep { $_->id != $self->obj->id } @array;
+        @array = grep { $_->id != $self->teacher_lab_stream->id } @array;
 
         # create sub menu
-        foreach my $obj (@array) {
+        foreach my $teacher_lab_stream (@array) {
             my $name;
             if ( $self->type eq 'teacher' ) {
-                $name = $obj->firstname . ' ' . $obj->lastname;
+                $name = $teacher_lab_stream->firstname . ' '
+                  . $teacher_lab_stream->lastname;
             }
             else {
-                $name = $obj->number;
+                $name = $teacher_lab_stream->number;
             }
-            $mm->command( -label   => $name,
-                          -command => [ \&move_class, $self, $obj ] );
+            $mm->command(
+                        -label   => $name,
+                        -command => [ \&move_class, $self, $teacher_lab_stream ]
+            );
         }
     }
 
@@ -196,7 +204,7 @@ sub new {
     # ---------------------------------------------------------------
     $self->redraw();
     $self->schedule->calculate_conflicts;
-    $self->update_for_conflicts;
+    $self->update_for_conflicts( $self->type );
 
     # return object
     return $self;
@@ -246,19 +254,22 @@ the Teacher/Lab Object.
 =cut
 
 sub move_class {
-    my ( $self, $obj ) = @_;
+    my ( $self, $teacher_lab_stream ) = @_;
 
     # reassign teacher/lab to blocks
     if ( $self->type eq 'teacher' ) {
-        $self->popup_guiblock()->block->remove_teacher( $self->obj );
-        $self->popup_guiblock()->block->assign_teacher($obj);
-        $self->popup_guiblock()->block->section->remove_teacher( $self->obj );
-        $self->popup_guiblock()->block->section->assign_teacher($obj);
+        $self->popup_guiblock()
+          ->block->remove_teacher( $self->teacher_lab_stream );
+        $self->popup_guiblock()->block->assign_teacher($teacher_lab_stream);
+        $self->popup_guiblock()
+          ->block->section->remove_teacher( $self->teacher_lab_stream );
+        $self->popup_guiblock()
+          ->block->section->assign_teacher($teacher_lab_stream);
     }
 
     elsif ( $self->type eq 'lab' ) {
-        $self->popup_guiblock()->block->remove_lab( $self->obj );
-        $self->popup_guiblock()->block->assign_lab($obj);
+        $self->popup_guiblock()->block->remove_lab( $self->teacher_lab_stream );
+        $self->popup_guiblock()->block->assign_lab($teacher_lab_stream);
     }
 
     # there was a change, redraw all views
@@ -266,9 +277,9 @@ sub move_class {
                           $self->popup_guiblock()->block->id,
                           $self->popup_guiblock()->block->start,
                           $self->popup_guiblock()->block->day,
-                          $self->obj,
+                          $self->teacher_lab_stream,
                           $self->type,
-                          $obj
+                          $teacher_lab_stream
                         );
     $self->guiSchedule->add_undo($undo);
 
@@ -294,11 +305,11 @@ Redraws the View with new GuiBlocks and their positions.
 =cut
 
 sub redraw {
-    my $self         = shift;
-    my $obj          = $self->obj;
-    my $schedule     = $self->schedule;
-    my $cn           = $self->canvas;
-    my $currentScale = $self->currentScale;
+    my $self               = shift;
+    my $teacher_lab_stream = $self->teacher_lab_stream;
+    my $schedule           = $self->schedule;
+    my $cn                 = $self->canvas;
+    my $currentScale       = $self->currentScale;
 
     $self->SUPER::redraw();
 
@@ -350,21 +361,8 @@ sub update_for_conflicts {
     my $self = shift;
 
     # use base class to get the conflict for this view
-    my $view_conflict = $self->SUPER::update_for_conflicts;
-
-    # get reference to button that created this view
-    my $btn = $self->button_ptr;
-
-    # change button for this view to appropriate colour based on conflicts
-    my $get_rid_of_warning = $Scheduler::Colours->{ButtonBackground};
-    if ($view_conflict) {
-        $$btn->configure(
-                 -background => $Scheduler::ConflictColours->{$view_conflict} );
-    }
-    else {
-        $$btn->configure(
-                       -background => $Scheduler::Colours->{ButtonBackground} );
-    }
+    my $view_conflict = $self->SUPER::update_for_conflicts( $self->type );
+    return;
 }
 
 # =================================================================
@@ -390,9 +388,12 @@ sub set_view_button_colours {
     my @streams  = $self->schedule->all_streams;
 
     if ( $self->guiSchedule ) {
+
         $self->guiSchedule->determine_button_colours( \@teachers, 'teacher' )
           if @teachers;
+
         $self->guiSchedule->determine_button_colours( \@labs, 'lab' ) if @labs;
+
         $self->guiSchedule->determine_button_colours( \@streams, 'stream' )
           if @streams;
     }
@@ -429,7 +430,8 @@ sub _double_open_view {
         }
         else {
             my @labs = $guiblock->block->labs;
-            $self->guiSchedule->_create_view( \@labs, 'teacher', $self->obj )
+            $self->guiSchedule->_create_view( \@labs, 'teacher',
+                                              $self->teacher_lab_stream )
               if @labs;
         }
     }
@@ -446,7 +448,8 @@ sub _double_open_view {
         }
         else {
             my @teachers = $guiblock->block->teachers;
-            $self->guiSchedule->_create_view( \@teachers, 'lab', $self->obj )
+            $self->guiSchedule->_create_view( \@teachers, 'lab',
+                                              $self->teacher_lab_stream )
               if @teachers;
         }
     }
@@ -592,8 +595,11 @@ sub _end_move {
 
     $guiblock->is_controlled(0);
 
-    my $undo = Undo->new( $guiblock->block->id, $guiblock->block->start,
-                          $guiblock->block->day, $self->obj, "Day/Time" );
+    my $undo = Undo->new(
+                          $guiblock->block->id,  $guiblock->block->start,
+                          $guiblock->block->day, $self->teacher_lab_stream,
+                          "Day/Time"
+                        );
 
     # set guiblocks new time and day
     $self->snap_guiblock($guiblock);
@@ -632,7 +638,7 @@ sub _end_move {
     my $block       = $guiblock->block;
     $guiSchedule->update_all_views($block);
 
-    # calculate new conflicts and update views to show these conflicts
+    # calculate new conflicts and update other views to show these conflicts
     $self->schedule->calculate_conflicts;
     $guiSchedule->update_for_conflicts;
     $guiSchedule->set_dirty( $guiSchedule->dirty_flag );

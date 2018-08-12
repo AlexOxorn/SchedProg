@@ -44,9 +44,76 @@ use constant {
     TIME         => 1,
     LUNCH        => 2,
     MINIMUM_DAYS => 4,
-    AVAILABILITY => 8
+    AVAILABILITY => 8,
+    TIME_TEACHER => 16,
+    TIME_LAB     => 32,
+    TIME_STREAM  => 64,
 };
+
 our @Sorted_Conflicts = (TIME, LUNCH, MINIMUM_DAYS, AVAILABILITY);
+
+sub hash_descriptions {
+    return { 
+        Conflict::TIME => "indirect time overlap",
+        Conflict::LUNCH => "no lunch time",
+        Conflict::MINIMUM_DAYS => "too few days",
+        Conflict::TIME_TEACHER => "time overlap",
+        Conflict::TIME_LAB => "time overlap",
+        Conflict::TIME_STREAM  => "time overlap",
+        Conflict::AVAILABILITY => "not available"
+    }            
+}
+
+sub get_description {
+    my $class = shift;
+    my $num = shift;
+    my $h = hash_descriptions;
+    return $h->{$num};
+    
+}
+
+sub is_time {
+    my $class = shift;
+    my $number = shift;
+    return $number & TIME;
+}
+
+sub is_time_lab {
+    my $class = shift;
+    my $number = shift;
+    return $number & TIME_LAB;
+}
+
+sub is_time_teacher {
+    my $class = shift;
+    my $number = shift;
+    return $number & TIME_TEACHER;
+}
+
+sub is_time_stream {
+    my $class = shift;
+    my $number = shift;
+    return $number & TIME_STREAM;
+}
+
+sub is_lunch {
+    my $class = shift;
+    my $number = shift;
+    return $number & LUNCH;
+}
+
+sub is_minimum_days {
+    my $class = shift;
+    my $number = shift;
+    return $number & MINIMUM_DAYS;
+}
+
+sub is_availibilty {
+    my $class = shift;
+    my $number = shift;
+    return $number & AVAILABILITY;
+}
+
 
 # =================================================================
 # most_severe
@@ -63,10 +130,16 @@ Input a conflict number, returns number of most severe conflict
 sub most_severe {
     my $class = shift;
     my $conflict_number = shift || 0;
+    my $view_type = shift || "";
     my $severest = 0;
-            
+    
+    my @sorted_conflicts = @Sorted_Conflicts;
+    unshift @sorted_conflicts,TIME_LAB if lc($view_type) eq "lab"; 
+    unshift @sorted_conflicts,TIME_STREAM if lc($view_type) eq "stream"; 
+    unshift @sorted_conflicts,TIME_TEACHER if lc($view_type) eq "teacher"; 
+                
     # loop through conflict types by order of severity (most severe first)
-    foreach my $conflict (@Sorted_Conflicts) {
+    foreach my $conflict (@sorted_conflicts) {
                 
         # logically AND each conflict type with the specified conflict number
         if ($conflict_number & $conflict) {

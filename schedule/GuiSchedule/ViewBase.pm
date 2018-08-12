@@ -91,6 +91,30 @@ sub new {
     my $tl = $mw->Toplevel;
     $tl->protocol( 'WM_DELETE_WINDOW', [ \&_close_view, $self ] );
     $tl->resizable( 0, 0 );
+
+    # ---------------------------------------------------------------
+    # Create bar at top to show colour coding of conflicts
+    # ---------------------------------------------------------------
+    my $f = $tl->Frame()->pack( -expand => 1, -fill => "x" );
+    foreach my $c ( Conflict::TIME_TEACHER, Conflict::TIME,
+                    Conflict::LUNCH, Conflict::MINIMUM_DAYS,
+                    Conflict::AVAILABILITY
+                  )
+    {
+        my $bg = Colour->new( $Scheduler::ConflictColours->{$c} );
+        my $fg = Colour->new("white");
+        $fg = Colour->new("black") if $bg->isLight;
+        $f->Label(
+                   -text       => Conflict->get_description($c),
+                   -width      => 10,
+                   -background => $bg->string,
+                   -foreground => $fg->string
+                 )->pack( -side => 'left', -expand => 1, -fill => "x" );
+    }
+
+    # ---------------------------------------------------------------
+    # add canvas
+    # ---------------------------------------------------------------
     my $cn = $tl->Canvas(
                           -height     => 700,
                           -width      => 700,
@@ -235,10 +259,8 @@ sub resize_view {
 
     # set height and width of canvas and toplevel
     $self->canvas->configure( -width => $canWidth, -height => $canHeight );
-    $self->toplevel->configure(
-                                -width  => int($tlWidth),
-                                -height => int($tlHeight)
-                              );
+    $self->toplevel->configure( -width  => int($tlWidth),
+                                -height => int($tlHeight) );
 
     # now that you have changed sizes etc, redraw
     $self->redraw();
@@ -552,7 +574,13 @@ them accordingly.
 =cut
 
 sub update_for_conflicts {
-    my $self      = shift;
+    my $self = shift;
+    my $type = shift;
+    unless ($type) {
+        my @c = caller();
+        print "Dieing from: @c\n";
+        die("must specify a type");    ##### remove die later
+    }
     my $guiblocks = $self->guiblocks;
 
     my $view_conflict = 0;
@@ -563,12 +591,10 @@ sub update_for_conflicts {
         # colour block if it is necessary
         if ( $guiblock->block->moveable ) {
 
-            $self->colour_block($guiblock);
+            $self->colour_block( $guiblock, $type );
 
-            # create conflict number for entire view by 'or'ing
-            # each block conflict
-            $view_conflict = Conflict->most_severe(
-                             $view_conflict | $guiblock->block->is_conflicted );
+            # create conflict number for entire view
+            $view_conflict = $view_conflict | $guiblock->block->is_conflicted;
         }
     }
 
@@ -588,7 +614,9 @@ colours the block according to conflicts
 sub colour_block {
     my $self     = shift;
     my $guiblock = shift;
-    my $conflict = Conflict->most_severe( $guiblock->block->is_conflicted );
+    my $type     = shift;
+    my $conflict =
+      Conflict->most_severe( $guiblock->block->is_conflicted, $type );
 
     # change the colour of the block to the most important conflict
     if ($conflict) {
@@ -612,30 +640,30 @@ Redraws the View with new GuiBlocks and their positions.
 =cut
 
 sub redraw {
-    my $self         = shift;
-    my $obj          = $self->obj;
-    my $schedule     = $self->schedule;
-    my $cn           = $self->canvas;
-    my $currentScale = $self->currentScale;
+    my $self               = shift;
+    my $teacher_lab_stream = $self->teacher_lab_stream;
+    my $schedule           = $self->schedule;
+    my $cn                 = $self->canvas;
+    my $currentScale       = $self->currentScale;
     return unless $schedule;
 
     my @blocks;
 
     # possible that this is an empty View, so @blocks may be empty
-    if ( defined $obj ) {
-        if ( $obj->isa("Teacher") ) {
-            @blocks = $schedule->blocks_for_teacher($obj);
+    if ( defined $teacher_lab_stream ) {
+        if ( $teacher_lab_stream->isa("Teacher") ) {
+            @blocks = $schedule->blocks_for_teacher($teacher_lab_stream);
         }
-        elsif ( $obj->isa("Lab") ) {
-            @blocks = $schedule->blocks_in_lab($obj);
+        elsif ( $teacher_lab_stream->isa("Lab") ) {
+            @blocks = $schedule->blocks_in_lab($teacher_lab_stream);
         }
-        else { @blocks = $schedule->blocks_for_stream($obj); }
+        else { @blocks = $schedule->blocks_for_stream($teacher_lab_stream); }
     }
 
     # remove everything on canvas
     $cn->delete('all');
 
-    # redraw timetable
+    # redraw background (things that don't change, like time, etc)
     $self->draw_background;
 
     # remove all guiblocks stored in the View
@@ -675,28 +703,16 @@ sub id {
     return $self->{-id};
 }
 
-=head2 button_ptr ( [Button Reference] )
-
-Get/set the Button reference of this View object.
-
-=cut
-
-sub button_ptr {
-    my $self = shift;
-    $self->{-button_ptr} = shift if @_;
-    return $self->{-button_ptr};
-}
-
-=head2 obj ( [Teacher/Lab/Stream Object] )
+=head2 teacher_lab_stream ( [Teacher/Lab/Stream Object] )
 
 Get/set the Teacher, Lab or Stream associated to this View.
 
 =cut
 
-sub obj {
+sub teacher_lab_stream {
     my $self = shift;
-    $self->{-obj} = shift if @_;
-    return $self->{-obj};
+    $self->{-teacher_lab_stream} = shift if @_;
+    return $self->{-teacher_lab_stream};
 }
 
 =head2 canvas ( [Canvas] )
@@ -1020,27 +1036,27 @@ Converts the times into X and Y coordinates and returns them
 =cut
 
 sub get_time_coords {
-	my $self     = shift;
-	my $day      = shift;
-	my $start    = shift;
-	my $duration = shift;
+    my $self     = shift;
+    my $day      = shift;
+    my $start    = shift;
+    my $duration = shift;
 
-	my $Xoffset = $self->xOffset;
-	my $Yoffset = $self->yOffset;
-	my $wScale  = $self->wScale;
-	my $hScale  = $self->hScale;
+    my $Xoffset = $self->xOffset;
+    my $Yoffset = $self->yOffset;
+    my $wScale  = $self->wScale;
+    my $hScale  = $self->hScale;
 
-	my $x = ( $Xoffset + ( $day - 1 ) ) * $wScale;
-	my $y = ( $Yoffset + ( $start - $EarliestTime ) ) * $hScale;
-	my $x2 = $wScale + $x - 1;
-	my $y2 = $duration * $hScale + $y - 1;
+    my $x = ( $Xoffset + ( $day - 1 ) ) * $wScale;
+    my $y = ( $Yoffset + ( $start - $EarliestTime ) ) * $hScale;
+    my $x2 = $wScale + $x - 1;
+    my $y2 = $duration * $hScale + $y - 1;
 
-	if (wantarray) {
-		return ( $x, $y, $x2, $y2 );
-	}
-	else {
-		[ $x, $y, $x2, $y2 ];
-	}
+    if (wantarray) {
+        return ( $x, $y, $x2, $y2 );
+    }
+    else {
+        [ $x, $y, $x2, $y2 ];
+    }
 }
 
 # =================================================================

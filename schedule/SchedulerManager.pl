@@ -109,11 +109,16 @@ $Colours = {
 	DataForeground            => "black",
 };
 $ConflictColours = {
-	Conflict->TIME         => "#FF0000",
-	Conflict->LUNCH        => "orange",
-	Conflict->MINIMUM_DAYS => "#FF80FF",
-	Conflict->AVAILABILITY => "pink"
+    Conflict->TIME_TEACHER => "red2",
+    Conflict->TIME_LAB     => "red2",
+    Conflict->TIME_STREAM  => "red2",
+	Conflict->LUNCH        => "tan4",
+	Conflict->MINIMUM_DAYS => "lightgoldenrod1",
+	Conflict->AVAILABILITY => "mediumvioletred"
 };
+my $lightred = Colour->new($ConflictColours->{Conflict->TIME_TEACHER})->lighten(30);
+$ConflictColours -> {Conflict->TIME} = $lightred;
+
 SetSystemColours( $mw, $Colours );
 $mw->configure( -bg => $Colours->{WorkspaceColour} );
 ( $Menu, $Toolbar ) = create_menu();

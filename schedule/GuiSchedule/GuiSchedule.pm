@@ -231,19 +231,19 @@ sub undo {
     my $schedule     = $$schedule_ptr;
 
     my $block;
-    my $obj = $action->origin_obj;
+    my $teacher_lab_stream = $action->origin_obj;
 
     #-------- Code for undo/redo moving block in same schedule --------#
 
     if ( $action->move_type eq "Day/Time" ) {
-        if ( $obj->isa("Teacher") ) {
-            @blocks = $schedule->blocks_for_teacher($obj);
+        if ( $teacher_lab_stream->isa("Teacher") ) {
+            @blocks = $schedule->blocks_for_teacher($teacher_lab_stream);
         }
-        elsif ( $obj->isa("Lab") ) {
-            @blocks = $schedule->blocks_in_lab($obj);
+        elsif ( $teacher_lab_stream->isa("Lab") ) {
+            @blocks = $schedule->blocks_in_lab($teacher_lab_stream);
         }
         else {
-            @blocks = $schedule->blocks_for_stream($obj);
+            @blocks = $schedule->blocks_for_stream($teacher_lab_stream);
         }
 
         # find block to undo/redo
@@ -266,9 +266,9 @@ sub undo {
         }
         else {
 
-            # performing redo, store current block time/day for undo
-            my $undo = Undo->new( $block->id, $block->start, $block->day,
-                                  $action->origin_obj, $action->move_type );
+            # performing redo, store current block time/day for undoteacher_lab_stream          my $undo = Undo->new( $block->id, $block->start, $block->day,
+            my $undo = Undo->new ( $block->id, $block->start, $block->day, 
+                                $action->origin_obj, $action->move_type);
             $self->add_undo($undo);
             $self->remove_last_redo;
             $View::Undo_left = scalar $self->undoes . " undoes left";
@@ -335,13 +335,13 @@ sub undo {
     # reassign teacher/lab to block
     if ( $action->move_type eq 'teacher' ) {
         $block->remove_teacher($new_obj);
-        $block->assign_teacher($obj);
+        $block->assign_teacher($teacher_lab_stream);
         $block->section->remove_teacher($new_obj);
-        $block->section->assign_teacher($obj);
+        $block->section->assign_teacher($teacher_lab_stream);
     }
     elsif ( $action->move_type eq 'lab' ) {
         $block->remove_lab($new_obj);
-        $block->assign_lab($obj);
+        $block->assign_lab($teacher_lab_stream);
     }
 
     # update all views to re-place blocks
@@ -380,18 +380,19 @@ sub add_redo {
 
 =head2 add_button_refs ( \button, Teacher/Lab/Stream Object )
 
-Adds a button reference to the hash of all button references and the Object it is associated to.
+Adds a button reference to the hash of all button references and the 
+Object it is associated to.
 
 =cut
 
 sub add_button_refs {
     my $self = shift;
     my $btn  = shift;
-    my $obj  = shift;
+    my $teacher_lab_stream  = shift;
     $self->{-buttonRefs} = {} unless $self->{-buttonRefs};
 
     # save
-    $self->{-buttonRefs}->{$obj} = $btn;
+    $self->{-buttonRefs}->{$teacher_lab_stream} = $btn;
     return $self;
 }
 
@@ -633,7 +634,7 @@ sub update_for_conflicts {
     my $openViews = $self->views;
 
     foreach my $view ( values %$openViews ) {
-        $view->update_for_conflicts;
+        $view->update_for_conflicts($view->type);
     }
 }
 
@@ -649,6 +650,7 @@ sub determine_button_colours {
     my $self  = shift;
     my $array = shift;
     my $type  = shift;
+    
 
     # get schedule object from reference
     my $schedule_ptr = $self->schedule_ptr;
@@ -660,17 +662,17 @@ sub determine_button_colours {
     my @blocks;
 
     # for every teacher/lab/stream
-    foreach my $obj (@$array) {
+    foreach my $teacher_lab_stream (@$array) {
 
         # get the blocks for the current teacher/lab/stream
         if ( $type eq "teacher" ) {
-            @blocks = $schedule->blocks_for_teacher($obj);
+            @blocks = $schedule->blocks_for_teacher($teacher_lab_stream);
         }
         elsif ( $type eq "lab" ) {
-            @blocks = $schedule->blocks_in_lab($obj);
+            @blocks = $schedule->blocks_in_lab($teacher_lab_stream);
         }
         else {
-            @blocks = $schedule->blocks_for_stream($obj);
+            @blocks = $schedule->blocks_for_stream($teacher_lab_stream);
         }
 
         # what is this view's conflict? start with 0
@@ -679,15 +681,16 @@ sub determine_button_colours {
         # for every block
         foreach my $block (@blocks) {
             $view_conflict =
-              Conflict->most_severe( $view_conflict | $block->is_conflicted );
+              Conflict->most_severe( $view_conflict | $block->is_conflicted, $type );
             last if $view_conflict == $Conflict::Sorted_Conflicts[0];
         }
 
         # get the button associated to the current teacher/lab/stream
         my $button_ptrs = $self->_button_refs;
-        my $btn         = $button_ptrs->{$obj};
+        my $btn         = $button_ptrs->{$teacher_lab_stream};
 
-   # set button colour to colour of conflict found if conflict found in schedule
+        # set button colour to colour of conflict 
+        # found if conflict found in schedule
         if ($view_conflict) {
             my $colour = $Scheduler::ConflictColours->{$view_conflict} || 'red';
             $$btn->configure( -background => $colour );
@@ -710,6 +713,7 @@ Populates frame with buttons for all Teachers, Labs or Streams depending on Type
 =cut
 
 sub create_frame {
+    
     my $self        = shift;
     my $frame       = shift;
     my $type        = shift;
@@ -745,19 +749,19 @@ sub create_frame {
     if ( $arr_size > 10 ) { $divisor = 4; }
 
     # for every teacher/lab/stream in alphabetical order
-    foreach my $obj (@ordered) {
+    foreach my $teacher_lab_stream (@ordered) {
         my $name;
 
         # determine name/number to show on button
         if ( $type eq "teacher" ) {
             $name =
-              uc( substr( $obj->firstname, 0, 1 ) ) . " " . $obj->lastname;
+              uc( substr( $teacher_lab_stream->firstname, 0, 1 ) ) . " " . $teacher_lab_stream->lastname;
         }
-        else { $name = $obj->number; }
+        else { $name = $teacher_lab_stream->number; }
 
         # create the command array reference including the GuiSchedule,
         # the Teacher/Lab/Stream, it's type
-        my $command = [ $command_sub, $self, $obj, $type ];
+        my $command = [ $command_sub, $self, $teacher_lab_stream, $type ];
 
         # create the button on the frame
         my $btn = $frame->Button( -text => $name, -command => $command )->grid(
@@ -772,9 +776,9 @@ sub create_frame {
         push( @{$command}, \$btn );
 
         # add it to hash of button references
-        $self->add_button_refs( \$btn, $obj );
+        $self->add_button_refs( \$btn, $teacher_lab_stream );
 
-        my $openView = $self->is_open( $obj->id, $type );
+        my $openView = $self->is_open( $teacher_lab_stream->id, $type );
         if ($openView) {
             $openView->button_ptr( \$btn );
         }
@@ -787,6 +791,7 @@ sub create_frame {
 
     # determine the colour of the buttons for
     # every teacher/lab/stream in the frame
+    
     $self->determine_button_colours( \@ordered, $type );
 }
 
@@ -808,11 +813,11 @@ sub _create_view {
     if   ( $type eq 'teacher' ) { $type = 'lab'; }
     else                        { $type = 'teacher'; }
 
-    foreach my $obj (@array) {
-        unless ( defined($obj_id) && $obj_id == $obj->id ) {
+    foreach my $teacher_lab_stream (@array) {
+        unless ( defined($obj_id) && $obj_id == $teacher_lab_stream->id ) {
             my $button_ptrs = $self->_button_refs;
-            $btn = $button_ptrs->{$obj};
-            $self->create_new_view( $obj, $type, $btn );
+            $btn = $button_ptrs->{$teacher_lab_stream};
+            $self->create_new_view( $teacher_lab_stream, $type, $btn );
         }
     }
 }
@@ -826,31 +831,31 @@ If View is already open, the View for that object is brought to front.
 
 sub create_new_view {
     my $self    = shift;
-    my $obj     = shift;
+    my $teacher_lab_stream     = shift;
     my $type    = shift;
     my $btn_ptr = shift;
-
+    
     my $mw           = $self->main_window;
-    my $open         = $self->is_open( $obj->id, $type );
+    my $open         = $self->is_open( $teacher_lab_stream->id, $type );
     my $schedule_ptr = $self->schedule_ptr;
     my $schedule     = $$schedule_ptr;
 
     if ( $open == 0 ) {
         my @blocks;
-        if ( $obj->isa("Teacher") ) {
-            @blocks = $schedule->blocks_for_teacher($obj);
+        if ( $teacher_lab_stream->isa("Teacher") ) {
+            @blocks = $schedule->blocks_for_teacher($teacher_lab_stream);
         }
-        elsif ( $obj->isa("Lab") ) {
-            @blocks = $schedule->blocks_in_lab($obj);
+        elsif ( $teacher_lab_stream->isa("Lab") ) {
+            @blocks = $schedule->blocks_in_lab($teacher_lab_stream);
         }
         else {
-            @blocks = $schedule->blocks_for_stream($obj);
+            @blocks = $schedule->blocks_for_stream($teacher_lab_stream);
         }
         if ( $ENV{DEBUG} ) {
             print "Calling new view with <$mw>, <\@blocks>, <$schedule>, "
-              . "<$obj>, <$type>, <$btn_ptr>\n";
+              . "<$teacher_lab_stream>, <$type>, <$btn_ptr>\n";
         }
-        my $view = View->new( $mw, \@blocks, $schedule, $obj, $type, $btn_ptr );
+        my $view = View->new( $mw, \@blocks, $schedule, $teacher_lab_stream, $type );
 
         $self->add_view($view);
         $self->add_guischedule_to_views;
@@ -872,11 +877,11 @@ sub is_open {
     my $self = shift;
     my $id   = shift;
     my $type = shift;
-
+    
     my $openViews = $self->views;
     foreach my $view ( values %$openViews ) {
         if ( $view->type eq $type ) {
-            if ( $view->obj->id == $id ) { return $view; }
+            if ( $view->teacher_lab_stream->id == $id ) { return $view; }
         }
     }
 
