@@ -117,7 +117,8 @@ sub new {
     # create the table entry object
     # ---------------------------------------------------------------
     if ( $type eq 'Lab' ) {
-        my $callback = [\&openView,$self->{-schedule},$self->{-frame}->toplevel];
+        my $callback =
+          [ \&openView, $self->{-schedule}, $self->{-frame}->toplevel ];
 
         $de = $frame->TableEntry(
                                   -rows       => 1,
@@ -143,9 +144,8 @@ sub new {
     foreach my $c ( 2 .. $de->columns ) {
         push @disabled, 0;
     }
-    print "configure disable\n";
+
     $de->configure( -disabled => \@disabled );
-    print "done configure disabled\n";
 
     # --------------------------------------------------------------------------
     # NOTE: If weird shit is happening, give up and use a 'Save' button
@@ -336,11 +336,11 @@ sub set_dirty {
     $guiSchedule->destroy_all;
 }
 
-sub openView{
-	my ($schedule,$mw, $id,$room,$desc) = @_;
-	my $lab = $schedule->labs->get($id);
-	
-	my $view = ViewLab->new($mw,$schedule,$lab);
+sub openView {
+    my ( $schedule, $mw, $id, $room, $desc ) = @_;
+    my $lab = $schedule->labs->get($id);
+
+    my $view = ViewLab->new( $mw, $schedule, $lab );
 }
 
 # =================================================================

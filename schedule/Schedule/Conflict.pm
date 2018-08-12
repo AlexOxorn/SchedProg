@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 package Conflict;
+use PerlLib::Colour;
 use Carp;
 
 
@@ -51,6 +52,22 @@ use constant {
 };
 
 our @Sorted_Conflicts = (TIME, LUNCH, MINIMUM_DAYS, AVAILABILITY);
+
+my $Colours = {
+    Conflict->TIME_TEACHER => "red2",
+    Conflict->TIME_LAB     => "red2",
+    Conflict->TIME_STREAM  => "red2",
+    Conflict->LUNCH        => "tan4",
+    Conflict->MINIMUM_DAYS => "lightgoldenrod1",
+    Conflict->AVAILABILITY => "mediumvioletred"
+};
+my $lightred = Colour->new($Colours->{Conflict->TIME_TEACHER})->lighten(30);
+$Colours -> {Conflict->TIME} = $lightred;
+
+sub Colours {
+    return $Colours;
+}
+
 
 sub hash_descriptions {
     return { 

@@ -692,12 +692,12 @@ sub determine_button_colours {
         # set button colour to colour of conflict 
         # found if conflict found in schedule
         if ($view_conflict) {
-            my $colour = $Scheduler::ConflictColours->{$view_conflict} || 'red';
+            my $colour = Conflict->Colours->{$view_conflict} || 'red';
             $$btn->configure( -background => $colour );
         }
         else {
             $$btn->configure(
-                       -background => $Scheduler::Colours->{ButtonBackground} );
+                       -background =>$Scheduler::Colours->{ButtonBackground} );
         }
     }
 }

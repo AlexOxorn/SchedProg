@@ -101,7 +101,7 @@ sub new {
                     Conflict::AVAILABILITY
                   )
     {
-        my $bg = Colour->new( $Scheduler::ConflictColours->{$c} );
+        my $bg = Colour->new( Conflict->Colours->{$c} );
         my $fg = Colour->new("white");
         $fg = Colour->new("black") if $bg->isLight;
         $f->Label(
@@ -620,7 +620,7 @@ sub colour_block {
 
     # change the colour of the block to the most important conflict
     if ($conflict) {
-        $guiblock->change_colour( $Scheduler::ConflictColours->{$conflict} );
+        $guiblock->change_colour( Conflict->Colours->{$conflict} );
     }
 
     # no conflict found, reset back to default colour

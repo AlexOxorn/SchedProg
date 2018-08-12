@@ -67,7 +67,7 @@ read_ini();
 # ==================================================================
 # global vars
 # ==================================================================
-our ( $mw, $Colours, $Fonts, $ConflictColours );
+our ( $mw, $Colours, $Fonts );
 my $Schedule;                 # the current schedule
 my $Current_schedule_file;    # will save to this file when save is requested
 my $Current_directory = $Preferences->{-current_dir} || $User_base_dir;
@@ -108,16 +108,6 @@ $Colours = {
 	DataBackground            => "white",
 	DataForeground            => "black",
 };
-$ConflictColours = {
-    Conflict->TIME_TEACHER => "red2",
-    Conflict->TIME_LAB     => "red2",
-    Conflict->TIME_STREAM  => "red2",
-	Conflict->LUNCH        => "tan4",
-	Conflict->MINIMUM_DAYS => "lightgoldenrod1",
-	Conflict->AVAILABILITY => "mediumvioletred"
-};
-my $lightred = Colour->new($ConflictColours->{Conflict->TIME_TEACHER})->lighten(30);
-$ConflictColours -> {Conflict->TIME} = $lightred;
 
 SetSystemColours( $mw, $Colours );
 $mw->configure( -bg => $Colours->{WorkspaceColour} );
