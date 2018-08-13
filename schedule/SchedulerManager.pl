@@ -18,7 +18,7 @@ use GuiSchedule::DataEntry;
 use GuiSchedule::EditCourses;
 use Schedule::Conflict;
 use PerlLib::Colours;
-use Experimentation::EditLab;
+use GuiSchedule::EditLab;
 
 use Export::CSV;
 use Export::Excel;

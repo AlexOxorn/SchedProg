@@ -66,10 +66,10 @@ sub new {
 
 	$lab = shift;
 
-	return junk();
+	return OpenDialog();
 }
 
-sub junk {
+sub OpenDialog {
 	if ($Schedule) {
 
 		#------------------------------------
@@ -117,6 +117,10 @@ sub junk {
 
 		my %blockName;
 
+		#------------------------------------
+		# Create Dialog Box
+		#------------------------------------
+
 		my $db = $frame->DialogBox(
 			-title   => "Add Block to Resource",
 			-buttons => [ "OK", "Cancel" ]
@@ -124,6 +128,10 @@ sub junk {
 
 		my $fonts   = $Scheduler::Fonts;
 		my $bigFont = $fonts->{big};
+
+		# -----------------------------------
+		# Create Main Labels
+		# -----------------------------------
 
 		my $MenuLabel = $db->Label(
 			-text => $dayName{$day} . " at "
@@ -138,6 +146,10 @@ sub junk {
 		my $SectionLabel = $db->Label( -text => "Section:" );
 		my $BlockLabel   = $db->Label( -text => "Block:" );
 
+		# -----------------------------------------------
+		# Defining widget variable names
+		# -----------------------------------------------
+
 		my $CourseJBE;
 		my $SectionJBE;
 		my $TeacherJBE;
@@ -151,6 +163,10 @@ sub junk {
 		my $TeacherNew;
 		my $BlockNew;
 
+		#----------------------------------------
+		# Drop Down Lists widgets
+		#----------------------------------------
+
 		$CourseJBE = $db->JBrowseEntry(
 			-variable  => \$curCourse,
 			-state     => 'readonly',
@@ -161,8 +177,8 @@ sub junk {
 				my $id    = $rHash{$curCourse};
 				$course = $Schedule->courses->get($id);
 				updateSectionList(
-					\$SectionJBE, $course, \%sectionName,
-					\$curSection, \$curBlock
+					\$SectionJBE, \$BlockJBE, $course, \%sectionName,
+					\%blockName, \$curSection, \$curBlock
 				);
 			}
 		);
@@ -199,9 +215,17 @@ sub junk {
 			}
 		);
 
+		# -------------------------------------------------------
+		# NAME entry widgets
+		# -------------------------------------------------------
+
 		$SectionEnt   = $db->Entry( -textvariable => \$newSection );
 		$TeacherFName = $db->Entry( -textvariable => \$newFName );
 		$TeacherLName = $db->Entry( -textvariable => \$newLName );
+
+		# -------------------------------------------------------
+		# button widgets
+		# -------------------------------------------------------
 
 		$SectionNew = $db->Button(
 			-text    => "ADD NEW",
@@ -228,6 +252,10 @@ sub junk {
 					\$curBlock );
 			}
 		);
+
+		# -------------------------------------------------------
+		# Widget Griding
+		# -------------------------------------------------------
 
 		$MenuLabel->grid( '-', '-', '-', '-', -sticky => 'nsew' );
 
@@ -257,18 +285,29 @@ sub junk {
 	}
 }
 
+# ----------------------------------------------------------------------------
+# updateSectionList
+# When a course is selected, the section menu has to change for the new Course
+# ----------------------------------------------------------------------------
+
 sub updateSectionList {
 
 	my $SectionJBE  = ${ +shift };
+	my $BlockJBE    = ${ +shift };
 	my $course      = shift;
 	my $sectionName = shift;
+	my $blockName   = shift;
 	my $curSection  = shift;
 	my $curBlock    = shift;
 
+	#Blanking the section and block inputs
 	$$curSection = "";
+	$section     = "";
 	$$curBlock   = "";
+	$block       = "";
 
 	%$sectionName = ();
+	%$blockName   = ();
 
 	my @sections = $course->sections;
 
@@ -277,6 +316,7 @@ sub updateSectionList {
 	}
 
 	$SectionJBE->configure( -choices => $sectionName );
+	$BlockJBE->configure( -choices => $blockName );
 
 }
 
@@ -325,7 +365,7 @@ sub add_new_teacher {
 			$teacherName->{ $teacherNew->id } = "$teacherNew";
 			$TeacherJBE->configure( -choices => $teacherName );
 			$$curTeach = "$teacherNew";
-			$teacher    = $teacherNew;
+			$teacher   = $teacherNew;
 		}
 		else {
 			my $db = $frame->DialogBox(
@@ -372,7 +412,7 @@ sub add_new_section {
 			$sectionName->{ $sectionNew->id } = "$sectionNew";
 			$SectionJBE->configure( -choices => $sectionName );
 			$$curSection = "$sectionNew";
-			$section = $sectionNew;
+			$section     = $sectionNew;
 		}
 		else {
 			my $db = $frame->DialogBox(
@@ -396,7 +436,7 @@ sub add_new_section {
 				$sectionName->{ $sectionNew->id } = "$sectionNew";
 				$SectionJBE->configure( -choices => $sectionName );
 				$$curSection = "$sectionNew";
-				$section = $sectionNew;
+				$section     = $sectionNew;
 			}
 		}
 	}
