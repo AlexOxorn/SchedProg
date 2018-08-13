@@ -151,6 +151,8 @@ sub _dragBind {
 				my $y2 = shift;
 				my $x1 = shift;
 				my $y1 = shift;
+				
+				#### Alex - you need to unbind motion before processing
 				eval { $cn->delete($temp) };
 				$temp = $cn->createRectangle(
 					$x1, $y1, $x2, $y2,
@@ -166,6 +168,8 @@ sub _dragBind {
 				foreach my $blk (@chosen) {
 					$blk->set_colour('blue');
 				}
+				
+				#### Now rebind the motion
 			},
 			Ev('x'),
 			Ev('y'),
