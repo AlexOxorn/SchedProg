@@ -689,16 +689,15 @@ sub determine_button_colours {
         my $button_ptrs = $self->_button_refs;
         my $btn         = $button_ptrs->{$obj};
 
-        # set button colour to colour of conflict 
-        # found if conflict found in schedule
+        # set button colour to conflict colour if there is a conflict
+        my $colour = $Scheduler::Colours->{ButtonBackground};
         if ($view_conflict) {
-            my $colour = Conflict->Colours->{$view_conflict} || 'red';
-            $$btn->configure( -background => $colour );
+            $colour = Conflict->Colours->{$view_conflict} || 'red';
         }
-        else {
+        my $active = Colour->darken(10,$colour);
             $$btn->configure(
-                       -background =>$Scheduler::Colours->{ButtonBackground} );
-        }
+                       -background =>$colour,
+                       -activebackground => $active);
     }
 }
 

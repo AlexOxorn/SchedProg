@@ -37,8 +37,9 @@ Describes a View
 # =================================================================
 # global and package variables
 # =================================================================
-our $Undo_number = "";
-our $Redo_number = "";
+my $Undo_number   = "";
+my $Redo_number   = "";
+my $Clicked_block = 0;
 
 # =================================================================
 # new
@@ -70,12 +71,12 @@ View object
 
 sub new {
 
-    my $class              = shift;
-    my $mw                 = shift;
-    my $blocks             = shift;
-    my $schedule           = shift;
-    my $obj = shift;
-    my $type               = shift;
+    my $class    = shift;
+    my $mw       = shift;
+    my $blocks   = shift;
+    my $schedule = shift;
+    my $obj      = shift;
+    my $type     = shift;
 
     # ---------------------------------------------------------------
     # create the ViewBase
@@ -83,10 +84,6 @@ sub new {
     my $self = $class->SUPER::new($mw);
     my $tl   = $self->toplevel;
     $tl->protocol( 'WM_DELETE_WINDOW', [ \&_close_view, $self ] );
-
-    # ---------------------------------------------------------------
-    # Show Conflict Colours
-    # ---------------------------------------------------------------
 
     # ---------------------------------------------------------------
     # set some parameters
@@ -102,8 +99,7 @@ sub new {
     my $title;
     if ( $obj && $obj->isa('Teacher') ) {
         $self->set_title(
-                      uc( substr( $obj->firstname, 0, 1 ) ) . " "
-                        . $obj->lastname );
+                 uc( substr( $obj->firstname, 0, 1 ) ) . " " . $obj->lastname );
     }
     elsif ($obj) {
         $self->set_title( $obj->number );
@@ -142,16 +138,13 @@ sub new {
         foreach my $obj (@array) {
             my $name;
             if ( $self->type eq 'teacher' ) {
-                $name = $obj->firstname . ' '
-                  . $obj->lastname;
+                $name = $obj->firstname . ' ' . $obj->lastname;
             }
             else {
                 $name = $obj->number;
             }
-            $mm->command(
-                        -label   => $name,
-                        -command => [ \&move_class, $self, $obj ]
-            );
+            $mm->command( -label   => $name,
+                          -command => [ \&move_class, $self, $obj ] );
         }
     }
 
@@ -258,13 +251,10 @@ sub move_class {
 
     # reassign teacher/lab to blocks
     if ( $self->type eq 'teacher' ) {
-        $self->popup_guiblock()
-          ->block->remove_teacher( $self->obj );
+        $self->popup_guiblock()->block->remove_teacher( $self->obj );
         $self->popup_guiblock()->block->assign_teacher($obj);
-        $self->popup_guiblock()
-          ->block->section->remove_teacher( $self->obj );
-        $self->popup_guiblock()
-          ->block->section->assign_teacher($obj);
+        $self->popup_guiblock()->block->section->remove_teacher( $self->obj );
+        $self->popup_guiblock()->block->section->assign_teacher($obj);
     }
 
     elsif ( $self->type eq 'lab' ) {
@@ -305,11 +295,11 @@ Redraws the View with new GuiBlocks and their positions.
 =cut
 
 sub redraw {
-    my $self               = shift;
-    my $obj = $self->obj;
-    my $schedule           = $self->schedule;
-    my $cn                 = $self->canvas;
-    my $currentScale       = $self->currentScale;
+    my $self         = shift;
+    my $obj          = $self->obj;
+    my $schedule     = $self->schedule;
+    my $cn           = $self->canvas;
+    my $currentScale = $self->currentScale;
 
     $self->SUPER::redraw();
 
@@ -318,6 +308,15 @@ sub redraw {
     # ---------------------------------------------------------------
     $self->set_view_button_colours();
     $self->guiSchedule->update_for_conflicts if $self->guiSchedule;
+    $self->canvas->CanvasBind(
+        "<1>",
+        sub {
+            if ($Clicked_block) {
+                print "I clicked a block, allow mouse moves\n";
+            }
+            else { print "run Alex Code\n" }
+          }
+    );
 
     # ---------------------------------------------------------------
     # bind events for each gui block
@@ -392,7 +391,8 @@ sub set_view_button_colours {
         $self->guiSchedule->determine_button_colours( \@teachers, 'teacher' )
           if @teachers;
 
-        $self->guiSchedule->determine_button_colours( \@labs, 'lab' ) if @labs;
+        $self->guiSchedule->determine_button_colours( \@labs, 'lab' )
+          if @labs;
 
         $self->guiSchedule->determine_button_colours( \@streams, 'stream' )
           if @streams;
@@ -430,8 +430,7 @@ sub _double_open_view {
         }
         else {
             my @labs = $guiblock->block->labs;
-            $self->guiSchedule->_create_view( \@labs, 'teacher',
-                                              $self->obj )
+            $self->guiSchedule->_create_view( \@labs, 'teacher', $self->obj )
               if @labs;
         }
     }
@@ -448,8 +447,7 @@ sub _double_open_view {
         }
         else {
             my @teachers = $guiblock->block->teachers;
-            $self->guiSchedule->_create_view( \@teachers, 'lab',
-                                              $self->obj )
+            $self->guiSchedule->_create_view( \@teachers, 'lab', $self->obj )
               if @teachers;
         }
     }
@@ -467,8 +465,14 @@ events to GuiBlock.
 =cut
 
 sub _on_click {
+    
+    
     my ( $cn, $guiblock, $self, $xstart, $ystart ) = @_;
     my ( $startingX, $startingY ) = $cn->coords( $guiblock->rectangle );
+
+    # we are processing a click on a guiblock, so tell the 
+    # click event for the canvas not to do anything
+    $Clicked_block = 1;
 
     # this block is being controlled by the mouse
     $guiblock->is_controlled(1);
@@ -588,6 +592,9 @@ updates the Blocks time in the Schedule.
 
 sub _end_move {
     my ( $cn, $guiblock, $self ) = @_;
+    
+    # it is ok now to process a click on the canvas
+    $Clicked_block = 0;
 
     # unbind the motion on the guiblock
     $cn->CanvasBind( "<Motion>",          "" );
@@ -595,11 +602,8 @@ sub _end_move {
 
     $guiblock->is_controlled(0);
 
-    my $undo = Undo->new(
-                          $guiblock->block->id,  $guiblock->block->start,
-                          $guiblock->block->day, $self->obj,
-                          "Day/Time"
-                        );
+    my $undo = Undo->new( $guiblock->block->id, $guiblock->block->start,
+                          $guiblock->block->day, $self->obj, "Day/Time" );
 
     # set guiblocks new time and day
     $self->snap_guiblock($guiblock);

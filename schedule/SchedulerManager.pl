@@ -183,7 +183,7 @@ sub menu_info {
 	# ----------------------------------------------------------
 	# button names
 	# ----------------------------------------------------------
-	my @buttons = ( 'new', 'open','CSVimport', 'save', 'print', 'junk');
+	my @buttons = ( 'new', 'open','CSVimport', 'save', 'print');
 
 	# ----------------------------------------------------------
 	# toolbar structure
@@ -254,7 +254,6 @@ sub menu_info {
 
 			]
 		],
-		[ "command", "View", -command => $b_props{open}{view} ],
 	];
 
 	# ------------------------------------------------------------------------
