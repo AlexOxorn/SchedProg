@@ -61,12 +61,12 @@ The block can be coloured, or uncoloured.
 # Global Variables
 # =================================================================
 my %dayTag = (
-               "1" => "monday",
-               "2" => "tuesday",
-               "3" => "wednesday",
-               "4" => "thursday",
-               "5" => "friday"
-             );
+	"1" => "monday",
+	"2" => "tuesday",
+	"3" => "wednesday",
+	"4" => "thursday",
+	"5" => "friday"
+);
 
 =head1 CLASS METHODS
 
@@ -95,61 +95,58 @@ AssignBlock object
 =cut
 
 sub new {
-    my $class = shift;
-    my $view  = shift;
-    my $day   = shift;
-    my $start = shift;
-    carp("You need a view!!!") unless $view;
-    
-    use Data::Dumper;
+	my $class = shift;
+	my $view  = shift;
+	my $day   = shift;
+	my $start = shift;
+	carp("You need a view!!!") unless $view;
 
-    # ---------------------------------------------------------------
-    # draw 1/2 the block
-    # ---------------------------------------------------------------
-    my $cn = $view->canvas;
-    my @coords = $view->get_time_coords( $day, $start, 1 / 2 );
-    
-    
-    my $r = $cn->createRectangle(
-                                  @coords,
-                                  -outline => 'red',
-                                  -width   => 0,
-                                  -tags    => $dayTag{"$day"},
-                                );
+	use Data::Dumper;
 
-    # ---------------------------------------------------------------
-    # create object
-    # ---------------------------------------------------------------
-    my $self = {};
-    bless $self, $class;
+	# ---------------------------------------------------------------
+	# draw 1/2 the block
+	# ---------------------------------------------------------------
+	my $cn = $view->canvas;
+	my @coords = $view->get_time_coords( $day, $start, 1 / 2 );
 
-    # ---------------------------------------------------------------
-    # save object info
-    # ---------------------------------------------------------------
-    $self->id($r);
-    $self->day($day);
-    $self->start($start);
-    $self->view($view);
-    $self->canvas( $view->canvas );
+	my $r = $cn->createRectangle(
+		@coords,
+		-outline => 'red',
+		-width   => 0,
+		-tags    => $dayTag{"$day"},
+	);
 
-    # just in case, want coords to be from top left -> bottom right
-    # or other logic in this class may fail
-    
-    
-    
-    my $x1 = $coords[0];
-    my $y1 = $coords[1];
-    my $x2 = $coords[2];
-    my $y2 = $coords[3];
-    
-    if ( $x1 > $x2 ) { my $tmp = $x1; $x1 = $x2; $x2 = $x1; }
-    if ( $y1 > $y2 ) { my $tmp = $y1; $y1 = $y2; $y2 = $y1; }
-    $self->x1($x1);
-    $self->y1($y1);
-    $self->x2($x2);
-    $self->y2($y2);
+	# ---------------------------------------------------------------
+	# create object
+	# ---------------------------------------------------------------
+	my $self = {};
+	bless $self, $class;
 
-    return $self;
+	# ---------------------------------------------------------------
+	# save object info
+	# ---------------------------------------------------------------
+	$self->id($r);
+	$self->day($day);
+	$self->start($start);
+	$self->view($view);
+	$self->canvas( $view->canvas );
+
+	# just in case, want coords to be from top left -> bottom right
+	# or other logic in this class may fail
+
+	my $x1 = $coords[0];
+	my $y1 = $coords[1];
+	my $x2 = $coords[2];
+	my $y2 = $coords[3];
+
+	if ( $x1 > $x2 ) { my $tmp = $x1; $x1 = $x2; $x2 = $x1; }
+	if ( $y1 > $y2 ) { my $tmp = $y1; $y1 = $y2; $y2 = $y1; }
+	$self->x1($x1);
+	$self->y1($y1);
+	$self->x2($x2);
+	$self->y2($y2);
+
+	return $self;
 }
 
 # =================================================================
@@ -173,18 +170,17 @@ Assign Block object
 =cut
 
 sub find {
-    my $class  = shift;
-    my $x      = shift;
-    my $y      = shift;
-    my $blocks = shift;
-    return unless $blocks;
+	my $class  = shift;
+	my $x      = shift;
+	my $y      = shift;
+	my $blocks = shift;
+	return unless $blocks;
 
-    my @found;
-    @found = grep { $_->at_canvas_coords( $x, $y ) } @$blocks;
-    
+	my @found;
+	@found = grep { $_->at_canvas_coords( $x, $y ) } @$blocks;
 
-    return $found[0] if @found;
-    return;
+	return $found[0] if @found;
+	return;
 }
 
 # =================================================================
@@ -208,13 +204,13 @@ Array of AssignBlock objects
 =cut
 
 sub get_day_blocks {
-    my $class  = shift;
-    my $day    = shift;
-    my $blocks = shift;
-    
-    my @x = @$blocks;
-    return unless $blocks;
-    return grep { $_->day == $day } @$blocks;
+	my $class  = shift;
+	my $day    = shift;
+	my $blocks = shift;
+
+	my @x = @$blocks;
+	return unless $blocks;
+	return grep { $_->day == $day } @$blocks;
 }
 
 # =================================================================
@@ -238,21 +234,21 @@ Array of AssignBlock objects
 =cut
 
 sub in_range {
-    my $class  = shift;
-    my $x1     = shift || 1;
-    my $y1     = shift || 1;
-    my $x2     = shift || 1;
-    my $y2     = shift || 1;
-    my $blocks = shift;
-    die unless $blocks;
+	my $class  = shift;
+	my $x1     = shift || 1;
+	my $y1     = shift || 1;
+	my $x2     = shift || 1;
+	my $y2     = shift || 1;
+	my $blocks = shift;
+	die unless $blocks;
 
-    # make sure start in left top towards bottom right
-    if ( $x1 > $x2 ) { my $tmp = $x1; $x1 = $x2; $x2 = $tmp; }
-    if ( $y1 > $y2 ) { my $tmp = $y1; $y1 = $y2; $y2 = $tmp; }
+	# make sure start in left top towards bottom right
+	if ( $x1 > $x2 ) { my $tmp = $x1; $x1 = $x2; $x2 = $tmp; }
+	if ( $y1 > $y2 ) { my $tmp = $y1; $y1 = $y2; $y2 = $tmp; }
 
-    return
-      grep { $_->x1 < $x2 && $_->x2 > $x1 && $_->y1 < $y2 && $_->y2 > $y1 }
-      @$blocks;
+	return
+	  grep { $_->x1 < $x2 && $_->x2 > $x1 && $_->y1 < $y2 && $_->y2 > $y1 }
+	  @$blocks;
 }
 
 =head1 INSTANCE METHODS
@@ -281,14 +277,14 @@ true or false
 =cut
 
 sub at_canvas_coords {
-    my $self = shift;
-    my $x    = shift;
-    my $y    = shift;
+	my $self = shift;
+	my $x    = shift;
+	my $y    = shift;
 
-    return 1
-      if ( $self->x1 < $x && $x < $self->x2 )
-      && ( $self->y1 < $y && $y < $self->y2 );
-    return 0;
+	return 1
+	  if ( $self->x1 < $x && $x < $self->x2 )
+	  && ( $self->y1 < $y && $y < $self->y2 );
+	return 0;
 }
 
 # =================================================================
@@ -312,12 +308,12 @@ block
 =cut
 
 sub set_colour {
-    my $self = shift;
-    my $colour = shift || "mistyrose3";
+	my $self = shift;
+	my $colour = shift || "mistyrose3";
 
-    my $c = Colour->new($colour);
-    $self->canvas->itemconfigure( $self->id, -fill => $c->string );
-    return $self;
+	my $c = Colour->new($colour);
+	$self->canvas->itemconfigure( $self->id, -fill => $c->string );
+	return $self;
 }
 
 # =================================================================
@@ -338,9 +334,9 @@ block
 sub unfill { return remove_colour(@_); }
 
 sub remove_colour {
-    my $self = shift;
-    $self->canvas->itemconfigure( $self->id, -fill => '' );
-    return $self;
+	my $self = shift;
+	$self->canvas->itemconfigure( $self->id, -fill => '' );
+	return $self;
 }
 
 # =================================================================
@@ -370,57 +366,77 @@ sub remove_colour {
 =cut
 
 sub id {
-    my $self = shift;
-    $self->{-id} = shift if @_;
-    return $self->{-id};
+	my $self = shift;
+	$self->{-id} = shift if @_;
+	return $self->{-id};
 }
 
 sub day {
-    my $self = shift;
-    $self->{-day} = shift if @_;
-    return $self->{-day};
+	my $self = shift;
+	$self->{-day} = shift if @_;
+	return $self->{-day};
 }
 
 sub start {
-    my $self = shift;
-    $self->{-start} = shift if @_;
-    return $self->{-start};
+	my $self = shift;
+	$self->{-start} = shift if @_;
+	return $self->{-start};
 }
 
 sub view {
-    my $self = shift;
-    $self->{-view} = shift if @_;
-    return $self->{-view};
+	my $self = shift;
+	$self->{-view} = shift if @_;
+	return $self->{-view};
 }
 
 sub canvas {
-    my $self = shift;
-    $self->{-canvas} = shift if @_;
-    return $self->{-canvas};
+	my $self = shift;
+	$self->{-canvas} = shift if @_;
+	return $self->{-canvas};
 }
 
 sub x1 {
-    my $self = shift;
-    $self->{-x1} = shift if @_;
-    return $self->{-x1};
+	my $self = shift;
+	$self->{-x1} = shift if @_;
+	return $self->{-x1};
 }
 
 sub y1 {
-    my $self = shift;
-    $self->{-y1} = shift if @_;
-    return $self->{-y1};
+	my $self = shift;
+	$self->{-y1} = shift if @_;
+	return $self->{-y1};
 }
 
 sub x2 {
-    my $self = shift;
-    $self->{-x2} = shift if @_;
-    return $self->{-x2};
+	my $self = shift;
+	$self->{-x2} = shift if @_;
+	return $self->{-x2};
 }
 
 sub y2 {
-    my $self = shift;
-    $self->{-y2} = shift if @_;
-    return $self->{-y2};
+	my $self = shift;
+	$self->{-y2} = shift if @_;
+	return $self->{-y2};
+}
+
+#
+sub Get_day_start_duration {
+	my $class  = shift;
+	my $chosen = shift;
+	my @x      = @$chosen;
+
+	my $day   = $x[0]->day;
+	my $start = $x[0]->start;
+	my $size  = scalar @x;
+
+	foreach my $i ( @x ) {
+		my $temp = $i->start;
+		if ( $temp < $start ) {
+			$start = $temp;
+		}
+	}
+
+	return ( $day, $start, $size / 2.0 );
 }
 
 1;

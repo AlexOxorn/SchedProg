@@ -43,7 +43,7 @@ our $Max_id = 0;
 our %week =
   ( mon => 1, tue => 2, wed => 3, thu => 4, fri => 5, sat => 6, sun => 7 );
 our $Max_hour_div = 2;
-my %reverse_week = map { $week{$_}, $_ } keys %week;
+our %reverse_week = map { $week{$_}, $_ } keys %week;
 our $Default_day = 'mon';
 our $Default_start = '8:00';
 our $Default_duration = 1.5;
@@ -130,13 +130,21 @@ sub day {
         $day = substr( lc($day), 0, 3 );
         
         # if bad input, set to monday
-        if ($day !~ /^mon|tue|wed|thu|fri|sat|sun/i) {
-            cluck "<$day>: invalid day specified... setting to $Default_day\n";
+        if ($day =~ /^mon|tue|wed|thu|fri|sat|sun/i) {
+            $self->{-day} = $day;
+        		$self->day_number( $week{$day} );
+        }
+        elsif ($day =~ /^[1-7]$/){
+        		$self->day_number($day);
+        		$self->{-day} = $reverse_week{$day};
+        }else{
+        		cluck "<$day>: invalid day specified... setting to $Default_day\n";
             $day = $Default_day;
-        }    
+            $self->{-day} = $day;
+        		$self->day_number( $week{$day} );
+        }
 
-        $self->{-day} = $day;
-        $self->day_number( $week{$day} );
+        
     }
     return $self->{-day};
 }

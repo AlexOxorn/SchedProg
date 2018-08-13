@@ -56,7 +56,7 @@ B<Parameters>
 
 -schedule => where course-sections/teachers/labs/streams are defined
 
--teacher_lab_stream => Teacher/Lab/Stream that the View is being made for
+-obj => Teacher/Lab/Stream that the View is being made for
 
 -type => Whether the view is a Teacher, Lab or Stream View
 
@@ -74,7 +74,7 @@ sub new {
     my $mw                 = shift;
     my $blocks             = shift;
     my $schedule           = shift;
-    my $teacher_lab_stream = shift;
+    my $obj = shift;
     my $type               = shift;
 
     # ---------------------------------------------------------------
@@ -94,19 +94,19 @@ sub new {
     $self->blocks($blocks);
     $self->schedule($schedule);
     $self->type($type);
-    $self->teacher_lab_stream($teacher_lab_stream);
+    $self->obj($obj);
 
     # ---------------------------------------------------------------
     # set the title
     # ---------------------------------------------------------------
     my $title;
-    if ( $teacher_lab_stream && $teacher_lab_stream->isa('Teacher') ) {
+    if ( $obj && $obj->isa('Teacher') ) {
         $self->set_title(
-                      uc( substr( $teacher_lab_stream->firstname, 0, 1 ) ) . " "
-                        . $teacher_lab_stream->lastname );
+                      uc( substr( $obj->firstname, 0, 1 ) ) . " "
+                        . $obj->lastname );
     }
-    elsif ($teacher_lab_stream) {
-        $self->set_title( $teacher_lab_stream->number );
+    elsif ($obj) {
+        $self->set_title( $obj->number );
     }
 
     # ---------------------------------------------------------------
@@ -136,21 +136,21 @@ sub new {
         }
 
         # remove object of the view
-        @array = grep { $_->id != $self->teacher_lab_stream->id } @array;
+        @array = grep { $_->id != $self->obj->id } @array;
 
         # create sub menu
-        foreach my $teacher_lab_stream (@array) {
+        foreach my $obj (@array) {
             my $name;
             if ( $self->type eq 'teacher' ) {
-                $name = $teacher_lab_stream->firstname . ' '
-                  . $teacher_lab_stream->lastname;
+                $name = $obj->firstname . ' '
+                  . $obj->lastname;
             }
             else {
-                $name = $teacher_lab_stream->number;
+                $name = $obj->number;
             }
             $mm->command(
                         -label   => $name,
-                        -command => [ \&move_class, $self, $teacher_lab_stream ]
+                        -command => [ \&move_class, $self, $obj ]
             );
         }
     }
@@ -254,22 +254,22 @@ the Teacher/Lab Object.
 =cut
 
 sub move_class {
-    my ( $self, $teacher_lab_stream ) = @_;
+    my ( $self, $obj ) = @_;
 
     # reassign teacher/lab to blocks
     if ( $self->type eq 'teacher' ) {
         $self->popup_guiblock()
-          ->block->remove_teacher( $self->teacher_lab_stream );
-        $self->popup_guiblock()->block->assign_teacher($teacher_lab_stream);
+          ->block->remove_teacher( $self->obj );
+        $self->popup_guiblock()->block->assign_teacher($obj);
         $self->popup_guiblock()
-          ->block->section->remove_teacher( $self->teacher_lab_stream );
+          ->block->section->remove_teacher( $self->obj );
         $self->popup_guiblock()
-          ->block->section->assign_teacher($teacher_lab_stream);
+          ->block->section->assign_teacher($obj);
     }
 
     elsif ( $self->type eq 'lab' ) {
-        $self->popup_guiblock()->block->remove_lab( $self->teacher_lab_stream );
-        $self->popup_guiblock()->block->assign_lab($teacher_lab_stream);
+        $self->popup_guiblock()->block->remove_lab( $self->obj );
+        $self->popup_guiblock()->block->assign_lab($obj);
     }
 
     # there was a change, redraw all views
@@ -277,9 +277,9 @@ sub move_class {
                           $self->popup_guiblock()->block->id,
                           $self->popup_guiblock()->block->start,
                           $self->popup_guiblock()->block->day,
-                          $self->teacher_lab_stream,
+                          $self->obj,
                           $self->type,
-                          $teacher_lab_stream
+                          $obj
                         );
     $self->guiSchedule->add_undo($undo);
 
@@ -306,7 +306,7 @@ Redraws the View with new GuiBlocks and their positions.
 
 sub redraw {
     my $self               = shift;
-    my $teacher_lab_stream = $self->teacher_lab_stream;
+    my $obj = $self->obj;
     my $schedule           = $self->schedule;
     my $cn                 = $self->canvas;
     my $currentScale       = $self->currentScale;
@@ -431,7 +431,7 @@ sub _double_open_view {
         else {
             my @labs = $guiblock->block->labs;
             $self->guiSchedule->_create_view( \@labs, 'teacher',
-                                              $self->teacher_lab_stream )
+                                              $self->obj )
               if @labs;
         }
     }
@@ -449,7 +449,7 @@ sub _double_open_view {
         else {
             my @teachers = $guiblock->block->teachers;
             $self->guiSchedule->_create_view( \@teachers, 'lab',
-                                              $self->teacher_lab_stream )
+                                              $self->obj )
               if @teachers;
         }
     }
@@ -597,7 +597,7 @@ sub _end_move {
 
     my $undo = Undo->new(
                           $guiblock->block->id,  $guiblock->block->start,
-                          $guiblock->block->day, $self->teacher_lab_stream,
+                          $guiblock->block->day, $self->obj,
                           "Day/Time"
                         );
 

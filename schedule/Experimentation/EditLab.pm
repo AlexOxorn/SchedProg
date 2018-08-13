@@ -25,47 +25,52 @@ my $image_dir = Tk::FindImages::get_image_dir();
 # Class/Global Variables
 # =================================================================
 our $Max_id = 0;
-my $Drag_source;
 my $Schedule;
 my $GuiSchedule;
 my $Trash1_photo;
 my $Trash2_photo;
-my $Dragged_from;
-my $Dirty_ptr;
-my $Fonts;
-my $Colours;
 my %Styles;
 
 my $frame;
+my $day;
+my $start;
+my $duration;
+my $lab;
+
+my $course;
+my $section;
+my $block;
+my $teacher;
+
+my %dayName = (
+	1 => "Monday",
+	2 => "Tuesday",
+	3 => "Wednesday",
+	4 => "Thursday",
+	5 => "Friday"
+);
 
 # ===================================================================
 # new
 # ===================================================================
 sub new {
 	my $class = shift;
-	$frame     = shift;
-	$Schedule  = shift;
-	$Dirty_ptr = shift;
-	$Colours   = shift;
-	$Fonts     = shift;
-	my $image_dir = shift;
-	$GuiSchedule = shift;
+	$frame    = shift;
+	$Schedule = shift;
 
-	junk();
+	#$GuiSchedule = shift;
 
+	$day      = shift;
+	$start    = shift;
+	$duration = shift;
+
+	$lab = shift;
+
+	return junk();
 }
 
 sub junk {
 	if ($Schedule) {
-
-		my $lab      = $Schedule->labs->get(0);
-		my $time     = 8;
-		my $duration = 1.5;
-
-		my $course;
-		my $section;
-		my $block;
-		my $teacher;
 
 		#------------------------------------
 		# SET UP TEACHER DATA
@@ -113,8 +118,19 @@ sub junk {
 		my %blockName;
 
 		my $db = $frame->DialogBox(
-			-title   => "Edit Resource",
+			-title   => "Add Block to Resource",
 			-buttons => [ "OK", "Cancel" ]
+		);
+
+		my $fonts   = $Scheduler::Fonts;
+		my $bigFont = $fonts->{big};
+
+		my $MenuLabel = $db->Label(
+			-text => $dayName{$day} . " at "
+			  . _hoursToString($start) . " for "
+			  . $duration
+			  . "hour(s)",
+			-font => $bigFont
 		);
 
 		my $CourseLabel  = $db->Label( -text => "Course:" );
@@ -208,9 +224,12 @@ sub junk {
 		$BlockNew = $db->Button(
 			-text    => "ADD NEW",
 			-command => sub {
-				add_new_block( \$section, \%blockName, \$BlockJBE, \$curBlock );
+				$block = add_new_block( \$section, \%blockName, \$BlockJBE,
+					\$curBlock );
 			}
 		);
+
+		$MenuLabel->grid( '-', '-', '-', '-', -sticky => 'nsew' );
 
 		$CourseLabel->grid( $CourseJBE, "-", "-", -sticky => 'nsew' );
 		$TeacherLabel->grid(
@@ -221,7 +240,20 @@ sub junk {
 			-sticky => 'nsew' );
 		$BlockLabel->grid( $BlockJBE, "-", "-", $BlockNew, -sticky => 'nsew' );
 
-		$db->Show();
+		my $answer = $db->Show();
+		print $block;
+		if ( $answer eq "OK" ) {
+			if ($block) {
+				print "HELLO WORLD\n";
+				$block->day($day);
+				$block->start( _hoursToString($start) );
+				$block->duration($duration);
+				$block->assign_lab($lab);
+				$block->assign_teacher($teacher) if $teacher;
+				return 1;
+			}
+		}
+		return 0;
 	}
 }
 
@@ -278,21 +310,22 @@ sub add_new_teacher {
 	my $curTeach    = shift;
 
 	if ( $$firstname && $$lastname ) {
-		my $teacher =
+		my $teacherNew =
 		  $Schedule->teachers->get_by_name( $$firstname, $$lastname );
 
-		unless ($teacher) {
-			$teacher = Teacher->new(
+		unless ($teacherNew) {
+			$teacherNew = Teacher->new(
 				-firstname => $$firstname,
 				-lastname  => $$lastname
 			);
 			$$firstname = "";
 			$$lastname  = "";
-			$Schedule->teachers->add($teacher);
+			$Schedule->teachers->add($teacherNew);
 
-			$teacherName->{ $teacher->id } = "$teacher";
+			$teacherName->{ $teacherNew->id } = "$teacherNew";
 			$TeacherJBE->configure( -choices => $teacherName );
-			$$curTeach = "$teacher";
+			$$curTeach = "$teacherNew";
+			$teacher    = $teacherNew;
 		}
 		else {
 			my $db = $frame->DialogBox(
@@ -305,9 +338,10 @@ sub add_new_teacher {
 
 			my $answer = $db->Show() || "";
 			if ( $answer eq "Yes" ) {
-				$$curTeach  = "$teacher";
+				$$curTeach  = "$teacherNew";
 				$$firstname = "";
 				$$lastname  = "";
+				$teacher    = $teacherNew;
 			}
 		}
 	}
@@ -324,20 +358,21 @@ sub add_new_section {
 
 	if ($course) {
 		my @sections = $course->get_section_by_name($$name);
-		my $section;
+		my $sectionNew;
 
 		unless (@sections) {
-			$section = Section->new(
+			$sectionNew = Section->new(
 				-number => $course->get_new_number,
 				-hours  => 0,
 				-name   => $$name
 			);
 			$$name = "";
-			$course->add_section($section);
+			$course->add_section($sectionNew);
 
-			$sectionName->{ $section->id } = "$section";
+			$sectionName->{ $sectionNew->id } = "$sectionNew";
 			$SectionJBE->configure( -choices => $sectionName );
-			$$curSection = "$section";
+			$$curSection = "$sectionNew";
+			$section = $sectionNew;
 		}
 		else {
 			my $db = $frame->DialogBox(
@@ -350,17 +385,18 @@ sub add_new_section {
 
 			my $answer = $db->Show() || "";
 			if ( $answer eq "Yes" ) {
-				$section = Section->new(
+				$sectionNew = Section->new(
 					-number => $course->get_new_number,
 					-hours  => 0,
 					-name   => $$name
 				);
 				$$name = "";
-				$course->add_section($section);
+				$course->add_section($sectionNew);
 
-				$sectionName->{ $section->id } = "$section";
+				$sectionName->{ $sectionNew->id } = "$sectionNew";
 				$SectionJBE->configure( -choices => $sectionName );
-				$$curSection = "$section";
+				$$curSection = "$sectionNew";
+				$section = $sectionNew;
 			}
 		}
 	}
@@ -373,15 +409,25 @@ sub add_new_block {
 	my $BlockJBE  = ${ +shift };
 	my $curBlock  = shift;
 
-	if($section){
+	if ($section) {
 		my $new = Block->new( -number => $section->get_new_number );
 		$blockName->{ $new->id } = $new->print_description2;
 		$$curBlock = $new->print_description2;
 		$section->add_block($new);
-		$BlockJBE->configure( -choices => $blockName );	
+		$BlockJBE->configure( -choices => $blockName );
+		return $new;
 	}
 
-	
+}
+
+sub _hoursToString {
+	my $time = shift;
+
+	my $string = int($time) . ":";
+	$string = $string . "00" if $time == int($time);
+	$string = $string . "30" unless $time == int($time);
+
+	return $string;
 
 }
 

@@ -641,7 +641,7 @@ Redraws the View with new GuiBlocks and their positions.
 
 sub redraw {
     my $self               = shift;
-    my $teacher_lab_stream = $self->teacher_lab_stream;
+    my $obj = $self->obj;
     my $schedule           = $self->schedule;
     my $cn                 = $self->canvas;
     my $currentScale       = $self->currentScale;
@@ -650,14 +650,14 @@ sub redraw {
     my @blocks;
 
     # possible that this is an empty View, so @blocks may be empty
-    if ( defined $teacher_lab_stream ) {
-        if ( $teacher_lab_stream->isa("Teacher") ) {
-            @blocks = $schedule->blocks_for_teacher($teacher_lab_stream);
+    if ( defined $obj ) {
+        if ( $obj->isa("Teacher") ) {
+            @blocks = $schedule->blocks_for_teacher($obj);
         }
-        elsif ( $teacher_lab_stream->isa("Lab") ) {
-            @blocks = $schedule->blocks_in_lab($teacher_lab_stream);
+        elsif ( $obj->isa("Lab") ) {
+            @blocks = $schedule->blocks_in_lab($obj);
         }
-        else { @blocks = $schedule->blocks_for_stream($teacher_lab_stream); }
+        else { @blocks = $schedule->blocks_for_stream($obj); }
     }
 
     # remove everything on canvas
@@ -684,7 +684,7 @@ sub redraw {
 
     $self->blocks( \@blocks );
     $schedule->calculate_conflicts;
-    $self->update_for_conflicts;
+    $self->update_for_conflicts($self->type);
 
 }
 
@@ -703,16 +703,16 @@ sub id {
     return $self->{-id};
 }
 
-=head2 teacher_lab_stream ( [Teacher/Lab/Stream Object] )
+=head2 obj ( [Teacher/Lab/Stream Object] )
 
 Get/set the Teacher, Lab or Stream associated to this View.
 
 =cut
 
-sub teacher_lab_stream {
+sub obj {
     my $self = shift;
-    $self->{-teacher_lab_stream} = shift if @_;
-    return $self->{-teacher_lab_stream};
+    $self->{-obj} = shift if @_;
+    return $self->{-obj};
 }
 
 =head2 canvas ( [Canvas] )
