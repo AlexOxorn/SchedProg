@@ -83,7 +83,7 @@ sub new {
 	$self->type("lab");
 	$self->obj($lab);
 	$self->redraw();
-	
+
 }
 
 sub redraw {
@@ -102,26 +102,29 @@ sub redraw {
 	);
 
 	$self->SUPER::redraw();
+	
+	#Loop through each half hour time slot, and create an AsignBlock for each
 	my @allBlocks;
-
 	foreach my $day ( 1 ... 5 ) {
 		foreach my $start ( $EarliestTime * 2 ... ( $LatestTime * 2 ) - 1 ) {
-			push(@allBlocks, AssignBlock->new($self,$day,$start/2));
+			push( @allBlocks, AssignBlock->new( $self, $day, $start / 2 ) );
 		}
 	}
-
+	
+	#BINDS MOUSE 1 to the setup of AssignBlock selection, then calls a funtction
+	#to bind the mouse movement 
 	$cn->CanvasBind(
 		'<Button-1>',
 		[
 			sub {
-				my $cn = shift;
-				my $x  = shift;
-				my $y  = shift;
-				my $assblock = AssignBlock->find($x,$y,\@allBlocks);
+				my $cn       = shift;
+				my $x        = shift;
+				my $y        = shift;
+				my $assblock = AssignBlock->find( $x, $y, \@allBlocks );
 				return unless $assblock;
 				$assblock->set_colour();
 				my $day = $assblock->day();
-				$self->_dragBind( $cn, $day, $x, $y , \@allBlocks);
+				$self->_dragBind( $cn, $day, $x, $y, \@allBlocks );
 			},
 			Ev('x'),
 			Ev('y')
@@ -131,63 +134,39 @@ sub redraw {
 }
 
 sub _dragBind {
-	my $self = shift;
-	my $cn   = shift;
-	my $day  = shift;
-	my $lx   = shift;
-	my $ly   = shift;
+	my $self      = shift;
+	my $cn        = shift;
+	my $day       = shift;
+	my $lx        = shift;
+	my $ly        = shift;
 	my $allBlocks = shift;
 	my @chosen;
-	
-	my @dayBlocks = AssignBlock->get_day_blocks($day,$allBlocks);
 
-	my $temp;
+	#Get a list of all the AssignBlocks associated with a given day
+	my @dayBlocks = AssignBlock->get_day_blocks( $day, $allBlocks );
+
+	#Blinds motion to a motion sub to handel the selection of multiple time slots
+	#when moving mouse
 	$cn->CanvasBind(
 		'<Motion>',
 		[
-			sub {
-				my $cn = shift;
-				my $x2 = shift;
-				my $y2 = shift;
-				my $x1 = shift;
-				my $y1 = shift;
-				
-				#### Alex - you need to unbind motion before processing
-				eval { $cn->delete($temp) };
-				$temp = $cn->createRectangle(
-					$x1, $y1, $x2, $y2,
-					-width   => 6,
-					-outline => "black"
-				);
-
-				@chosen = AssignBlock->in_range($x1,$y1,$x2,$y2, \@dayBlocks);
-				
-				foreach my $blk (@dayBlocks) {
-					$blk->unfill;
-				}
-				foreach my $blk (@chosen) {
-					$blk->set_colour('blue');
-				}
-				
-				#### Now rebind the motion
-			},
-			Ev('x'),
-			Ev('y'),
-			$lx,
-			$ly,
+			\&_motionSub, Ev('x'), Ev('y'), \$lx,
+			\$ly, \@chosen, \@dayBlocks,
 		]
 	);
 
+	#Binds the release of Mouse 1 to the end binding routine to open the 
+	#block adding menu and unbind everything else
 	$cn->CanvasBind(
 		'<ButtonRelease-1>',
 		[
 			sub {
-				my $cn = shift;
-				my $x  = shift;
-				my $y1 = shift;
-				my $y2 = shift;
+				my $cn     = shift;
+				my $x      = shift;
+				my $y1     = shift;
+				my $y2     = shift;
 				my $chosen = shift;
-				$self->_endBinding( $cn, $x, $y1, $y2 , $chosen );
+				$self->_endBinding( $cn, $x, $y1, $y2, $chosen );
 			},
 			$lx,
 			$ly,
@@ -198,22 +177,57 @@ sub _dragBind {
 }
 
 sub _endBinding {
-	my $self = shift;
-	my $cn   = shift;
-	my $x1   = shift;
-	my $y1   = shift;
-	my $y2   = shift;
+	my $self   = shift;
+	my $cn     = shift;
+	my $x1     = shift;
+	my $y1     = shift;
+	my $y2     = shift;
 	my $chosen = shift;
 	
-	$cn->CanvasBind( '<Motion>', sub{});
-	$cn->CanvasBind( '<Button-1>', sub{});
-	$cn->CanvasBind( '<ButtonRelease-1>', sub{});
-	
-	my ($day, $start, $duration) = AssignBlock->Get_day_start_duration($chosen);
-	
-	EditLabs->new($cn, $self->{-schedule}, $day, $start, $duration, $self->obj);
-	
+	#Unbind everything
+	$cn->CanvasBind( '<Motion>',          sub { } );
+	$cn->CanvasBind( '<Button-1>',        sub { } );
+	$cn->CanvasBind( '<ButtonRelease-1>', sub { } );
+
+	#Get the day and time of the chosen blocks
+	my ( $day, $start, $duration ) =
+	  AssignBlock->Get_day_start_duration($chosen);
+
+	#create the menu to select the block to assign to the timeslot
+	EditLabs->new( $cn, $self->{-schedule}, $day, $start, $duration,
+		$self->obj );
+
+	#redraw
 	$self->redraw();
+}
+
+sub _motionSub {
+	my $cn        = shift;
+	my $x2        = shift;
+	my $y2        = shift;
+	my $x1        = shift;
+	my $y1        = shift;
+	my $chosen    = shift;
+	my $dayBlocks = shift;
+
+	#Temporarily unbind motion
+	$cn->CanvasBind( '<Motion>', sub { } );
+
+	#get the AssignBlocks currently under the slection window
+	@$chosen = AssignBlock->in_range( $$x1, $$y1, $x2, $y2, $dayBlocks );
+
+	#colour selection blue
+	foreach my $blk (@$dayBlocks) {
+		$blk->unfill;
+	}
+	foreach my $blk (@$chosen) {
+		$blk->set_colour('blue');
+	}
+
+	#rebind Motion
+	$cn->CanvasBind( '<Motion>',
+		[ \&_motionSub, Ev('x'), Ev('y'), $x1, $y1, $chosen, $dayBlocks ] );
+
 }
 
 1;

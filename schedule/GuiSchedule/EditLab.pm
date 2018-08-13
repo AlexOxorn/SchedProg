@@ -125,6 +125,9 @@ sub OpenDialog {
 			-title   => "Add Block to Resource",
 			-buttons => [ "OK", "Cancel" ]
 		);
+		
+		my $OKAY = $db->Subwidget("B_OK");
+		$OKAY->configure(-state=>'disabled');
 
 		my $fonts   = $Scheduler::Fonts;
 		my $bigFont = $fonts->{big};
@@ -177,11 +180,15 @@ sub OpenDialog {
 				my $id    = $rHash{$curCourse};
 				$course = $Schedule->courses->get($id);
 				updateSectionList(
-					\$SectionJBE, \$BlockJBE, $course, \%sectionName,
-					\%blockName, \$curSection, \$curBlock
+					\$SectionJBE, \$BlockJBE,   $course, \%sectionName,
+					\%blockName,  \$curSection, \$curBlock, \$OKAY
 				);
 			}
 		);
+		my $courseDropEntry = $CourseJBE->Subwidget("entry");
+		$courseDropEntry->configure( -disabledbackground => "white" );
+		$courseDropEntry->configure( -disabledforeground => "black" );
+
 		$SectionJBE = $db->JBrowseEntry(
 			-variable  => \$curSection,
 			-state     => 'readonly',
@@ -191,9 +198,13 @@ sub OpenDialog {
 				$section = $course->get_section_by_id($id);
 				print "Section ID <$id>\n";
 				updateBlockList( \$BlockJBE, $section, \%blockName,
-					\$curBlock );
+					\$curBlock , \$OKAY);
 			}
 		);
+		my $secDropEntry = $SectionJBE->Subwidget("entry");
+		$secDropEntry->configure( -disabledbackground => "white" );
+		$secDropEntry->configure( -disabledforeground => "black" );
+
 		$TeacherJBE = $db->JBrowseEntry(
 			-variable  => \$curTeach,
 			-state     => 'readonly',
@@ -204,6 +215,10 @@ sub OpenDialog {
 				$teacher = $Schedule->teachers->get($id);
 			}
 		);
+		my $teacherDropEntry = $TeacherJBE->Subwidget("entry");
+		$teacherDropEntry->configure( -disabledbackground => "white" );
+		$teacherDropEntry->configure( -disabledforeground => "black" );
+
 		$BlockJBE = $db->JBrowseEntry(
 			-variable  => \$curBlock,
 			-state     => 'readonly',
@@ -212,8 +227,12 @@ sub OpenDialog {
 				my $id    = $rHash{$curBlock};
 				print "Block ID <$id>\n";
 				$block = $section->get_block_by_id($id);
+				$OKAY->configure(-state=>'normal');
 			}
 		);
+		my $blockDropEntry = $BlockJBE->Subwidget("entry");
+		$blockDropEntry->configure( -disabledbackground => "white" );
+		$blockDropEntry->configure( -disabledforeground => "black" );
 
 		# -------------------------------------------------------
 		# NAME entry widgets
@@ -228,7 +247,7 @@ sub OpenDialog {
 		# -------------------------------------------------------
 
 		$SectionNew = $db->Button(
-			-text    => "ADD NEW",
+			-text    => "CREATE",
 			-command => sub {
 				add_new_section(
 					\$newSection, \$course, \%sectionName,
@@ -237,7 +256,7 @@ sub OpenDialog {
 			}
 		);
 		$TeacherNew = $db->Button(
-			-text    => "ADD NEW",
+			-text    => "CREATE",
 			-command => sub {
 				add_new_teacher(
 					\$newFName,   \$newLName, \%teacherName,
@@ -246,10 +265,12 @@ sub OpenDialog {
 			}
 		);
 		$BlockNew = $db->Button(
-			-text    => "ADD NEW",
+			-text    => "CREATE",
 			-command => sub {
-				$block = add_new_block( \$section, \%blockName, \$BlockJBE,
-					\$curBlock );
+				add_new_block(
+					\$section, \%blockName, \$BlockJBE,
+					\$curBlock, \$OKAY
+				);
 			}
 		);
 
@@ -268,11 +289,13 @@ sub OpenDialog {
 			-sticky => 'nsew' );
 		$BlockLabel->grid( $BlockJBE, "-", "-", $BlockNew, -sticky => 'nsew' );
 
-		my $answer = $db->Show();
+		#Show menu
+		my $answer = $db->Show() || "Cancel";
 		print $block;
 		if ( $answer eq "OK" ) {
+			#if answer is okay, check if a block is defined
 			if ($block) {
-				print "HELLO WORLD\n";
+				#if it is, assign all the properties to the block and return
 				$block->day($day);
 				$block->start( _hoursToString($start) );
 				$block->duration($duration);
@@ -299,6 +322,10 @@ sub updateSectionList {
 	my $blockName   = shift;
 	my $curSection  = shift;
 	my $curBlock    = shift;
+	my $OKAY = ${+shift};
+	
+	#Disable okay;
+	$OKAY->configure(-state=>'disabled');
 
 	#Blanking the section and block inputs
 	$$curSection = "";
@@ -306,6 +333,7 @@ sub updateSectionList {
 	$$curBlock   = "";
 	$block       = "";
 
+	# Blanking the choice hashes
 	%$sectionName = ();
 	%$blockName   = ();
 
@@ -315,10 +343,16 @@ sub updateSectionList {
 		$sectionName->{ $i->id } = "$i";
 	}
 
+	# Updating the Drop down with the new options
 	$SectionJBE->configure( -choices => $sectionName );
 	$BlockJBE->configure( -choices => $blockName );
 
 }
+
+# ----------------------------------------------------------------------------
+# updateBlockList
+# When a section is selected, the block menu has to change for the new Section
+# ----------------------------------------------------------------------------
 
 sub updateBlockList {
 
@@ -326,9 +360,16 @@ sub updateBlockList {
 	my $section   = shift;
 	my $blockName = shift;
 	my $curBlock  = shift;
+	my $OKAY = ${+shift};
+	
+	#Disable okay;
+	$OKAY->configure(-state=>'disabled');
 
+	#Blanking the block inputs
 	$$curBlock = "";
+	$block     = "";
 
+	# Blanking the choice hashes
 	%$blockName = ();
 
 	my @blocks = $section->blocks;
@@ -337,6 +378,7 @@ sub updateBlockList {
 		$blockName->{ $i->id } = $i->print_description2;
 	}
 
+	# Updating the Drop down with the new options
 	$BlockJBE->configure( -choices => $blockName );
 
 }
@@ -349,11 +391,16 @@ sub add_new_teacher {
 	my $TeacherJBE  = ${ +shift };
 	my $curTeach    = shift;
 
+	# Check is a first and last name are inputed, otherwise return
 	if ( $$firstname && $$lastname ) {
+
+		#see if a teacher by that name exsits
 		my $teacherNew =
 		  $Schedule->teachers->get_by_name( $$firstname, $$lastname );
 
 		unless ($teacherNew) {
+
+			#if no teacher by the inputed name exists, create a new teacher
 			$teacherNew = Teacher->new(
 				-firstname => $$firstname,
 				-lastname  => $$lastname
@@ -368,6 +415,8 @@ sub add_new_teacher {
 			$teacher   = $teacherNew;
 		}
 		else {
+			#If a teacher exists by that name, ask the user if he would like
+			#to set that teacher, otherwise return
 			my $db = $frame->DialogBox(
 				-title   => "Teacher already exists",
 				-buttons => [ "Yes", "No" ]
@@ -396,11 +445,16 @@ sub add_new_section {
 	my $SectionJBE  = ${ +shift };
 	my $curSection  = shift;
 
+	#check if a course is defined, otherwise return
 	if ($course) {
+
+		#check to see if a section by that name  exists
 		my @sections = $course->get_section_by_name($$name);
 		my $sectionNew;
 
 		unless (@sections) {
+
+			#If it doesn't, create the new section
 			$sectionNew = Section->new(
 				-number => $course->get_new_number,
 				-hours  => 0,
@@ -415,6 +469,8 @@ sub add_new_section {
 			$section     = $sectionNew;
 		}
 		else {
+			#If a section by the same name does exists
+			# ask the user if he want's to create a new section with that name
 			my $db = $frame->DialogBox(
 				-title   => "Section already exists",
 				-buttons => [ "Yes", "No" ]
@@ -425,6 +481,8 @@ sub add_new_section {
 
 			my $answer = $db->Show() || "";
 			if ( $answer eq "Yes" ) {
+
+				#If he does, create the new section
 				$sectionNew = Section->new(
 					-number => $course->get_new_number,
 					-hours  => 0,
@@ -438,6 +496,14 @@ sub add_new_section {
 				$$curSection = "$sectionNew";
 				$section     = $sectionNew;
 			}
+			else {
+				#Otherwise, set section to first instance of the section with
+				#the section name
+				my $temp = $sections[0];
+				$$curSection  = "$temp";
+				$$sectionName = "";
+				$section      = $temp;
+			}
 		}
 	}
 
@@ -448,18 +514,25 @@ sub add_new_block {
 	my $blockName = shift;
 	my $BlockJBE  = ${ +shift };
 	my $curBlock  = shift;
+	my $OKAY = ${ +shift };
 
+	#If a section is defined, create a new block and set active block to it
 	if ($section) {
 		my $new = Block->new( -number => $section->get_new_number );
 		$blockName->{ $new->id } = $new->print_description2;
 		$$curBlock = $new->print_description2;
 		$section->add_block($new);
 		$BlockJBE->configure( -choices => $blockName );
-		return $new;
+		$block = $new;
+		$OKAY->configure(-state=>'normal');
 	}
 
 }
 
+#=======================
+#_hoursToString
+#  8.5 -> 8:30
+#=======================
 sub _hoursToString {
 	my $time = shift;
 
