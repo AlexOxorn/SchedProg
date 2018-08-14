@@ -57,6 +57,8 @@ X Clear All
 - Bind return -> tab
 - See current selected
 
++ CSV hardening
+
 (X) Can't close top level
 (X) View scaling doesn't work properly
 (X) Why did change to _get_canvas_coords break code

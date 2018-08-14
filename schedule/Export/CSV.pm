@@ -170,6 +170,8 @@ sub export {
 				# split rooms into "first" and a comma-seperated "rest"
 				my @rooms     = @{ $block->labs };
 				my $firstRoom = $rooms[0];
+				my $Labnumber = $firstRoom->number if $firstRoom;
+				$Labnumber = $Labnumber || "";
 				shift(@rooms);
 				my $remainingRooms = join( ",", @rooms );
 
@@ -195,7 +197,7 @@ sub export {
 							, $teacherLName                   # Teacher L Name
 							, $teacherFName                   # Teacher F Name
 							, $teacherID                      # Teacher ID;
-							, $firstRoom                      # Room
+							, $Labnumber                      # Room
 							, $remainingRooms                 # Other Rooms Used
 							, ""                              # Restriction
 							, ""                              # Travel Fees
@@ -287,30 +289,44 @@ sub import_csv {
 		my $courseNo   = $fields->[ $fieldNames{"course no."} ];
 
 		my $course = $Courses->get_by_number($courseNo);
+
 		unless ($course) {
-			$course = Course->new( -name => $courseName, -number => $courseNo );
-			$Courses->add($course);
+			if ( $courseName && $courseNo ) {
+				$course =
+				  Course->new( -name => $courseName, -number => $courseNo );
+				$Courses->add($course);
+			}
 		}
 
 		# Section Number & Name
+		my $section;
 
 		my $sectionNum  = $fields->[ $fieldNames{"section"} ];
 		my $sectionName = "";
 		$sectionName = $fields->[ $fieldNames{"section name"} ]
 		  if exists $fieldNames{"section name"};
 
-		unless ( looks_like_number($sectionNum) ) {
+		unless ( !$sectionNum || looks_like_number($sectionNum) ) {
 			croak "Section number <$sectionNum> needs to be a number";
 		}
 
-		my $section = $course->get_section($sectionNum);
-		unless ($section) {
-			$section = Section->new(
-				-number => $sectionNum,
-				-hours  => 0,
-				-name   => $sectionName
-			);
-			$course->add_section($section);
+		print "HELLO 1 \n";
+
+		if ( $course && $sectionNum ) {
+			$section = $course->get_section($sectionNum);
+			unless ($section) {
+				$section = Section->new(
+					-number => $sectionNum,
+					-hours  => 0,
+					-name   => $sectionName
+				);
+				$course->add_section($section);
+			}
+		}
+		else {
+			if ( $sectionNum || $sectionName ) {
+				croak "Section Can't be specified if course isn't specified";
+			}
 		}
 
 		# [4 Constant] Ponderation (90)
@@ -318,18 +334,30 @@ sub import_csv {
 		# [5] Start Time
 		# [6] End Time
 
-		my $start    = _to_hours( $fields->[ $fieldNames{"start time"} ] );
-		my $end      = _to_hours( $fields->[ $fieldNames{"end time"} ] );
-		my $duration = $end - $start;
-		croak "$courseName, $sectionName has starts before it ends"
-		  if $duration < 0;
+		print "HELLO 2\n";
 
-		my $startTime;
-		$startTime = int($start) . ":" . ( ( $start - int($start) ) * 60 )
-		  if int($start) != $start;
-		$startTime = $start . ":00" if int($start) == $start;
+		my $startIn = $fields->[ $fieldNames{"start time"} ];
+		my $endIn   = $fields->[ $fieldNames{"end time"} ];
 
-		$section->add_hours($duration);
+		my $start = _to_hours($startIn) if $startIn;
+		my $end   = _to_hours($endIn)   if $endIn;
+		my $duration  = '';
+		my $startTime = '';
+
+		print "HELLO 3\n";
+
+		if ( $section && $start && $end ) {
+
+			$duration = $end - $start;
+			croak "$courseName, $sectionName has starts before it ends"
+			  if $duration < 0;
+
+			$startTime = int($start) . ":" . ( ( $start - int($start) ) * 60 )
+			  if int($start) != $start;
+			$startTime = $start . ":00" if int($start) == $start;
+
+			$section->add_hours($duration);
+		}
 
 		# [7] Day
 		my $dayInput = $fields->[ $fieldNames{"day"} ];
@@ -340,15 +368,25 @@ sub import_csv {
 			do { $day = $day_dict{$k}; last } if $dayInput =~ /^$k/i;
 		}
 
-		my $blockNumber = $section->get_new_number;
+		my $block;
 
-		my $block = Block->new(
-			-day      => $day,
-			-start    => $startTime,
-			-duration => $duration,
-			-number   => $blockNumber
-		);
-		$section->add_block($block);
+		if ($section) {
+			my $blockNumber = $section->get_new_number;
+
+			$block = Block->new(
+				-day      => $day,
+				-start    => $startTime,
+				-duration => $duration,
+				-number   => $blockNumber
+			);
+			$section->add_block($block);
+		}
+		else {
+			if ( $day || $startTime || $duration ) {
+				croak
+				  "Block Time Can't be specified if section isn't specified";
+			}
+		}
 
 		# [8 Constant] Type (C+-Lecture & Lab combined)
 		# [9 Constant] Max (30)
@@ -407,8 +445,15 @@ sub import_csv {
 					  $repeateTeacherName{ $firstname . $lastname }{$teachID};
 				}
 			}
-
-			$block->assign_teacher($teacher);
+			if ($block) {
+				$block->assign_teacher($teacher);
+			}
+			elsif ($section) {
+				$section->assign_teacher($teacher);
+			}
+			elsif ($course) {
+				$course->assign_teacher($teacher);
+			}
 		}
 
 		# [13] room
@@ -427,7 +472,15 @@ sub import_csv {
 				$Labs->add($lab);
 			}
 
-			$block->assign_lab($lab);
+			if ($block) {
+				$block->assign_lab($lab);
+			}
+			elsif ($section) {
+				$section->assign_lab($lab);
+			}
+			elsif ($course) {
+				$course->assign_lab($lab);
+			}
 		}
 
 		# [14 empty] Other used room

@@ -145,7 +145,7 @@ sub OpenDialog {
 		#------------------------------------
 
 		my $db = $frame->DialogBox(
-			-title => "Add (or Modify) Block to <CONTEXT>",
+			-title => "Assign Block",
 			-buttons => [ "Ok", "Cancel" ]
 		);
 
@@ -163,10 +163,17 @@ sub OpenDialog {
 		# Create Main Labels
 		# -----------------------------------
 
-		my $lblTitle = $db->Label(
-			-text => "Add block to <VIEW CONTEXT>",
+		my $lblTitle;
+		$lblTitle = $db->Label(
+			-text => "Assign block to Resource",
 			-font => $bigFont
-		);
+		) if $type eq 'type';
+		
+		$lblTitle = $db->Label(
+			-text => "Assign block to Resource",
+			-font => $bigFont
+		) if $type eq 'teacher';
+		
 		my $selectedBlockText =
 		    $dayName{$day} . " at "
 		  . _hoursToString($start) . " for "

@@ -43,6 +43,7 @@ my $Redo_number   = "";
 my $Clicked_block = 0;
 my $EarliestTime  = $ViewBase::EarliestTime;
 my $LatestTime    = $ViewBase::LatestTime;
+my $selectColour = 'royalblue';
 
 # =================================================================
 # new
@@ -388,7 +389,7 @@ sub _motionSub {
         $blk->unfill;
     }
     foreach my $blk (@$chosen) {
-        $blk->set_colour('blue');
+        $blk->set_colour($selectColour);
     }
 
     #rebind Motion
