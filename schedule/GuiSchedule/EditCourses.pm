@@ -898,14 +898,18 @@ sub _show_tree_menu {
 
 				$db1->add( 'Label', -text => "Block Duration (in Hours)?" )
 				  ->pack;
-				$db1->add(
-					'LabEntry',
+				
+				my $hourEntry = $db1->add(
+					'Entry',
 					-textvariable    => \$num,
 					-validate        => 'key',
 					-validatecommand => \&is_number,
 					-invalidcommand  => sub { $tree_menu->bell },
 					-width           => 20,
 				)->pack;
+				
+				$db1->configure(-focus=>$hourEntry);
+				
 				my $answer1 = $db1->Show();
 				if (   $answer1 eq 'Ok'
 					&& defined($num)
@@ -2252,6 +2256,8 @@ sub _edit_course2 {
 	}
 	$top->gridRowconfigure( $rows - 1, -weight => 1 );
 
+	$edit_dialog->configure(-focus=>$secDrop);
+
 	my $answer = $edit_dialog->Show();
 	$answer = "Close" unless $answer;
 
@@ -2675,6 +2681,8 @@ sub _edit_section2 {
 	}
 	$top->gridRowconfigure( $rows - 1, -weight => 1 );
 
+	$edit_dialog->configure(-focus=>$blockDrop);
+
 	my $answer = $edit_dialog->Show();
 	$answer = "NO" unless $answer;
 
@@ -2988,6 +2996,8 @@ sub _edit_block2 {
 	}
 	$top->gridRowconfigure( $rows - 1, -weight => 1 );
 
+	$edit_dialog->configure(-focus=>$durIn);
+
 	my $answer = $edit_dialog->Show();
 	$answer = "Close" unless $answer;
 	if ( $answer eq 'Close' ) {
@@ -3036,7 +3046,7 @@ sub _add_block {
 	);
 
 	$db1->add( 'Label', -text => "How Many Blocks? (MAX 10)" )->pack;
-	$db1->add(
+	my $blockNumEntry = $db1->add(
 		'Entry',
 		-textvariable    => \$num,
 		-validate        => 'key',
@@ -3044,6 +3054,9 @@ sub _add_block {
 		-invalidcommand  => sub { $frame->bell },
 		-width           => 20,
 	)->pack( -fill => 'x' );
+	
+	$db1->configure(-focus=>$blockNumEntry);
+	
 	my $answer = $db1->Show();
 	$answer = "Cancel" unless $answer;
 
@@ -3061,16 +3074,20 @@ sub _add_block {
 		foreach my $i ( 1 ... $num ) {
 			push( @hrs, "" );
 		}
+		
+		my $hoursEntry;
+		
 		foreach my $i ( 1 ... $num ) {
-			$top->Label( -text => "Block $i" )->grid(
-				$top->Entry(
+			my $A = $top->Label( -text => "Block $i" );
+			my $B = $top->Entry(
 					-textvariable    => \$hrs[ $i - 1 ],
 					-validate        => 'key',
 					-validatecommand => \&is_number,
 					-invalidcommand  => sub { $frame->bell },
-				),
-				-sticky => 'new'
 			);
+			
+			$hoursEntry = $B if $i == 1;
+			$A->grid($B , -sticky => 'new' );
 		}
 
 		my ( $col, $row ) = $top->gridSize();
@@ -3080,6 +3097,9 @@ sub _add_block {
 		$top->gridRowconfigure( $row - 1, -weight => 1 );
 
 		$answer = "";
+		
+		$db2->configure(-focus=>$hoursEntry);
+		
 		$answer = $db2->Show();
 		$answer = "Cancel" unless $answer;
 
@@ -3117,27 +3137,29 @@ sub _add_section {
 	my @names;
 
 	my $db0 = $frame->DialogBox(
-		-title          => 'How Many Sections',
-		-buttons        => [ 'Ok', 'Cancel' ],
-		-default_button => 'Ok',
+		-title   => 'How Many Sections',
+		-buttons => [ 'Ok', 'Cancel' ],
 
 		#-height => 300,
 		#-width => 500
 	);
 
-	$db0->add( 'Label', -text => "How Many Sections? (MAX 10)" )->pack;
-	$db0->add(
+	$db0->add( 'Label', -text => "How Many Sections? (MAX 50)" )->pack;
+	my $secNumEntry = $db0->add(
 		'Entry',
 		-textvariable    => \$numS,
 		-validate        => 'key',
 		-validatecommand => \&is_integer,
 		-invalidcommand  => sub { $frame->bell },
 	)->pack( -fill => 'x' );
+
+	$db0->configure( -focus => $secNumEntry );
+
 	my $answer = $db0->Show();
 	$answer = "Cancel" unless $answer;
 
 	if ( $answer eq 'Ok' && defined $numS && $numS ne "" && $numS > 0 ) {
-		$numS = 10 if $numS > 10;
+		$numS = 50 if $numS > 50;
 
 		my $db3 = $frame->DialogBox(
 			-title          => 'Name The Sections',
@@ -3147,19 +3169,41 @@ sub _add_section {
 
 		my $top = $db3->Subwidget("top");
 
-		$top->Label( -text => "Name the Sections (OPTIONAL)" )
-		  ->grid( -columnspan => 2 );
+		my $frame = $top->Scrolled(
+			'Frame',
+			-scrollbars => 'oe',
+			-width      => 300,
+			-height     => 300
+		)->pack( -expand => 1, -fill => 'both' );
+
+		$frame->configure( -bg => 'red' );
+
+		$frame->Label( -text => "Name the Sections (OPTIONAL)", -bg => 'pink' )
+		  ->pack( -side => 'top' );
 		foreach my $i ( 1 ... $numS ) {
 			push( @names, "" );
 		}
+
+		my $sectionNameEntry;
+
 		foreach my $i ( 1 ... $numS ) {
-			$top->Label( -text => "Section $i" )->grid(
-				$top->Entry(
-					-textvariable => \$names[ $i - 1 ]
-				),
-				-sticky => 'new'
+			my $x = $frame->Frame()->pack( -expand => 1, -fill => 'x' );
+
+			$x->Label( -text => "Section $i", -width => 11, -anchor => 'w' )
+			  ->pack( -side => 'left' );
+
+			my $y = $x->Entry( -textvariable => \$names[ $i - 1 ] )->pack(
+				-side   => 'left',
+				-expand => 1,
+				-fill   => 'x'
 			);
+
+			$sectionNameEntry = $y if $i == 1;
 		}
+		$frame->Label( -text => "", -bg => 'pink' )
+		  ->pack( -expand => 1, -fill => 'both' );
+
+		$db3->configure( -focus => $sectionNameEntry );
 
 		$answer = $db3->Show();
 		$answer = "Cancel" unless $answer;
@@ -3175,7 +3219,7 @@ sub _add_section {
 			);
 
 			$db1->add( 'Label', -text => "How Many Blocks? (MAX 10)" )->pack;
-			$db1->add(
+			my $blockNumEntry = $db1->add(
 				'Entry',
 				-textvariable    => \$numB,
 				-validate        => 'key',
@@ -3184,10 +3228,16 @@ sub _add_section {
 				-width           => 20,
 			)->pack( -fill => 'x' );
 			$answer = "";
+
+			$db1->configure( -focus => $blockNumEntry );
+
 			$answer = $db1->Show();
 			$answer = 'Cancel' unless $answer;
 
-			if ( $answer eq "Ok" && defined $numB && $numB ne "" && $numB >= 0 )
+			if (   $answer eq "Ok"
+				&& defined $numB
+				&& $numB ne ""
+				&& $numB >= 0 )
 			{
 				$numB = 10 if $numB > 10;
 
@@ -3208,16 +3258,19 @@ sub _add_section {
 					foreach my $i ( 1 ... $numB ) {
 						push( @hrs, "" );
 					}
+
+					my $hoursEntry;
+
 					foreach my $i ( 1 ... $numB ) {
-						$top->Label( -text => "Block $i" )->grid(
-							$top->Entry(
-								-textvariable    => \$hrs[ $i - 1 ],
-								-validate        => 'key',
-								-validatecommand => \&is_number,
-								-invalidcommand  => sub { $frame->bell },
-							),
-							-sticky => 'new'
+						my $A = $top->Label( -text => "Block $i" );
+						my $B = $top->Entry(
+							-textvariable    => \$hrs[ $i - 1 ],
+							-validate        => 'key',
+							-validatecommand => \&is_number,
+							-invalidcommand  => sub { $frame->bell },
 						);
+						$hoursEntry = $B if $i == 1;
+						$A->grid( $B , -sticky => 'new' );
 					}
 
 					my ( $col, $row ) = $top->gridSize();
@@ -3227,6 +3280,9 @@ sub _add_section {
 					$top->gridRowconfigure( $row - 1, -weight => 1 );
 
 					$answer = "";
+					
+					$db2->configure(-focus=>$hoursEntry);
+					
 					$answer = $db2->Show();
 					$answer = "Cancel" unless $answer;
 				}
