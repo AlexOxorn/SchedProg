@@ -113,9 +113,10 @@ sub OpenDialog {
         #------------------------------------
         # SET UP BLOCK DATA
         #------------------------------------
-
+        my @blocks;
         my $curBlock = "";
         my $newBlock = "";
+        my %blockName;
 
         #------------------------------------
         # Create Dialog Box
@@ -125,10 +126,10 @@ sub OpenDialog {
                                     -title => "Add (or Modify) Block to "
                                       . $lab->number . ": "
                                       . $lab->descr,
-                                    -buttons => [ "OK", "Cancel" ]
+                                    -buttons => [ "Ok", "Cancel" ]
                                   );
 
-        my $OKAY = $db->Subwidget("B_OK");
+        my $OKAY = $db->Subwidget("B_Ok");
         $OKAY->configure( -state => 'disabled' );
 
         my $df = $db->Subwidget("top");
@@ -138,42 +139,56 @@ sub OpenDialog {
         my $bigFont  = $fonts->{bigbold};
         my $boldFont = $fonts->{bold};
 
-
         # -----------------------------------
         # Create Main Labels
         # -----------------------------------
 
-        my $MainLabel = $db->Label(
-                                    -text => $dayName{$day} . " at "
-                                      . _hoursToString($start) . " for "
-                                      . $duration
-                                      . " hour(s)",
-                                    -font => $bigFont
-                                  );
-
-#        my $CourseLabel  = $db->Label( -text => "Course:",  -width => 8 );
-#        my $TeacherLabel = $db->Label( -text => "Teacher:", -width => 8 );
-#        my $SectionLabel = $db->Label( -text => "Section:", -width => 8 );
+        my $lblTitle = $db->Label(
+                         -text => "Create new block and add to " . $lab->number,
+                         -font => $bigFont );
+        my $selectedBlockText =
+            $dayName{$day} . " at "
+          . _hoursToString($start) . " for "
+          . $duration
+          . " hour(s)";
+        my $lblCourseInfo =
+          $db->Label( -text => "Course Info (required)", -font => $boldFont,-anchor=>'w' );
+        my $lblTeacherInfo =
+          $db->Label( -text => "Teacher (optional)", -font => $boldFont,-anchor=>'w' );
+        my $lblCourse  = $db->Label( -text => "Choose Course",-anchor=>'w' );
+        my $lblTeacher = $db->Label( -text => "Choose Teacher",-anchor=>'w' );
+        my $lblSection = $db->Label( -text => "Choose Section",-anchor=>'w' );
+        my $lblBlock   = $db->Label( -text => "Choose Block",-anchor=>'w' );
+        my $lblCreateSection =
+          $db->Label( -text => "Create new from Section Name",-anchor=>'w' );
+        my $lblCreateTeacher =
+          $db->Label( -text => "Create new from Firstname / Lastname",-anchor=>'w' );
+        my $lblCreateBlock =
+          $db->Label( -text => "Create block from selected date/time",-anchor=>'w' );
 
         # -----------------------------------------------
         # Defining widget variable names
         # -----------------------------------------------
 
-        my $CourseJBE;  
+        my $CourseJBE;
         my $SectionJBE;
         my $TeacherJBE;
+        my $BlockJBE;
 
         my $SectionEntry;
         my $TeacherFName;
         my $TeacherLName;
+        my $BlockDescr;
 
         my $SectionNewBtn;
         my $TeacherNewBtn;
+        my $BlockNewBtn;
 
         #----------------------------------------
         # Drop Down Lists widgets
         #----------------------------------------
 
+        # course
         $CourseJBE = $db->JBrowseEntry(
             -variable  => \$curCourse,
             -state     => 'readonly',
@@ -183,14 +198,18 @@ sub OpenDialog {
                 my %rHash = reverse %courseName;
                 my $id    = $rHash{$curCourse};
                 $course = $Schedule->courses->get($id);
-                updateSectionList( \$SectionJBE, \%sectionName,
-                                   \$curSection, $OKAY );
+                updateSectionList(
+                    \$SectionJBE, \$BlockJBE, \%sectionName,
+                    \%blockName,  \$curSection, \$curBlock, \$OKAY
+                );
             }
         );
+        
         my $courseDropEntry = $CourseJBE->Subwidget("entry");
         $courseDropEntry->configure( -disabledbackground => "white" );
         $courseDropEntry->configure( -disabledforeground => "black" );
 
+        # section
         $SectionJBE = $db->JBrowseEntry(
             -variable  => \$curSection,
             -state     => 'readonly',
@@ -198,13 +217,32 @@ sub OpenDialog {
                 my %rHash = reverse %sectionName;
                 my $id    = $rHash{$curSection};
                 $section = $course->get_section_by_id($id);
-                $OKAY->configure( -state => 'normal' );
+                updateBlockList( \$BlockJBE, $section, \%blockName,
+                    \$curBlock , \$OKAY);
             }
-        );
+            );
+        
         my $secDropEntry = $SectionJBE->Subwidget("entry");
         $secDropEntry->configure( -disabledbackground => "white" );
         $secDropEntry->configure( -disabledforeground => "black" );
 
+        # block
+        $BlockJBE = $db->JBrowseEntry(
+            -variable  => \$curBlock,
+            -state     => 'readonly',
+            -choices   => \%blockName,
+            -browsecmd => sub {
+                my %rHash = reverse %blockName;
+                my $id    = $rHash{$curBlock};
+                $block = $section->get_block_by_id($id);
+                $OKAY->configure(-state=>'normal');
+            }
+        );
+        my $blockDropEntry = $BlockJBE->Subwidget("entry");
+        $blockDropEntry->configure( -disabledbackground => "white" );
+        $blockDropEntry->configure( -disabledforeground => "black" );
+       
+        # teacher
         $TeacherJBE = $db->JBrowseEntry(
             -variable  => \$curTeach,
             -state     => 'readonly',
@@ -218,14 +256,16 @@ sub OpenDialog {
         my $teacherDropEntry = $TeacherJBE->Subwidget("entry");
         $teacherDropEntry->configure( -disabledbackground => "white" );
         $teacherDropEntry->configure( -disabledforeground => "black" );
+        
 
         # -------------------------------------------------------
         # NAME entry widgets
         # -------------------------------------------------------
 
-        $SectionEntry   = $db->Entry( -textvariable => \$newSection );
+        $SectionEntry = $db->Entry( -textvariable => \$newSection );
         $TeacherFName = $db->Entry( -textvariable => \$newFName );
         $TeacherLName = $db->Entry( -textvariable => \$newLName );
+        $BlockDescr = $db->Entry(-textvariable => \$selectedBlockText, -state=>'disabled', -disabledbackground=>'white');
 
         # -------------------------------------------------------
         # button widgets
@@ -234,8 +274,8 @@ sub OpenDialog {
         $SectionNewBtn = $db->Button(
             -text    => "Create",
             -command => sub {
-                add_new_section( \$newSection,   \%sectionName,
-                                 \$SectionJBE, \$curSection, $OKAY );
+                add_new_section( \$newSection, \%sectionName, \$SectionJBE,
+                                 \$curSection, $OKAY );
             }
         );
         $TeacherNewBtn = $db->Button(
@@ -245,61 +285,59 @@ sub OpenDialog {
                                  \$TeacherJBE, \$curTeach );
             }
         );
+        $BlockNewBtn = $db->Button(
+            -text    => "Create",
+            -command => sub {
+                add_new_block(
+                    \$section, \%blockName, \$BlockJBE,
+                    \$curBlock, \$OKAY
+                );
+            }
+        );
 
         # -------------------------------------------------------
         # Widget Placement
         # -------------------------------------------------------
-        $boldFont =
-          $db->toplevel->fontCreate( $db->toplevel->fontActual($boldFont),
-                                     -weight => 'bold' );
-        my %bold = $db->toplevel->fontActual($boldFont);
-        $db->Label(
-                    -text => "Create new block and add to " . $lab->number,
-                    -font => $bigFont
-                  )->grid( "-", "-", "-", -pady => 2, -padx => 2, -sticky => 'nsew' );
-        $MainLabel->grid( "-", "-", "-", -padx => 2, -sticky => 'nsew' );
-
+        # title
+        $lblTitle->grid( "-", "-", "-", -padx => 2, -sticky => 'nsew' );
+        
+        # course
         $db->Label( -text => '' )->grid( "-", "-", "-", -sticky => 'nsew' );
-        $db->Label(
-                    -text   => "Course Info (required)",
-                    -font   => $boldFont,
-                    -anchor => 'w'
-                  )->grid( "-", "-", "-", -padx => 2, -sticky => 'nsew' );
-
-     #  $db->Label(-text=>'')->grid( "-", "-","-",-padx=>2, -sticky => 'nsew' );
-        $db->Label( -text => "Choose Course", -anchor => 'w' )
-          ->grid( "-", "-", "-", -padx => 2, -sticky => 'nsew' );
+        $lblCourseInfo->grid( "-", "-", "-", -padx => 2, -sticky => 'nsew' );
+        $lblCourse->grid( "-", "-", "-", -padx => 2, -sticky => 'nsew' );
         $CourseJBE->grid( "-", "-", "-", -padx => 2, -sticky => 'nsew' );
-        $db->Label( -text => "Choose Section", -anchor => 'w' )->grid(
-                                    $db->Label(
-                                        -text => "Create new from Section Name",
-                                        -anchor => 'w'
-                                    ),
-                                    "-", "-",
-                                    -padx   => 2,
-                                    -sticky => 'nsew'
-        );
+        
+        # section
+        $lblSection->grid(
+                           $lblCreateSection,
+                           "-", "-",
+                           -padx   => 2,
+                           -sticky => 'nsew'
+                         );
         $SectionJBE->grid(
                            $SectionEntry, "-", $SectionNewBtn,
                            -padx   => 2,
                            -sticky => 'nsew'
                          );
+        # block
+        $lblBlock->grid(
+                           $lblCreateBlock,
+                           "-", "-",
+                           -padx   => 2,
+                           -sticky => 'nsew'
+                         );
+        $BlockJBE->grid( $BlockDescr, "-", $BlockNewBtn,-padx=>2,-sticky=>'nsew');
+        
+        # teacher
         $db->Label( -text => '' )
           ->grid( "-", "-", "-", -padx => 2, -sticky => 'nsew' );
-        $db->Label(
-                    -text   => "Teacher (optional)",
-                    -font   => $boldFont,
-                    -anchor => 'w'
-                  )->grid( "-", "-", "-", -padx => 2, -sticky => 'nsew' );
-        $db->Label( -text => "Teacher", -anchor => 'w' )->grid(
-                            $db->Label(
-                                -text => "Create new from Firstname / Lastname",
-                                -anchor => 'w'
-                            ),
-                            "-", "-",
-                            -padx   => 2,
-                            -sticky => 'nsew'
-        );
+        $lblTeacherInfo->grid( "-", "-","-", -padx => 2, -sticky => 'nsew' );
+        $lblTeacher->grid(
+            $lblCreateTeacher,
+            "-", "-",
+            -padx   => 2,
+            -sticky => 'nsew'
+                         );
         $TeacherJBE->grid(
                            $TeacherFName, $TeacherLName,
                            $TeacherNewBtn,
@@ -314,11 +352,8 @@ sub OpenDialog {
         #------------------------------------
         my $answer = $db->Show() || "Cancel";
 
-        if ( $answer eq "OK" ) {
+        if ( $answer eq "Ok" ) {
 
-            #if answer is okay, then create the new block
-            add_new_block();
-            
             # check if a block is defined
             if ($block) {
 
@@ -343,19 +378,25 @@ sub OpenDialog {
 sub updateSectionList {
 
     my $SectionJBE  = ${ +shift };
+    my $BlockJBE    = ${ +shift };
     my $sectionName = shift;
+    my $blockName   = shift;
     my $curSection  = shift;
-    my $OKAY        = shift;
-
+    my $curBlock    = shift;
+    my $OKAY = ${+shift};
+    
     #Disable okay;
-    $OKAY->configure( -state => 'disabled' );
+    $OKAY->configure(-state=>'disabled');
 
     #Blanking the section and block inputs
     $$curSection = "";
     $section     = "";
+    $$curBlock   = "";
+    $block       = "";
 
     # Blanking the choice hashes
     %$sectionName = ();
+    %$blockName   = ();
 
     my @sections = $course->sections;
 
@@ -365,6 +406,41 @@ sub updateSectionList {
 
     # Updating the Drop down with the new options
     $SectionJBE->configure( -choices => $sectionName );
+    $BlockJBE->configure( -choices => $blockName );
+
+}
+
+# ----------------------------------------------------------------------------
+# updateBlockList
+# When a section is selected, the block menu has to change for the new Section
+# ----------------------------------------------------------------------------
+
+sub updateBlockList {
+
+    my $BlockJBE  = ${ +shift };
+    my $section   = shift;
+    my $blockName = shift;
+    my $curBlock  = shift;
+    my $OKAY = ${+shift};
+    
+    #Disable okay;
+    $OKAY->configure(-state=>'disabled');
+
+    #Blanking the block inputs
+    $$curBlock = "";
+    $block     = "";
+
+    # Blanking the choice hashes
+    %$blockName = ();
+
+    my @blocks = $section->blocks;
+
+    foreach my $i (@blocks) {
+        $blockName->{ $i->id } = $i->print_description2;
+    }
+
+    # Updating the Drop down with the new options
+    $BlockJBE->configure( -choices => $blockName );
 
 }
 
@@ -451,8 +527,8 @@ sub add_new_section {
             if ( $answer ne 'Yes' ) {
                 $create_flag = 0;
                 my $temp = $sections[0];
-                $$curSection  = "$temp";
-                $section      = $temp;
+                $$curSection = "$temp";
+                $section     = $temp;
             }
         }
 
@@ -479,14 +555,22 @@ sub add_new_section {
 }
 
 sub add_new_block {
+    my $section   = ${ +shift };
+    my $blockName = shift;
+    my $BlockJBE  = ${ +shift };
+    my $curBlock  = shift;
+    my $OKAY = ${ +shift };
 
     #If a section is defined, create a new block and set active block to it
     if ($section) {
         my $new = Block->new( -number => $section->get_new_number );
+        $blockName->{ $new->id } = $new->print_description2;
+        $$curBlock = $new->print_description2;
         $section->add_block($new);
+        $BlockJBE->configure( -choices => $blockName );
         $block = $new;
+        $OKAY->configure(-state=>'normal');
     }
-
 }
 
 #=======================
