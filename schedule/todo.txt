@@ -30,12 +30,12 @@ X Disallow multiple labs with same room number
 X Fallback
 + Pretty up menu2s
 	+ Line up label with drop down menu (Mom)
-- get rid of trash icon / code
+X get rid of trash icon / code
 + fix weird variable names
 + add missing dirty flags
 
 X Limit number of things that can be added
-- Add scrolled object
++ Add scrolled object
 
 X Edit Course -> change sec name: doesn't update section list
 ~ Section/Course->rightclick: add change name
@@ -51,16 +51,18 @@ X Dragging Lab on course, BUG (assign lab Courses)
 X Remove Block from new course not enabled
 
 - Attempting to edit something in the tree as it is being updated will give a pathname error
-- Section/Section->clear all doesn't clear all (LABs)
 <> Optimize tree
--Clear All
+X Clear All
+
+- Bind return -> tab
+- See current selected
 
 (X) Can't close top level
 (X) View scaling doesn't work properly
 (X) Why did change to _get_canvas_coords break code
 (X) Change colour coding
 
-- In EditCourse, when adding sections, max is 10 (ok...?) 
++ In EditCourse, when adding sections, max is 10 (ok...?) 
   but when you do it again, the section numbers listed are still 1..10, 
   confusing because I didn't think it was working (it was... 
   but maybe numbers should be section numbers)

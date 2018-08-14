@@ -46,8 +46,6 @@ our $Max_id = 0;
 my $Drag_source;
 my $Schedule;
 my $GuiSchedule;
-my $Trash1_photo;
-my $Trash2_photo;
 my $Dragged_from;
 my $Dirty_ptr;
 my $Fonts;
@@ -89,19 +87,6 @@ sub new {
 		-bg => $Colours->{DarkBackground},
 		-fg => $Colours->{SelectedForeground},
 	);
-
-	eval {
-		$Trash1_photo = $frame->Photo(
-			-format => 'gif',
-			-file   => "$image_dir/small_trash.gif"
-		) unless $Trash1_photo;
-
-		#
-		$Trash2_photo = $frame->Photo(
-			-format => 'gif',
-			-file   => "$image_dir/large_trash.gif"
-		) unless $Trash2_photo;
-	};
 
 	# ----------------------------------------------------------------
 	# using grid, create right and left panels
@@ -145,8 +130,8 @@ sub new {
 	  $right_panel->Frame()
 	  ->pack( -expand => 1, -fill => 'both', -side => 'right' );
 
-	my ( $labs_list, $streams_list, $teachers_list, $trash_label ) =
-	  create_panel_for_modifying( $Trash1_photo, $tree, $panel );
+	my ( $labs_list, $streams_list, $teachers_list ) =
+	  create_panel_for_modifying( $tree, $panel );
 
 	#-------------------------------
 	# Alex Code
@@ -158,7 +143,7 @@ sub new {
 	# ----------------------------------------------------------------
 	# drag and drop bindings
 	# ----------------------------------------------------------------
-	_create_drag_drop_objs( $trash_label, $teachers_list, $labs_list,
+	_create_drag_drop_objs($teachers_list, $labs_list,
 		$streams_list, $tree );
 
 	# ---------------------------------------------------------------
@@ -181,7 +166,6 @@ sub new {
 # ===================================================================
 sub create_panel_for_modifying {
 
-	my $Trash1_photo = shift;
 	my $tree         = shift;
 	my $panel        = shift;
 
@@ -194,28 +178,6 @@ sub create_panel_for_modifying {
 		-row    => 3
 	);
 
-	# ---------------------------------------------------------------
-	# trash
-	# ---------------------------------------------------------------
-
-	my $trash_label;
-	if ($Trash1_photo) {
-		$trash_label = $button_row->Label(
-			-image  => $Trash1_photo,
-			-width  => 20,
-			-height => 20
-		)->pack( -side => 'left' );
-	}
-	else {
-		$trash_label = $button_row->Label(
-			-text   => 'Trash',
-			-width  => 10,
-			-height => 1,
-			-bg     => $Colours->{WorkspaceColour},
-			-fg     => $Colours->{WindowForeground},
-		)->pack( -side => 'left' );
-	}
-	$trash_label->bind( "<Leave>", [ \&empty_trash, $trash_label ] );
 
 	# ---------------------------------------------------------------
 	# buttons
@@ -287,7 +249,7 @@ sub create_panel_for_modifying {
 			$stream->id . ":  " . $stream->number . " " . $stream->descr );
 	}
 
-	return ( $labs_list, $streams_list, $teachers_list, $trash_label );
+	return ( $labs_list, $streams_list, $teachers_list );
 }
 
 # ===================================================================
@@ -427,7 +389,7 @@ sub add_lab {
 	my $not_hide = shift;
 
 	my $l_id = $l . $l->id;
-	no warnings;
+	#no warnings;
 	$tree->add(
 		"$path/$l_id",
 		-text => "Resource: " . $l->number . " " . $l->descr,
@@ -537,17 +499,21 @@ sub _show_tree_menu {
 		$tree_menu->cascade( -label => "Remove Teacher" );
 		$tree_menu->cascade( -label => "Remove Stream" );
 		$tree_menu->command(
-			-label   => "Clear All",
+			-label   => "Clear All Teacher Resources and Streams",
 			-command => sub {
 				my @sections = $obj->sections;
 				foreach my $sec (@sections) {
 					my @teachers = $sec->teachers;
 					my @streams  = $sec->streams;
+					my @labs = $Schedule->labs->list;
 					foreach my $teach (@teachers) {
 						$sec->remove_teacher($teach);
 					}
 					foreach my $stream (@streams) {
 						$sec->remove_stream($stream);
+					}
+					foreach my $lab(@labs){
+						$sec->remove_lab($lab);
 					}
 				}
 				refresh_schedule($tree);
@@ -720,18 +686,20 @@ sub _show_tree_menu {
 		$tree_menu->cascade( -label => "Remove Teacher" );
 		$tree_menu->cascade( -label => "Remove Stream" );
 		$tree_menu->command(
-			-label   => "Clear All",
+			-label   => "Clear All Teacher Resources and Streams",
 			-command => sub {
 				my @teachers = $obj->teachers;
-				my @streams  = $obj->streams;
-				foreach my $teach (@teachers) {
-					$obj->remove_teacher($teach);
-				}
-				foreach my $stream (@streams) {
-					$obj->remove_stream($stream);
-				}
-				refresh_schedule($tree);
-				set_dirty();
+					my @streams  = $obj->streams;
+					my @labs = $Schedule->labs->list;
+					foreach my $teach (@teachers) {
+						$obj->remove_teacher($teach);
+					}
+					foreach my $stream (@streams) {
+						$obj->remove_stream($stream);
+					}
+					foreach my $lab(@labs){
+						$obj->remove_lab($lab);
+					}
 			}
 		);
 		$tree_menu->command(
@@ -860,7 +828,7 @@ sub _show_tree_menu {
 		$tree_menu->cascade( -label => "Remove Teacher" );
 		$tree_menu->cascade( -label => "Remove Resource" );
 		$tree_menu->command(
-			-label   => "Clear All",
+			-label   => "Clear All Teacher Resources and Streams",
 			-command => sub {
 				my @teachers = $obj->teachers;
 				my @labs     = $obj->labs;
@@ -898,7 +866,7 @@ sub _show_tree_menu {
 
 				$db1->add( 'Label', -text => "Block Duration (in Hours)?" )
 				  ->pack;
-				
+
 				my $hourEntry = $db1->add(
 					'Entry',
 					-textvariable    => \$num,
@@ -907,9 +875,9 @@ sub _show_tree_menu {
 					-invalidcommand  => sub { $tree_menu->bell },
 					-width           => 20,
 				)->pack;
-				
-				$db1->configure(-focus=>$hourEntry);
-				
+
+				$db1->configure( -focus => $hourEntry );
+
 				my $answer1 = $db1->Show();
 				if (   $answer1 eq 'Ok'
 					&& defined($num)
@@ -1289,7 +1257,6 @@ sub _show_stream_menu {
 # create all the drag'n'drop stuff
 # =================================================================
 sub _create_drag_drop_objs {
-	my $trash_label   = shift;
 	my $teachers_list = shift;
 	my $labs_list     = shift;
 	my $streams_list  = shift;
@@ -1303,13 +1270,12 @@ sub _create_drag_drop_objs {
 		-sitetypes => [qw/Local/],
 		-startcommand =>
 		  [ \&_teacher_lab_start_drag, $teachers_list, $tree, 'Teacher' ],
-		-postdropcommand => [ \&empty_trash, $trash_label ],
+		#-postdropcommand => [ \&empty_trash, $trash_label ],
 	);
 
 	$teachers_list->DropSite(
 		-droptypes    => [qw/Local/],
-		-dropcommand  => [ \&_drop_on_trash, $trash_label, $tree ],
-		-entercommand => [ \&_enter_trash, $trash_label ],
+		-dropcommand  => [ \&_drop_on_trash, $tree ],
 	);
 
 	$labs_list->DragDrop(
@@ -1321,8 +1287,7 @@ sub _create_drag_drop_objs {
 
 	$labs_list->DropSite(
 		-droptypes    => [qw/Local/],
-		-dropcommand  => [ \&_drop_on_trash, $trash_label, $tree ],
-		-entercommand => [ \&_enter_trash, $trash_label ],
+		-dropcommand  => [ \&_drop_on_trash, $tree ],
 	);
 
 	$streams_list->DragDrop(
@@ -1334,8 +1299,7 @@ sub _create_drag_drop_objs {
 
 	$streams_list->DropSite(
 		-droptypes    => [qw/Local/],
-		-dropcommand  => [ \&_drop_on_trash, $trash_label, $tree ],
-		-entercommand => [ \&_enter_trash, $trash_label ],
+		-dropcommand  => [ \&_drop_on_trash, $tree ],
 	);
 
 	$tree->DropSite(
@@ -1351,14 +1315,10 @@ sub _create_drag_drop_objs {
 		-event     => '<B1-Motion>',
 		-sitetypes => [qw/Local/],
 		-startcommand =>
-		  [ \&_course_tree_start_start_drag, $tree, $trash_label ],
+		  [ \&_course_tree_start_start_drag, $tree],
 	);
 
-	$trash_label->DropSite(
-		-droptypes    => [qw/Local/],
-		-dropcommand  => [ \&_drop_on_trash, $trash_label, $tree ],
-		-entercommand => [ \&_enter_trash, $trash_label ],
-	);
+
 
 }
 
@@ -1495,15 +1455,10 @@ sub _dragging_on_course {
 	# =================================================================
 	sub _course_tree_start_start_drag {
 		my ( $tree, $trash_label, $drag ) = @_;
-		if ($Trash1_photo) {
-			$trash_label->configure( -image => $Trash1_photo );
-		}
-		else {
-			$trash_label->configure(
-				-bg => $Colours->{WorkspaceColour},
-				-fg => $Colours->{WindowForeground},
-			);
-		}
+		$trash_label->configure(
+			-bg => $Colours->{WorkspaceColour},
+			-fg => $Colours->{WindowForeground},
+		);
 
 		my $input = $tree->selectionGet();
 
@@ -1530,47 +1485,6 @@ sub _dragging_on_course {
 
 		return unless $Dragged_from eq 'Tree';
 
-		my $trash_label = shift;
-		my @x           = $Drag_source->cget('-relief');
-
-		if ($dropped) {
-			$toggle = 0;
-			if ($Trash1_photo) {
-				$trash_label->configure( -image => $Trash1_photo );
-			}
-			else {
-				$trash_label->configure(
-					-bg => $Colours->{WorkspaceColour},
-					-fg => $Colours->{WindowForeground},
-				);
-			}
-			return;
-		}
-		if ( $x[0] eq 'flat' ) {
-			if ($Trash1_photo) {
-				$trash_label->configure( -image => $Trash1_photo );
-			}
-			else {
-				$trash_label->configure(
-					-bg => $Colours->{WorkspaceColour},
-					-fg => $Colours->{WindowForeground},
-				);
-			}
-		}
-		else {
-			if ($Trash2_photo) {
-				$trash_label->configure( -image => $Trash2_photo );
-			}
-			else {
-				$trash_label->configure(
-					-fg => $Colours->{WorkspaceColour},
-					-bg => $Colours->{WindowForeground}
-				);
-			}
-
-		}
-		$trash_label->toplevel->update;
-
 		return;
 	}
 
@@ -1578,23 +1492,19 @@ sub _dragging_on_course {
 	# dropped item on trash can
 	# =================================================================
 	sub _drop_on_trash {
-		my $trash_label = shift;
 		my $tree        = shift;
 
 		# validate that we have data to work with
 		unless ($Dragged_from) {
-			empty_trash($trash_label);
 			return;
 		}
 
 		unless ($Dragged_from) {
-			empty_trash($trash_label);
 			return;
 		}
 		my $input = $tree->selectionGet();
 
 		unless ($input) {
-			empty_trash($trash_label);
 			return;
 		}
 
@@ -1605,7 +1515,6 @@ sub _dragging_on_course {
 		# get parent widget
 		my $parent = $tree->info( 'parent', $input );
 		unless ($parent) {
-			empty_trash($trash_label);
 			return;
 		}
 		my $parent_obj = $tree->infoData($parent)->{-obj};
@@ -1637,7 +1546,6 @@ sub _dragging_on_course {
 		# -------------------------------------------------------------
 		# tidy up
 		# -------------------------------------------------------------
-		empty_trash($trash_label);
 		$tree->autosetmode();
 		$Dragged_from = '';
 		set_dirty();
@@ -1646,15 +1554,11 @@ sub _dragging_on_course {
 	sub empty_trash {
 		my $trash_label = shift;
 		$dropped = 1;
-		if ($Trash1_photo) {
-			$trash_label->configure( -image => $Trash1_photo );
-		}
-		else {
-			$trash_label->configure(
-				-bg => $Colours->{WorkspaceColour},
-				-fg => $Colours->{WindowForeground},
-			);
-		}
+
+		$trash_label->configure(
+			-bg => $Colours->{WorkspaceColour},
+			-fg => $Colours->{WindowForeground},
+		);
 	}
 
 }
@@ -2256,7 +2160,7 @@ sub _edit_course2 {
 	}
 	$top->gridRowconfigure( $rows - 1, -weight => 1 );
 
-	$edit_dialog->configure(-focus=>$secDrop);
+	$edit_dialog->configure( -focus => $secDrop );
 
 	my $answer = $edit_dialog->Show();
 	$answer = "Close" unless $answer;
@@ -2681,7 +2585,7 @@ sub _edit_section2 {
 	}
 	$top->gridRowconfigure( $rows - 1, -weight => 1 );
 
-	$edit_dialog->configure(-focus=>$blockDrop);
+	$edit_dialog->configure( -focus => $blockDrop );
 
 	my $answer = $edit_dialog->Show();
 	$answer = "NO" unless $answer;
@@ -2996,7 +2900,7 @@ sub _edit_block2 {
 	}
 	$top->gridRowconfigure( $rows - 1, -weight => 1 );
 
-	$edit_dialog->configure(-focus=>$durIn);
+	$edit_dialog->configure( -focus => $durIn );
 
 	my $answer = $edit_dialog->Show();
 	$answer = "Close" unless $answer;
@@ -3054,9 +2958,9 @@ sub _add_block {
 		-invalidcommand  => sub { $frame->bell },
 		-width           => 20,
 	)->pack( -fill => 'x' );
-	
-	$db1->configure(-focus=>$blockNumEntry);
-	
+
+	$db1->configure( -focus => $blockNumEntry );
+
 	my $answer = $db1->Show();
 	$answer = "Cancel" unless $answer;
 
@@ -3074,20 +2978,20 @@ sub _add_block {
 		foreach my $i ( 1 ... $num ) {
 			push( @hrs, "" );
 		}
-		
+
 		my $hoursEntry;
-		
+
 		foreach my $i ( 1 ... $num ) {
 			my $A = $top->Label( -text => "Block $i" );
 			my $B = $top->Entry(
-					-textvariable    => \$hrs[ $i - 1 ],
-					-validate        => 'key',
-					-validatecommand => \&is_number,
-					-invalidcommand  => sub { $frame->bell },
+				-textvariable    => \$hrs[ $i - 1 ],
+				-validate        => 'key',
+				-validatecommand => \&is_number,
+				-invalidcommand  => sub { $frame->bell },
 			);
-			
+
 			$hoursEntry = $B if $i == 1;
-			$A->grid($B , -sticky => 'new' );
+			$A->grid( $B, -sticky => 'new' );
 		}
 
 		my ( $col, $row ) = $top->gridSize();
@@ -3097,9 +3001,9 @@ sub _add_block {
 		$top->gridRowconfigure( $row - 1, -weight => 1 );
 
 		$answer = "";
-		
-		$db2->configure(-focus=>$hoursEntry);
-		
+
+		$db2->configure( -focus => $hoursEntry );
+
 		$answer = $db2->Show();
 		$answer = "Cancel" unless $answer;
 
@@ -3189,8 +3093,8 @@ sub _add_section {
 		foreach my $i ( 1 ... $numS ) {
 			my $x = $frame->Frame()->pack( -expand => 1, -fill => 'x' );
 
-			$x->Label( -text => "Section $i", -width => 11, -anchor => 'w' )
-			  ->pack( -side => 'left' );
+			#$x->Label( -text => "Name", -width => 5, -anchor => 'w' )
+			#  ->pack( -side => 'left' );
 
 			my $y = $x->Entry( -textvariable => \$names[ $i - 1 ] )->pack(
 				-side   => 'left',
@@ -3270,7 +3174,7 @@ sub _add_section {
 							-invalidcommand  => sub { $frame->bell },
 						);
 						$hoursEntry = $B if $i == 1;
-						$A->grid( $B , -sticky => 'new' );
+						$A->grid( $B, -sticky => 'new' );
 					}
 
 					my ( $col, $row ) = $top->gridSize();
@@ -3280,9 +3184,9 @@ sub _add_section {
 					$top->gridRowconfigure( $row - 1, -weight => 1 );
 
 					$answer = "";
-					
-					$db2->configure(-focus=>$hoursEntry);
-					
+
+					$db2->configure( -focus => $hoursEntry );
+
 					$answer = $db2->Show();
 					$answer = "Cancel" unless $answer;
 				}
