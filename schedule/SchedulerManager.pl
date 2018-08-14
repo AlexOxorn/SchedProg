@@ -18,7 +18,7 @@ use GuiSchedule::DataEntry;
 use GuiSchedule::EditCourses;
 use Schedule::Conflict;
 use PerlLib::Colours;
-use GuiSchedule::EditLab;
+use GuiSchedule::EditLabs;
 
 use Export::CSV;
 use Export::Excel;
@@ -501,7 +501,6 @@ sub new_schedule {
 	$guiSchedule->destroy_all;
 
 	# TODO: save previous schedule?
-
 	$Schedule = Schedule->new();
 	
 	undef $Current_schedule_file;
