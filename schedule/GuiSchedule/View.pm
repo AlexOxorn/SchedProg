@@ -362,7 +362,7 @@ sub _endBinding {
       AssignBlock->Get_day_start_duration($chosen);
 
     #create the menu to select the block to assign to the timeslot
-    EditLabs->new( $cn, $self->schedule, $self->guiSchedule, $day, $start, $duration,
+    AssignToResource->new( $cn, $self->schedule, $self->guiSchedule, $day, $start, $duration,
         $self->obj, $self->type );
 
     #redraw

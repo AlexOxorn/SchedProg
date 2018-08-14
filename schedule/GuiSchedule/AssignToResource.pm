@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-package EditLabs;
+package AssignToResource;
 use FindBin;
 use Carp;
 use Tk;
