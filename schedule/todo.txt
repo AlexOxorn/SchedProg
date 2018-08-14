@@ -54,7 +54,7 @@ X Remove Block from new course not enabled
 <> Optimize tree
 X Clear All
 
-- Bind return -> tab
+- In naming sections, or adding hours to blocks, Bind return -> tab
 - See current selected
 
 + CSV hardening
@@ -64,7 +64,11 @@ X Clear All
 (X) Why did change to _get_canvas_coords break code
 (X) Change colour coding
 
-+ In EditCourse, when adding sections, max is 10 (ok...?) 
+no longer relevant: In EditCourse, when adding sections, max is 10 (ok...?) 
   but when you do it again, the section numbers listed are still 1..10, 
   confusing because I didn't think it was working (it was... 
   but maybe numbers should be section numbers)
+  
+
+
+  
