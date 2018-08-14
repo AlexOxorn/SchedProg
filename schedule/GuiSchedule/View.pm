@@ -10,13 +10,14 @@ use GuiSchedule::GuiBlocks;
 use GuiSchedule::Undo;
 use GuiSchedule::ViewBase;
 use Schedule::Conflict;
+use GuiSchedule::AssignBlock;
 
 use Tk;
 our @ISA = qw(ViewBase);
 
 =head1 NAME
 
-View - describes the visual representation of a Window
+View - describes the visual representation of a Schedule
 
 =head1 VERSION
 
@@ -40,6 +41,8 @@ Describes a View
 my $Undo_number   = "";
 my $Redo_number   = "";
 my $Clicked_block = 0;
+my $EarliestTime  = $ViewBase::EarliestTime;
+my $LatestTime    = $ViewBase::LatestTime;
 
 # =================================================================
 # new
@@ -106,52 +109,106 @@ sub new {
     }
 
     # ---------------------------------------------------------------
-    # create the pop-up menu BEFORE drawing the blocks, so that it can be
-    # bound to each block (done in $self->draw_blocks)
+    # popup menu for guiblocks
     # ---------------------------------------------------------------
-    my $pm = $mw->Menu( -tearoff => 0 );
-    $pm->command( -label   => "Toggle Moveable/Fixed",
-                  -command => [ \&toggle_movement, $self ], );
-
-    if ( $type ne 'stream' ) {
-        my $mm = $pm->cascade( -label => 'Move Class to', -tearoff => 0 );
-        my @array;
-
-        # sorted array of teacher or lab
-        if ( $self->type eq 'teacher' ) {
-            @array = sort { $a->lastname cmp $b->lastname }
-              $self->schedule->all_teachers;
-        }
-        elsif ( $self->type eq 'lab' ) {
-            @array =
-              sort { $a->number cmp $b->number } $self->schedule->all_labs;
-        }
-        elsif ( $self->type eq 'stream' ) {
-            @array =
-              sort { $a->number cmp $b->number } $self->schedule->all_streams;
-        }
-
-        # remove object of the view
-        @array = grep { $_->id != $self->obj->id } @array;
-
-        # create sub menu
-        foreach my $obj (@array) {
-            my $name;
-            if ( $self->type eq 'teacher' ) {
-                $name = $obj->firstname . ' ' . $obj->lastname;
-            }
-            else {
-                $name = $obj->number;
-            }
-            $mm->command( -label   => $name,
-                          -command => [ \&move_class, $self, $obj ] );
-        }
-    }
-
-    $self->popup_menu($pm);
+    $self->setup_popup_menu($mw);
 
     # ---------------------------------------------------------------
     # undo/redo
+    # ---------------------------------------------------------------
+    $self->setup_undo_redo($mw);
+
+    # ---------------------------------------------------------------
+    # refresh drawing
+    # ---------------------------------------------------------------
+    $self->redraw();
+    $self->schedule->calculate_conflicts;
+    $self->update_for_conflicts( $self->type );
+
+    # return object
+    return $self;
+}
+
+# ============================================================================
+# setup popup menu
+# ============================================================================
+
+=head2 setup_popup_menu ($mw) {
+ 
+create the pop-up menu BEFORE drawing the blocks, so that it can be
+bound to each block (done in $self->draw_blocks)
+
+=cut
+
+sub setup_popup_menu {
+    my $self = shift;
+    my $mw   = shift;
+    my $type = $self->type;
+
+    # create menu
+    my $pm = $mw->Menu( -tearoff => 0 );
+
+    # for all menus
+    $pm->command( -label   => "Toggle Moveable/Fixed",
+                  -command => [ \&toggle_movement, $self ], );
+
+    # Extra stuff depending on type of view
+    my $mm = $pm->cascade( -label => 'Move Class to', -tearoff => 0 );
+    my @array;
+
+    # sorted array of teacher or lab
+    if ( $self->type eq 'teacher' ) {
+        @array =
+          sort { $a->lastname cmp $b->lastname } $self->schedule->all_teachers;
+    }
+    elsif ( $self->type eq 'lab' ) {
+        @array =
+          sort { $a->number cmp $b->number } $self->schedule->all_labs;
+    }
+    elsif ( $self->type eq 'stream' ) {
+        @array =
+          sort { $a->number cmp $b->number } $self->schedule->all_streams;
+    }
+
+    # remove object of the view
+    @array = grep { $_->id != $self->obj->id } @array;
+
+    # create sub menu
+    foreach my $obj (@array) {
+        my $name;
+        if ( $self->type eq 'teacher' ) {
+            $name = $obj->firstname . ' ' . $obj->lastname;
+        }
+        else {
+            $name = $obj->number;
+        }
+        $mm->command( -label   => $name,
+                      -command => [ \&move_class, $self, $obj ] );
+    }
+
+    # save
+    $self->popup_menu($pm);
+
+}
+
+# ============================================================================
+# setup undo_redo
+# ============================================================================
+
+=head2 setup_undo_redo ($mw) {
+ 
+create code for undo and redo
+
+=cut
+
+
+sub setup_undo_redo {
+    my $self = shift;
+    my $mw   = shift;
+    my $tl   = $self->toplevel;
+    
+    # ---------------------------------------------------------------
+    # bind keys
     # ---------------------------------------------------------------
     $tl->bind( '<Control-KeyPress-z>' => [ \&undo, $self, 'undo' ] );
     $tl->bind( '<Meta-Key-z>'         => [ \&undo, $self, 'undo' ] );
@@ -192,16 +249,154 @@ sub new {
                           -width        => 15
                         )->pack( -side => 'right', -fill => 'x' );
 
-    # ---------------------------------------------------------------
-    # refresh drawing
-    # ---------------------------------------------------------------
-    $self->redraw();
-    $self->schedule->calculate_conflicts;
-    $self->update_for_conflicts( $self->type );
-
-    # return object
-    return $self;
 }
+
+# ============================================================================
+# setup assign blocks
+# ============================================================================
+
+=head2 setup_assign_blocks {
+ 
+Set up code so that the user can select blocks and assign to this view object
+
+Allows for creation of new sections and teachers
+
+=cut
+
+sub setup_assign_blocks {
+    my $self = shift;
+    my $cn = $self->canvas;
+
+    #Loop through each half hour time slot, and create and draw AsignBlock for each
+    my @allBlocks;
+    foreach my $day ( 1 ... 5 ) {
+        foreach my $start ( $EarliestTime * 2 ... ( $LatestTime * 2 ) - 1 ) {
+            push( @allBlocks, AssignBlock->new( $self, $day, $start / 2 ) );
+        }
+    }
+
+    #BINDS MOUSE 1 to the setup of AssignBlock selection, then calls a function
+    #to bind the mouse movement
+    $cn->CanvasBind(
+        '<Button-1>',
+        [
+           sub {
+               return if $Clicked_block;  # allow another event to take control
+               my $cn       = shift;
+               my $x        = shift;
+               my $y        = shift;
+               my $assblock = AssignBlock->find( $x, $y, \@allBlocks );
+               return unless $assblock;
+               $assblock->set_colour();
+               my $day = $assblock->day();
+               $self->_dragBind( $cn, $day, $x, $y, \@allBlocks );
+           },
+           Ev('x'),
+           Ev('y')
+        ]
+    );
+
+}
+
+sub _dragBind {
+    my $self      = shift;
+    my $cn        = shift;
+    my $day       = shift;
+    my $lx        = shift;
+    my $ly        = shift;
+    my $allBlocks = shift;
+    my @chosen;
+
+    #Get a list of all the AssignBlocks associated with a given day
+    my @dayBlocks = AssignBlock->get_day_blocks( $day, $allBlocks );
+
+    #Binds motion to a motion sub to handel the selection of multiple time slots
+    #when moving mouse
+    $cn->CanvasBind(
+        '<Motion>',
+        [
+            \&_motionSub, Ev('x'), Ev('y'), \$lx,
+            \$ly, \@chosen, \@dayBlocks,
+        ]
+    );
+
+    #Binds the release of Mouse 1 to the end binding routine to open the 
+    #block adding menu and unbind everything else
+    $cn->CanvasBind(
+        '<ButtonRelease-1>',
+        [
+            sub {
+                my $cn     = shift;
+                my $x      = shift;
+                my $y1     = shift;
+                my $y2     = shift;
+                my $chosen = shift;
+                $self->_endBinding( $cn, $x, $y1, $y2, $chosen );
+            },
+            $lx,
+            $ly,
+            Ev('y'),
+            \@chosen
+        ]
+    );
+}
+
+sub _endBinding {
+    my $self   = shift;
+    my $cn     = shift;
+    my $x1     = shift;
+    my $y1     = shift;
+    my $y2     = shift;
+    my $chosen = shift;
+    
+    #Unbind everything
+    $cn->CanvasBind( '<Motion>',          sub { } );
+    $cn->CanvasBind( '<ButtonRelease-1>', sub { } );
+    
+    my $something_to_do = $chosen && @$chosen;
+    return unless $something_to_do;
+
+    #Get the day and time of the chosen blocks
+    my ( $day, $start, $duration ) =
+      AssignBlock->Get_day_start_duration($chosen);
+
+    #create the menu to select the block to assign to the timeslot
+    EditLabs->new( $cn, $self->schedule, $self->guiSchedule, $day, $start, $duration,
+        $self->obj );
+
+    #redraw
+    $self->redraw();
+}
+
+sub _motionSub {
+    my $cn        = shift;
+    my $x2        = shift;
+    my $y2        = shift;
+    my $x1        = shift;
+    my $y1        = shift;
+    my $chosen    = shift;
+    my $dayBlocks = shift;
+
+    #Temporarily unbind motion
+    $cn->CanvasBind( '<Motion>', sub { } );
+
+    #get the AssignBlocks currently under the slection window
+    @$chosen = AssignBlock->in_range( $$x1, $$y1, $x2, $y2, $dayBlocks );
+
+    #colour selection blue
+    foreach my $blk (@$dayBlocks) {
+        $blk->unfill;
+    }
+    foreach my $blk (@$chosen) {
+        $blk->set_colour('blue');
+    }
+
+    #rebind Motion
+    $cn->CanvasBind( '<Motion>',
+        [ \&_motionSub, Ev('x'), Ev('y'), $x1, $y1, $chosen, $dayBlocks ] );
+
+}
+
 
 # =================================================================
 # toggle_movement
@@ -302,21 +497,20 @@ sub redraw {
     my $currentScale = $self->currentScale;
 
     $self->SUPER::redraw();
+    
+    # ---------------------------------------------------------------
+    # If this is a lab view, then add 'AssignBlocks' to the view,
+    # and bind as necessary
+    # ---------------------------------------------------------------
+    my $type = $self->type;
+    $self->setup_assign_blocks if lc($type) eq 'lab';
+
 
     # ---------------------------------------------------------------
     # set colour for all buttons on main window, "Schedules" tab
     # ---------------------------------------------------------------
     $self->set_view_button_colours();
     $self->guiSchedule->update_for_conflicts if $self->guiSchedule;
-    $self->canvas->CanvasBind(
-        "<1>",
-        sub {
-            if ($Clicked_block) {
-                print "I clicked a block, allow mouse moves\n";
-            }
-            else { print "run Alex Code\n" }
-          }
-    );
 
     # ---------------------------------------------------------------
     # bind events for each gui block
@@ -465,12 +659,11 @@ events to GuiBlock.
 =cut
 
 sub _on_click {
-    
-    
+
     my ( $cn, $guiblock, $self, $xstart, $ystart ) = @_;
     my ( $startingX, $startingY ) = $cn->coords( $guiblock->rectangle );
 
-    # we are processing a click on a guiblock, so tell the 
+    # we are processing a click on a guiblock, so tell the
     # click event for the canvas not to do anything
     $Clicked_block = 1;
 
@@ -592,7 +785,7 @@ updates the Blocks time in the Schedule.
 
 sub _end_move {
     my ( $cn, $guiblock, $self ) = @_;
-    
+
     # it is ok now to process a click on the canvas
     $Clicked_block = 0;
 

@@ -7,7 +7,6 @@ use FindBin;
 use Carp;
 use lib "$FindBin::Bin/..";
 use Tk::TableEntry;
-use GuiSchedule::ViewLab;
 
 =head1 NAME
 
@@ -116,21 +115,6 @@ sub new {
     # ---------------------------------------------------------------
     # create the table entry object
     # ---------------------------------------------------------------
-    if ( $type eq 'Lab' ) {
-        my $callback =
-          [ \&openView, $self->{-schedule}, $self->{-frame}->toplevel ];
-
-        $de = $frame->TableEntry(
-                                  -rows       => 1,
-                                  -columns    => scalar(@titles),
-                                  -titles     => \@titles,
-                                  -colwidths  => \@sizes,
-                                  -delete     => [ \&delete_obj, $self ],
-                                  -buttoncmd  => $callback,
-                                  -buttontext => "Add block",
-                                )->pack( -side => 'top', -expand => 1, -fill => 'both' );
-    }
-    else {
         $de = $frame->TableEntry(
                                   -rows      => 1,
                                   -columns   => scalar(@titles),
@@ -138,7 +122,6 @@ sub new {
                                   -colwidths => \@sizes,
                                   -delete    => [ \&delete_obj, $self ],
                                 )->pack( -side => 'top', -expand => 1, -fill => 'both' );
-    }
 
     @disabled = (1);
     foreach my $c ( 2 .. $de->columns ) {
@@ -333,14 +316,7 @@ sub delete_obj {
 sub set_dirty {
     my $self = shift;
     ${ $self->{-dirty} } = 1;
-    $guiSchedule->destroy_all;
-}
-
-sub openView {
-    my ( $schedule, $mw, $id, $room, $desc ) = @_;
-    my $lab = $schedule->labs->get($id);
-
-    my $view = ViewLab->new( $mw, $schedule, $lab );
+    $guiSchedule->redraw_all_views;
 }
 
 # =================================================================

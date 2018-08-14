@@ -697,7 +697,7 @@ sub determine_button_colours {
         my $active = Colour->darken(10,$colour);
             $$btn->configure(
                        -background =>$colour,
-                       -activebackground => $active);
+                       -activebackground => $active) if $btn;
     }
 }
 
@@ -778,10 +778,6 @@ sub create_frame {
         $self->add_button_refs( \$btn, $obj );
 
         my $openView = $self->is_open( $obj->id, $type );
-        if ($openView) {
-            $openView->button_ptr( \$btn );
-        }
-
         $col++;
 
         # reset to next row

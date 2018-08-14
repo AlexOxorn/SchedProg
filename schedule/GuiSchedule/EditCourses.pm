@@ -464,9 +464,7 @@ sub _teacher_sort {
 # =================================================================
 sub set_dirty {
 	$$Dirty_ptr = 1;
-
-	#$GuiSchedule->redraw_all_views;
-	$GuiSchedule->destroy_all;
+	$GuiSchedule->redraw_all_views;
 }
 
 #==================================================================

@@ -115,6 +115,7 @@ sub new {
 		-width   => 0,
 		-tags    => $dayTag{"$day"},
 	);
+	$cn->lower($r,'all');
 
 	# ---------------------------------------------------------------
 	# create object
@@ -424,6 +425,7 @@ sub Get_day_start_duration {
 	my $class  = shift;
 	my $chosen = shift;
 	my @x      = @$chosen;
+	return unless @x;
 
 	my $day   = $x[0]->day;
 	my $start = $x[0]->start;

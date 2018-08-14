@@ -91,22 +91,26 @@ sub set {
     $mw->configure( -bg => $colours{WorkspaceColour} );
 
     # define normal font
-    my $size = $mysize || 12;
-    $size = $size - 2 if $^O =~ /win/i;
-    my $family = "arial";
-    $family = "lucida" if $^O =~ /darwin/i;
-    $size = $size if $^O =~ /darwin/i;
+    $mysize = $mysize || 12;
+    my $size = $mysize - 1;
+    $size = $size - 2 if $^O =~ /window/i;
+    my $family = "newspaper";
     my %normalfont = (
         '-family',    'arial',  '-size',       $size,
         '-weight',    'normal', '-slant',      'roman',
         '-underline', 0,        '-overstrike', 0
     );
+    my %boldfont = (%normalfont, -weight=>"bold");
+    %boldfont = (%boldfont, -family=>'lucida') if $^O =~ /darwin/;
+    my %bigboldfont = (%normalfont, -weight=>"bold", -size=>$size+2) ;
+    %bigboldfont = (%bigboldfont, -family=>'lucida', -size=>$size+3) if $^O =~ /darwin/;
 
     # make fonts
     my $fonts = {
         normal => $mw->fontCreate(%normalfont),
-        bold   => $mw->fontCreate( %normalfont, -weight => 'bold' ),
+        bold   => $mw->fontCreate( %boldfont, ),
         big    => $mw->fontCreate( %normalfont, -size => $size + 2 ),
+        bigbold => $mw->fontCreate( %bigboldfont ),
         fixed  => $mw->fontCreate(
             %normalfont,
             -size   => $size + 1,
