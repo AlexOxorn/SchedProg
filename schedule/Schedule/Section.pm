@@ -175,9 +175,6 @@ Section name
 sub name {
     my $self = shift;
     $self->{-name} = shift if @_;
-    unless ($self->{-name}) {
-        $self->{-name} = "Section " . $self->number;
-    }
     return $self->{-name};
 }
 
@@ -641,10 +638,8 @@ sub print_description{
 	
 	
 	if($self->name ne ""){
-		
 		return "Section " . $self->number . ": " . $self->name;
 	}else{
-		
 		return "Section " . $self->number;
 	}
 }

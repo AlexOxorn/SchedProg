@@ -548,6 +548,31 @@ sub assign_teacher {
 }
 
 # =================================================================
+# assign_lab
+# =================================================================
+
+=head2 assign_lab ( lab object )
+
+Assign a lab to all sectionss in this course
+
+Returns course object
+
+=cut
+
+sub assign_lab {
+    my $self = shift;
+
+    if (@_) {
+        my $lab = shift;
+        foreach my $section ( $self->sections ) {
+            $section->assign_lab($lab);
+        }
+    }
+
+    return $self;
+}
+
+# =================================================================
 # assign_stream
 # =================================================================
 
