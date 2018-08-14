@@ -362,7 +362,7 @@ sub _endBinding {
 
     #create the menu to select the block to assign to the timeslot
     EditLabs->new( $cn, $self->schedule, $self->guiSchedule, $day, $start, $duration,
-        $self->obj );
+        $self->obj, $self->type );
 
     #redraw
     $self->redraw();
@@ -503,7 +503,7 @@ sub redraw {
     # and bind as necessary
     # ---------------------------------------------------------------
     my $type = $self->type;
-    $self->setup_assign_blocks if lc($type) eq 'lab';
+    $self->setup_assign_blocks if lc($type) eq 'lab' || lc($type) eq 'teacher';
 
 
     # ---------------------------------------------------------------
