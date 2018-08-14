@@ -88,7 +88,7 @@ sub new {
     # get needed block information
     my $blockNum         = $block->section->course->number || " ";
     my $blockSec         = " (" . $block->section->number . ")";
-    my $blockSectionName = $block->section->name;
+    my $blockSectionName = $block->section->title;
     my @teachers         = $block->teachers;
     my $blockTeacher     = join( "\n", @teachers );
     my @labs             = $block->labs;
