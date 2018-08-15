@@ -1006,7 +1006,7 @@ sub teacher_stat {
     $week{'Saturday'}  = 0;
     $week{'Sunday'}    = 0;
 
-    my $hoursOfWork;
+    my $hoursOfWork = 0;
 
     foreach my $i (@blocks) {
         $hoursOfWork += $i->duration;

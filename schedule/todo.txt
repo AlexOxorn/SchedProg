@@ -19,6 +19,8 @@ X Giving Blocks Numbers
 
 X Change max id >= 1
 
+- FIX tabbing order in AssignRescrece
+
 X Import CSV
 X CSV Icon
 X last opened change (current schedule something)

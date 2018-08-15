@@ -274,20 +274,6 @@ Returns Course object
 
 =cut
 
-# ===================================
-# Alex Code
-# Assign teacher to Course
-# ===================================
-
-sub course_assign_teacher() {
-    my $self    = shift;
-    my $teacher = shift;
-
-    foreach my $sec ( $self->sections ) {
-        $sec->assign_teacher($teacher);
-    }
-}
-
 sub remove_section {
     my $self    = shift;
     my $section = shift;

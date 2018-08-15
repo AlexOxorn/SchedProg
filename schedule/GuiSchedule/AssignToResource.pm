@@ -167,10 +167,10 @@ sub OpenDialog {
 		$lblTitle = $db->Label(
 			-text => "Assign block to Resource",
 			-font => $bigFont
-		) if $type eq 'type';
+		) if $type eq 'lab';
 		
 		$lblTitle = $db->Label(
-			-text => "Assign block to Resource",
+			-text => "Assign block to Teacher",
 			-font => $bigFont
 		) if $type eq 'teacher';
 		
@@ -263,7 +263,10 @@ sub OpenDialog {
 		$courseDropEntry->configure( -disabledbackground => "white" );
 		$courseDropEntry->configure( -disabledforeground => "black" );
 
+
+		# ========================================================
 		# section
+		# ========================================================
 		$SectionJBE = $db->JBrowseEntry(
 			-variable  => \$curSection,
 			-state     => 'readonly',
@@ -280,7 +283,23 @@ sub OpenDialog {
 		$secDropEntry->configure( -disabledbackground => "white" );
 		$secDropEntry->configure( -disabledforeground => "black" );
 
+		$SectionEntry = $db->Entry( -textvariable => \$newSection );
+		
+		$SectionNewBtn = $db->Button(
+			-text    => "Create",
+			-command => sub {
+				add_new_section(
+					\$newSection, \%sectionName, \$SectionJBE,
+					\$curSection, $OKAY
+				);
+			}
+		);
+
+
+		# =====================================================
 		# block
+		# =====================================================
+		
 		$BlockJBE = $db->JBrowseEntry(
 			-variable  => \$curBlock,
 			-state     => 'readonly',
@@ -296,7 +315,25 @@ sub OpenDialog {
 		$blockDropEntry->configure( -disabledbackground => "white" );
 		$blockDropEntry->configure( -disabledforeground => "black" );
 
+		$BlockDescr   = $db->Entry(
+			-textvariable       => \$selectedBlockText,
+			-state              => 'disabled',
+			-disabledbackground => 'white'
+		);
+		
+		$BlockNewBtn = $db->Button(
+			-text    => "Create",
+			-command => sub {
+				add_new_block( \$section, \%blockName, \$BlockJBE, \$curBlock,
+					\$OKAY );
+			}
+		);
+		
+		
+		# =============================================
 		# teacher
+		# ============================================
+		
 		$TeacherJBE = $db->JBrowseEntry(
 			-variable  => \$curTeach,
 			-state     => 'readonly',
@@ -311,7 +348,22 @@ sub OpenDialog {
 		$teacherDropEntry->configure( -disabledbackground => "white" );
 		$teacherDropEntry->configure( -disabledforeground => "black" );
 
+		$TeacherFName = $db->Entry( -textvariable => \$newFName );
+		$TeacherLName = $db->Entry( -textvariable => \$newLName );
+
+		$TeacherNewBtn = $db->Button(
+			-text    => "Create",
+			-command => sub {
+				add_new_teacher(
+					\$newFName,   \$newLName, \%teacherName,
+					\$TeacherJBE, \$curTeach
+				);
+			}
+		);
+
+		# ======================================================
 		# Lab
+		# ======================================================
 		$LabJBE = $db->JBrowseEntry(
 			-variable  => \$curLab,
 			-state     => 'readonly',
@@ -326,44 +378,9 @@ sub OpenDialog {
 		$labDropEntry->configure( -disabledbackground => "white" );
 		$labDropEntry->configure( -disabledforeground => "black" );
 
-		# -------------------------------------------------------
-		# NAME entry widgets
-		# -------------------------------------------------------
-
-		$SectionEntry = $db->Entry( -textvariable => \$newSection );
-		$TeacherFName = $db->Entry( -textvariable => \$newFName );
-		$TeacherLName = $db->Entry( -textvariable => \$newLName );
-		$BlockDescr   = $db->Entry(
-			-textvariable       => \$selectedBlockText,
-			-state              => 'disabled',
-			-disabledbackground => 'white'
-		);
-
-		$LabDscr   = $db->Entry( -textvariable => \$newLabName );
 		$LabNumber = $db->Entry( -textvariable => \$newLabNum );
-
-		# -------------------------------------------------------
-		# button widgets
-		# -------------------------------------------------------
-
-		$SectionNewBtn = $db->Button(
-			-text    => "Create",
-			-command => sub {
-				add_new_section(
-					\$newSection, \%sectionName, \$SectionJBE,
-					\$curSection, $OKAY
-				);
-			}
-		);
-		$TeacherNewBtn = $db->Button(
-			-text    => "Create",
-			-command => sub {
-				add_new_teacher(
-					\$newFName,   \$newLName, \%teacherName,
-					\$TeacherJBE, \$curTeach
-				);
-			}
-		);
+		$LabDscr   = $db->Entry( -textvariable => \$newLabName );
+		
 
 		$LabNewBtn = $db->Button(
 			-text    => "Create",
@@ -375,13 +392,7 @@ sub OpenDialog {
 			}
 		);
 
-		$BlockNewBtn = $db->Button(
-			-text    => "Create",
-			-command => sub {
-				add_new_block( \$section, \%blockName, \$BlockJBE, \$curBlock,
-					\$OKAY );
-			}
-		);
+		
 
 		# -------------------------------------------------------
 		# Widget Placement

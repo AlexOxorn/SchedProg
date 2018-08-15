@@ -8,45 +8,50 @@ use Carp;
 use Tk;
 use lib "$FindBin::Bin/..";
 use Tk::DynamicTree;
-use Tk::DragDrop;
-use Tk::DropSite;
-use Tk::ItemStyle;
-use Tk::FindImages;
 use PerlLib::Colours;
-use Tk::FindImages;
 use Tk::Dialog;
 use Tk::Menu;
 use Tk::LabEntry;
 use Tk::Optionmenu;
 use Tk::JBrowseEntry;
-my $image_dir = Tk::FindImages::get_image_dir();
 our $Schedule;
-my $MAX_SECTIONS = 50;
+my $MAX_SECTIONS = 100;
 my $MAX_BLOCK    = 10;
 
 #==================================================================
-#ALEX CODE
-#show menus
+# coded by ALEX
 #==================================================================
 
+#==================================================================
+# show tree menu
+#==================================================================
+# creates and shows the drop down menu when right clicking
+# the schedule tree
+# -----------------------------------------------------------------
 sub _show_tree_menu {
-    my ( $self, $tree, $teachers_list, $labs_list, $streams_list, $x, $y ) = @_;
+    my ( $self, $tree, $x, $y ) = @_;
+
+    # what was selected? If nothing, bail out
     my @inputs = $tree->selectionGet();
     my $input  = $inputs[0];
     return unless $input;
 
+    # get the object and parent object associated with the selected item,
+    # if no parent (i.e. Schedule) we don't need a drop down menu
     my $obj = $tree->infoData($input)->{-obj};
     my $parent = $tree->info( 'parent', $input );
     return unless $parent;
     my $parent_obj = $tree->infoData($parent)->{-obj};
 
+    # create the drop down menu
     my $tree_menu = $tree->Menu( -tearoff => 0 );
+
+    #=====================================
+    # Course Main Menu
+    #=====================================
     if ( $obj->isa('Course') ) {
         my @sections = $obj->sections;
 
-        #=====================================
-        #COURSE MENU
-        #=====================================
         $tree_menu->cascade( -label => "Add Teacher" );
         $tree_menu->cascade( -label => "Set Stream" );
         $tree_menu->command(
@@ -61,23 +66,9 @@ sub _show_tree_menu {
         $tree_menu->cascade( -label => "Remove Teacher" );
         $tree_menu->cascade( -label => "Remove Stream" );
         $tree_menu->command(
-            -label   => "Clear All Teacher Resources and Streams",
+            -label   => "Clear All Teachers, Resources, and Streams",
             -command => sub {
-                my @sections = $obj->sections;
-                foreach my $sec (@sections) {
-                    my @teachers = $sec->teachers;
-                    my @streams  = $sec->streams;
-                    my @labs     = $Schedule->labs->list;
-                    foreach my $teach (@teachers) {
-                        $sec->remove_teacher($teach);
-                    }
-                    foreach my $stream (@streams) {
-                        $sec->remove_stream($stream);
-                    }
-                    foreach my $lab (@labs) {
-                        $sec->remove_lab($lab);
-                    }
-                }
+                $Schedule->clear_all_from_course($obj);
                 refresh_schedule($tree);
                 set_dirty();
             }
@@ -85,30 +76,24 @@ sub _show_tree_menu {
         $tree_menu->command(
             -label   => "Delete Course",
             -command => sub {
-                $parent_obj->remove_course($obj);
+                $Schedule->remove_course($obj);
                 refresh_schedule($tree);
                 set_dirty();
             }
         );
 
         #-------------------------------------------
-        #Add Teacher Menu
+        # Add Teacher Course Sub-Menu
         #-------------------------------------------
-        my $add_teach = $tree_menu->entrycget( "Add Teacher", "-menu" );
-        $add_teach->configure( -tearoff => 0 );
+        my $add_teach_menu = $tree_menu->entrycget( "Add Teacher", "-menu" );
+        $add_teach_menu->configure( -tearoff => 0 );
 
-        my @newTeachers = $teachers_list->get( 0, 'end' );
-        foreach my $teachID (@newTeachers) {
-            ( my $Tid ) = split " ", $teachID;
-            chop $Tid;
-            my $teach = $Schedule->teachers->get($Tid);
-            $add_teach->command(
+        foreach my $teach ( $Schedule->all_teachers ) {
+            #next if $obj->has_teacher($teach);
+            $add_teach_menu->command(
                 -label   => $teach->firstname . " " . $teach->lastname,
                 -command => sub {
-                    my @sections = $obj->sections;
-                    foreach my $sec (@sections) {
-                        $sec->assign_teacher($teach);
-                    }
+                    $obj->assign_teacher($teach);
                     refresh_course( $tree, $obj, $input, 1 );
                     set_dirty();
                 }
@@ -116,7 +101,7 @@ sub _show_tree_menu {
         }
 
         #-------------------------------------------
-        #Remove Teacher Menu
+        # Remove Teacher Course Sub-Menu
         #-------------------------------------------
         my $remove_teach = $tree_menu->entrycget( "Remove Teacher", "-menu" );
         $remove_teach->configure( -tearoff => 0 );
@@ -124,32 +109,15 @@ sub _show_tree_menu {
         $remove_teach->command(
             -label   => "All Teachers",
             -command => sub {
-                my @sections = $obj->sections;
-                foreach my $sec (@sections) {
-                    my @teachers = $sec->teachers;
-                    foreach my $teach (@teachers) {
-                        $sec->remove_teacher($teach);
-                    }
-                    refresh_course( $tree, $sec, $input, 1 );
-                }
+                $obj->remove_all_teachers();
+                refresh_course( $tree, $obj, $input, 1 );
                 set_dirty();
             }
         );
+
         $remove_teach->separator;
 
-        my %teacher;
-        my @teachers;
-        foreach my $sec (@sections) {
-            my @temp = $sec->teachers;
-            foreach my $i (@temp) {
-                $teacher{ $i->id } = $i->id;
-            }
-        }
-
-        @teachers = values %teacher;
-        my $AllTeachers = $Schedule->teachers;
-        foreach my $id (@teachers) {
-            my $teacher = $AllTeachers->get($id);
+        foreach my $teacher ( $obj->teachers ) {
             $remove_teach->command(
                 -label   => $teacher->firstname . " " . $teacher->lastname,
                 -command => sub {
@@ -161,23 +129,17 @@ sub _show_tree_menu {
         }
 
         #-----------------------------------
-        #Add Streams
+        # Add Streams Course Sub-Menu
         #-----------------------------------
-        my $add_stream = $tree_menu->entrycget( "Set Stream", "-menu" );
-        $add_stream->configure( -tearoff => 0 );
+        my $add_stream_menu = $tree_menu->entrycget( "Set Stream", "-menu" );
+        $add_stream_menu->configure( -tearoff => 0 );
 
-        my @newSabs = $streams_list->get( 0, 'end' );
-        foreach my $streamID (@newSabs) {
-            ( my $Lid ) = split " ", $streamID;
-            chop $Lid;
-            my $stream = $Schedule->streams->get($Lid);
-            $add_stream->command(
+        foreach my $stream ( $Schedule->all_streams ) {
+            #next if $obj->has_stream($stream);
+            $add_stream_menu->command(
                 -label   => $stream->number . ": " . $stream->descr,
                 -command => sub {
-                    my @sections = $obj->sections;
-                    foreach my $sec (@sections) {
-                        $sec->assign_stream($stream);
-                    }
+                    $obj->assign_stream($stream);
                     refresh_schedule($tree);
                     set_dirty();
                 }
@@ -185,41 +147,24 @@ sub _show_tree_menu {
         }
 
         #-----------------------------------------
-        #Remove Streams
+        # Remove Streams Course Sub-Menu
         #-----------------------------------------
-        my $remove_stream = $tree_menu->entrycget( "Remove Stream", "-menu" );
-        $remove_stream->configure( -tearoff => 0 );
+        my $remove_stream_menu =
+          $tree_menu->entrycget( "Remove Stream", "-menu" );
+        $remove_stream_menu->configure( -tearoff => 0 );
 
-        $remove_stream->command(
+        $remove_stream_menu->command(
             -label   => "All Streams",
             -command => sub {
-                my @sections = $obj->sections;
-                foreach my $sec (@sections) {
-                    my @streams = $sec->streams;
-                    foreach my $stream (@streams) {
-                        $sec->remove_stream($stream);
-                    }
-                }
+                $obj->remove_all_streams;
                 refresh_schedule($tree);
                 set_dirty();
             }
         );
-        $remove_stream->separator;
+        $remove_stream_menu->separator;
 
-        my %stream;
-        my @streams;
-        foreach my $sec (@sections) {
-            my @temp = $sec->streams;
-            foreach my $i (@temp) {
-                $stream{ $i->id } = $i->id;
-            }
-        }
-
-        @streams = values %stream;
-        my $AllStreams = $Schedule->streams;
-        foreach my $id (@streams) {
-            my $stream = $AllStreams->get($id);
-            $remove_stream->command(
+        foreach my $stream ( $obj->streams ) {
+            $remove_stream_menu->command(
                 -label   => $stream->print_description2,
                 -command => sub {
                     $obj->remove_stream($stream);
@@ -229,11 +174,12 @@ sub _show_tree_menu {
             );
         }
     }
+
+    #=====================================
+    #SECTION MENU
+    #=====================================
     elsif ( $obj->isa('Section') ) {
 
-        #=====================================
-        #SECTION MENU
-        #=====================================
         $tree_menu->cascade( -label => "Add Teacher" );
         $tree_menu->cascade( -label => "Set Stream" );
         $tree_menu->command(
@@ -248,43 +194,30 @@ sub _show_tree_menu {
         $tree_menu->cascade( -label => "Remove Teacher" );
         $tree_menu->cascade( -label => "Remove Stream" );
         $tree_menu->command(
-            -label   => "Clear All Teacher Resources and Streams",
+            -label   => "Clear All Teacher, Resources, and Streams",
             -command => sub {
-                my @teachers = $obj->teachers;
-                my @streams  = $obj->streams;
-                my @labs     = $Schedule->labs->list;
-                foreach my $teach (@teachers) {
-                    $obj->remove_teacher($teach);
-                }
-                foreach my $stream (@streams) {
-                    $obj->remove_stream($stream);
-                }
-                foreach my $lab (@labs) {
-                    $obj->remove_lab($lab);
-                }
+                $Schedule->clear_all_from_section($obj);
+                refresh_section( $tree, $obj, $input, 1 );
             }
         );
         $tree_menu->command(
             -label   => "Delete Section",
             -command => sub {
-                $parent_obj->remove_section($obj);
+                $obj->course->remove_section($obj);
                 refresh_course( $tree, $parent_obj, $parent, 1 );
                 set_dirty();
             }
         );
 
         #-------------------------------------------
-        #Add Teacher Menu
+        # Add Teacher Section Sub-Menu
         #-------------------------------------------
-        my $add_teach = $tree_menu->entrycget( "Add Teacher", "-menu" );
-        $add_teach->configure( -tearoff => 0 );
+        my $add_teach_menu = $tree_menu->entrycget( "Add Teacher", "-menu" );
+        $add_teach_menu->configure( -tearoff => 0 );
 
-        my @newTeachers = $teachers_list->get( 0, 'end' );
-        foreach my $teachID (@newTeachers) {
-            ( my $Tid ) = split " ", $teachID;
-            chop $Tid;
-            my $teach = $Schedule->teachers->get($Tid);
-            $add_teach->command(
+        foreach my $teach ( $Schedule->all_teachers ) {
+            #next if $obj->has_teacher($teach);
+            $add_teach_menu->command(
                 -label   => $teach->firstname . " " . $teach->lastname,
                 -command => sub {
                     $obj->assign_teacher($teach);
@@ -295,26 +228,24 @@ sub _show_tree_menu {
         }
 
         #-------------------------------------------
-        #Remove Teacher Menu
+        # Remove Teacher Section Sub-Menu
         #-------------------------------------------
-        my $remove_teach = $tree_menu->entrycget( "Remove Teacher", "-menu" );
-        $remove_teach->configure( -tearoff => 0 );
+        my $remove_teach_menu =
+          $tree_menu->entrycget( "Remove Teacher", "-menu" );
+        $remove_teach_menu->configure( -tearoff => 0 );
 
-        my @teachers = $obj->teachers;
-        $remove_teach->command(
+        $remove_teach_menu->command(
             -label   => "All Teachers",
             -command => sub {
-                foreach my $teach (@teachers) {
-                    $obj->remove_teacher($teach);
-                }
+                $obj->remove_all_teachers;
                 refresh_section( $tree, $obj, $input, 1 );
                 set_dirty();
             }
         );
-        $remove_teach->separator;
+        $remove_teach_menu->separator;
 
-        foreach my $teach (@teachers) {
-            $remove_teach->command(
+        foreach my $teach ( $obj->teachers ) {
+            $remove_teach_menu->command(
                 -label   => $teach->firstname . " " . $teach->lastname,
                 -command => sub {
                     $obj->remove_teacher($teach);
@@ -325,17 +256,14 @@ sub _show_tree_menu {
         }
 
         #-----------------------------------
-        #Add Streams
+        # Add Streams Section Sub-Menu
         #-----------------------------------
-        my $add_stream = $tree_menu->entrycget( "Set Stream", "-menu" );
-        $add_stream->configure( -tearoff => 0 );
+        my $add_stream_menu = $tree_menu->entrycget( "Set Stream", "-menu" );
+        $add_stream_menu->configure( -tearoff => 0 );
 
-        my @newSabs = $streams_list->get( 0, 'end' );
-        foreach my $streamID (@newSabs) {
-            ( my $Lid ) = split " ", $streamID;
-            chop $Lid;
-            my $stream = $Schedule->streams->get($Lid);
-            $add_stream->command(
+        foreach my $stream ( $Schedule->all_streams ) {
+            next if $obj->has_stream($stream);
+            $add_stream_menu->command(
                 -label   => $stream->number . ": " . $stream->descr,
                 -command => sub {
                     $obj->assign_stream($stream);
@@ -346,24 +274,23 @@ sub _show_tree_menu {
         }
 
         #-----------------------------------------
-        #Remove Streams
+        # Remove Streams Section Sub-Menu
         #-----------------------------------------
         my $remove_stream = $tree_menu->entrycget( "Remove Stream", "-menu" );
         $remove_stream->configure( -tearoff => 0 );
 
-        my @streams = $obj->streams;
         $remove_stream->command(
             -label   => "All Streams",
             -command => sub {
-                foreach my $stream (@streams) {
-                    $obj->remove_stream($stream);
-                }
+                $obj->remove_all_streams;
                 refresh_schedule($tree);
                 set_dirty();
             }
         );
+
         $remove_stream->separator;
-        foreach my $stream (@streams) {
+
+        foreach my $stream ( $obj->streams ) {
             $remove_stream->command(
                 -label   => $stream->number . ": " . $stream->descr,
                 -command => sub {
@@ -375,11 +302,12 @@ sub _show_tree_menu {
         }
 
     }
+
+    #=========================
+    # BLOCK MENU
+    #=========================
     elsif ( $obj->isa('Block') ) {
 
-        #=========================
-        # BLOCK MENU
-        #=========================
         $tree_menu->cascade( -label => "Add Teacher" );
         $tree_menu->cascade( -label => "Set Resource" );
         $tree_menu->command(
@@ -392,22 +320,16 @@ sub _show_tree_menu {
         $tree_menu->command(
             -label   => "Clear All Teacher Resources and Streams",
             -command => sub {
-                my @teachers = $obj->teachers;
-                my @labs     = $obj->labs;
-                foreach my $teach (@teachers) {
-                    $obj->remove_teacher($teach);
-                }
-                foreach my $lab (@labs) {
-                    $obj->remove_lab($lab);
-                }
+                $Schedule->clear_all_from_block($obj);
                 refresh_block( $tree, $obj, $input, 1 );
                 set_dirty();
             }
         );
+
         $tree_menu->command(
             -label   => "Delete Block",
             -command => sub {
-                $parent_obj->remove_block($obj);
+                $obj->section->remove_block($obj);
                 refresh_section( $tree, $parent_obj, $parent, 1 );
                 set_dirty();
             }
@@ -415,66 +337,33 @@ sub _show_tree_menu {
         $tree_menu->separator;
         $tree_menu->command(
             -label   => "Change Number of Hours",
-            -command => sub {
-                my $num;
-                my $db1 = $tree_menu->DialogBox(
-                    -title          => 'Block Duration',
-                    -buttons        => [ 'Ok', 'Cancel' ],
-                    -default_button => 'Ok',
-
-                    #-height => 300,
-                    #-width => 500
-                                               );
-
-                $db1->add( 'Label', -text => "Block Duration (in Hours)?" )
-                  ->pack;
-
-                my $hourEntry =
-                  $db1->add(
-                             'Entry',
-                             -textvariable    => \$num,
-                             -validate        => 'key',
-                             -validatecommand => \&is_number,
-                             -invalidcommand  => sub { $tree_menu->bell },
-                             -width           => 20,
-                           )->pack;
-
-                $db1->configure( -focus => $hourEntry );
-
-                my $answer1 = $db1->Show();
-                if (    $answer1 eq 'Ok'
-                     && defined($num)
-                     && $num ne ""
-                     && $num > 0 )
-                {
-                    $obj->duration($num);
+            -command => [
+                sub {
+                		my $tree_menu = shift;
+                    my $num = _get_block_duration($tree_menu, $obj->duration);
+                    return unless defined $num;
+                    if ( $num > 0 ) {
+                        $obj->duration($num);
+                    }
+                    elsif ( $num == 0 ) {
+                        $parent_obj->remove_block($obj);
+                    }
                     refresh_section( $tree, $parent_obj, $parent, 1 );
                     set_dirty();
-                }
-                elsif (    $answer1 eq 'Ok'
-                        && defined($num)
-                        && $num ne ""
-                        && $num == 0 )
-                {
-                    $parent_obj->remove_block($obj);
-                    refresh_section( $tree, $parent_obj, $parent, 1 );
-                    set_dirty();
-                }
-            }
+                },
+                $tree_menu
+                        ],
         );
 
         #----------------------------------
-        #Add Teacher
+        # Add Teacher block Sub-Menu
         #----------------------------------
-        my $add_teach = $tree_menu->entrycget( "Add Teacher", "-menu" );
-        $add_teach->configure( -tearoff => 0 );
+        my $add_teach_menu = $tree_menu->entrycget( "Add Teacher", "-menu" );
+        $add_teach_menu->configure( -tearoff => 0 );
 
-        my @newTeachers = $teachers_list->get( 0, 'end' );
-        foreach my $teachID (@newTeachers) {
-            ( my $Tid ) = split " ", $teachID;
-            chop $Tid;
-            my $teach = $Schedule->teachers->get($Tid);
-            $add_teach->command(
+        foreach my $teach ( $Schedule->all_teachers ) {
+            next if $obj->has_teacher($teach);
+            $add_teach_menu->command(
                 -label   => $teach->firstname . " " . $teach->lastname,
                 -command => sub {
                     $obj->assign_teacher($teach);
@@ -485,17 +374,14 @@ sub _show_tree_menu {
         }
 
         #--------------------------------------
-        #Add Lab
+        # Add Lab block Sub-Menu
         #--------------------------------------
-        my $add_lab = $tree_menu->entrycget( "Set Resource", "-menu" );
-        $add_lab->configure( -tearoff => 0 );
+        my $add_lab_menu = $tree_menu->entrycget( "Set Resource", "-menu" );
+        $add_lab_menu->configure( -tearoff => 0 );
 
-        my @newLabs = $labs_list->get( 0, 'end' );
-        foreach my $labID (@newLabs) {
-            ( my $Lid ) = split " ", $labID;
-            chop $Lid;
-            my $lab = $Schedule->labs->get($Lid);
-            $add_lab->command(
+        foreach my $lab ( $Schedule->all_labs ) {
+            next if $obj->has_lab($lab);
+            $add_lab_menu->command(
                 -label   => $lab->number . ": " . $lab->descr,
                 -command => sub {
                     $obj->assign_lab($lab);
@@ -506,27 +392,25 @@ sub _show_tree_menu {
         }
 
         #-----------------------------------------
-        #Remove Teacher
+        # Remove Teacher Block Sub-Menu
         #-----------------------------------------
-        my $remove_teach = $tree_menu->entrycget( "Remove Teacher", "-menu" );
-        $remove_teach->configure( -tearoff => 0 );
-        my @teachers = $obj->teachers;
+        my $remove_teach_menu =
+          $tree_menu->entrycget( "Remove Teacher", "-menu" );
+        $remove_teach_menu->configure( -tearoff => 0 );
 
-        $remove_teach->command(
+        $remove_teach_menu->command(
             -label   => "All Teachers",
             -command => sub {
-                foreach my $teach (@teachers) {
-                    $obj->remove_teacher($teach);
-                }
+                $obj->remove_all_teachers;
                 refresh_block( $tree, $obj, $input, 1 );
                 set_dirty();
             }
         );
 
-        $remove_teach->separator;
+        $remove_teach_menu->separator;
 
-        foreach my $teach (@teachers) {
-            $remove_teach->command(
+        foreach my $teach ( $obj->teachers ) {
+            $remove_teach_menu->command(
                 -label   => $teach->firstname . " " . $teach->lastname,
                 -command => sub {
                     $obj->remove_teacher($teach);
@@ -537,28 +421,25 @@ sub _show_tree_menu {
         }
 
         #-----------------------------------------
-        #Remove Lab
+        # Remove Lab block sub-menu
         #-----------------------------------------
-        my $remove_lab = $tree_menu->entrycget( "Remove Resource", "-menu" );
-        $remove_lab->configure( -tearoff => 0 );
+        my $remove_lab_menu =
+          $tree_menu->entrycget( "Remove Resource", "-menu" );
+        $remove_lab_menu->configure( -tearoff => 0 );
 
-        my @labs = $obj->labs;
-
-        $remove_lab->command(
+        $remove_lab_menu->command(
             -label   => "All Resources",
             -command => sub {
-                foreach my $lab (@labs) {
-                    $obj->remove_lab($lab);
-                }
+                $obj->remove_all_labs;
                 refresh_block( $tree, $obj, $input, 1 );
                 set_dirty();
             }
         );
 
-        $remove_lab->separator;
+        $remove_lab_menu->separator;
 
-        foreach my $lab (@labs) {
-            $remove_lab->command(
+        foreach my $lab ( $obj->labs ) {
+            $remove_lab_menu->command(
                 -label   => $lab->number . ": " . $lab->descr,
                 -command => sub {
                     $obj->remove_lab($lab);
@@ -569,11 +450,12 @@ sub _show_tree_menu {
         }
 
     }
+
+    #=====================
+    #Teacher Menu
+    #=====================
     elsif ( $obj->isa('Teacher') ) {
 
-        #=====================
-        #Teacher Menu
-        #=====================
         $tree_menu->command(
             -label   => "Remove",
             -command => sub {
@@ -582,11 +464,12 @@ sub _show_tree_menu {
             }
         );
     }
+
+    #=====================
+    #Lab Menu
+    #=====================
     elsif ( $obj->isa('Lab') ) {
 
-        #=====================
-        #Lab Menu
-        #=====================
         $tree_menu->command(
             -label   => "Remove",
             -command => sub {
@@ -599,6 +482,40 @@ sub _show_tree_menu {
         return;
     }
     $tree_menu->post( $x, $y );
+}
+
+# ============================================================================
+# _get_block_duration
+# ============================================================================
+sub _get_block_duration {
+    my $tree_menu = shift;
+    my $num       = shift;
+    my $db1 = $tree_menu->DialogBox(
+                                     -title          => 'Block Duration',
+                                     -buttons        => [ 'Ok', 'Cancel' ],
+                                     -default_button => 'Ok',
+                                   );
+
+    $db1->add( 'Label', -text => "Block Duration (in Hours)?" )->pack;
+
+    my $hourEntry =
+      $db1->add(
+                 'Entry',
+                 -textvariable    => \$num,
+                 -validate        => 'key',
+                 -validatecommand => \&is_number,
+                 -invalidcommand  => sub { $tree_menu->bell },
+                 -width           => 20,
+               )->pack;
+
+    $db1->configure( -focus => $hourEntry );
+
+    my $answer1 = $db1->Show() || "";
+
+    return if $answer1 eq 'Cancel';
+
+    return $num;
+
 }
 
 sub _show_teacher_menu {
@@ -842,7 +759,7 @@ sub _edit_course2 {
         $sectionName{ $i->id } = "$i";
     }
 
-    my @teachers = $Schedule->teachers->list;
+    my @teachers = $Schedule->all_teachers;
     my $curTeach = "";
 
     my %teacherName;
@@ -857,7 +774,7 @@ sub _edit_course2 {
         $teacherNameO{ $i->id } = $i->firstname . " " . $i->lastname;
     }
 
-    my @streams   = $Schedule->streams->list;
+    my @streams   = $Schedule->all_streams;
     my $curStream = "";
     my %streamName;
     foreach my $i (@streams) {
@@ -1352,7 +1269,7 @@ sub _edit_section2 {
         $blockName{ $i->id } = $i->print_description2;
     }
 
-    my @teachersN = $Schedule->teachers->list;
+    my @teachersN = $Schedule->all_teachers;
     my $curTeachN = "";
 
     my %teacherNameN;
@@ -1368,7 +1285,7 @@ sub _edit_section2 {
         $teacherNameO{ $i->id } = $i->firstname . " " . $i->lastname;
     }
 
-    my @streamsN   = $Schedule->streams->list;
+    my @streamsN   = $Schedule->all_streams;
     my $curStreamN = "";
     my %streamNameN;
     foreach my $i (@streamsN) {
@@ -1766,7 +1683,7 @@ sub _edit_block2 {
     my $dur    = $obj->duration;
     my $oldDur = $dur;
 
-    my @teachersN = $Schedule->teachers->list;
+    my @teachersN = $Schedule->all_teachers;
     my $curTeachN;
 
     my %teacherNameN;
@@ -1782,7 +1699,7 @@ sub _edit_block2 {
         $teacherNameO{ $i->id } = $i->firstname . " " . $i->lastname;
     }
 
-    my @labsN = $Schedule->labs->list;
+    my @labsN = $Schedule->all_labs;
     my $curLabN;
     my %labNameN;
     foreach my $i (@labsN) {
