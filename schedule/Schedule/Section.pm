@@ -422,6 +422,28 @@ sub remove_teacher {
 }
 
 # =================================================================
+# remove_all_teachers
+# =================================================================
+
+=head2 remove_all_teachers ( )
+
+removes all teacher from all blocks in this section
+
+Returns Section object
+
+=cut
+
+sub remove_all_teachers {
+    my $self    = shift;
+    foreach my $teacher ($self->teachers) {
+        $self->remove_teacher($teacher);
+    }
+
+    return $self;
+
+}
+
+# =================================================================
 # teachers
 # =================================================================
 
@@ -447,6 +469,27 @@ sub teachers {
     else {
         return [ values %teachers ];
     }
+}
+
+# =================================================================
+# has_teacher
+# =================================================================
+
+=head2 has_teacher ( teacher )
+
+returns true if section has teacher
+
+=cut
+
+sub has_teacher {
+    my $self = shift;
+    my $teacher = shift;
+    return unless $teacher;
+    
+    foreach my $t ($self->teachers) {
+        return 1 if $t->id == $teacher->id;
+    }
+    return;
 }
 
 # =================================================================
@@ -526,6 +569,49 @@ sub streams {
     else {
         return [ values %{$self->{-streams}} ];
     }
+}
+
+# =================================================================
+# has_stream
+# =================================================================
+
+=head2 has_stream ( stream )
+
+returns true if this section has specified stream
+
+=cut
+
+sub has_stream {
+    my $self = shift;
+    my $stream = shift;
+    return unless $stream;
+    
+    foreach my $s ($self->streams) {
+        return 1 if $s->id == $stream->id;
+    }
+    return;
+}
+
+# =================================================================
+# remove_all_streams
+# =================================================================
+
+=head2 remove_all_streams ( )
+
+removes all streams from this section
+
+Returns Section object
+
+=cut
+
+sub remove_all_streams {
+    my $self    = shift;
+    foreach my $stream ($self->streams) {
+        $self->remove_stream($stream);
+    }
+
+    return $self;
+
 }
 
 

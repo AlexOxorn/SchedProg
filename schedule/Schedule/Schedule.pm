@@ -852,11 +852,11 @@ sub calculate_conflicts {
 
                 # creat a conflict object and mark the blocks as conflicting
                 if ($is_conflict) {
-                my @blocks = ( $block1, $block2 );
-                $self->conflicts->add( -type   => Conflict->TIME,
-                                       -blocks => \@blocks );
-                $block1->conflicted( Conflict->TIME );
-                $block2->conflicted( Conflict->TIME );
+                    my @blocks = ( $block1, $block2 );
+                    $self->conflicts->add( -type   => Conflict->TIME,
+                                           -blocks => \@blocks );
+                    $block1->conflicted( Conflict->TIME );
+                    $block2->conflicted( Conflict->TIME );
                 }
 
             }
@@ -888,7 +888,7 @@ sub calculate_conflicts {
             my @blocks = @{ $blocksByDay{$day} };
             continue if ( scalar(@blocks) == 0 );
 
-            # check for the existence of a lunch break in any of the possible 
+            # check for the existence of a lunch break in any of the possible
             #  :30 periods between 11:00 and 13:00
             my $hasLunch = 0;
             foreach my $lunchStart (@lunch_periods) {
@@ -1050,6 +1050,16 @@ sub teacher_stat {
     return $message;
 }
 
+# ================================================
+# Teacher details
+# ================================================
+
+=head2 $Schedule->details($teacher)
+
+Prints a schedule for a specific teacher
+
+=cut
+
 sub teacher_details {
     my $self    = shift;
     my $teacher = shift;
@@ -1107,6 +1117,81 @@ sub teacher_details {
     }
 
     return $text;
+}
+
+# ================================================
+# clear_all_from_course
+# ================================================
+
+=head2 $clear_all_from_course($course)
+
+removes  all teachers, labs, and streams from course
+
+=cut
+
+sub clear_all_from_course {
+    my $self   = shift;
+    my $course = shift;
+    return unless $course;
+
+    foreach my $sec ( $course->sections ) {
+        $self->clear_all_from_section($sec);
+    }
+
+}
+
+# ================================================
+# clear_all_from_section
+# ================================================
+
+=head2 $clear_all_from_section ($section)
+
+removes  all teachers, labs, and streams from section
+
+=cut
+
+sub clear_all_from_section {
+    my $self    = shift;
+    my $section = shift;
+    return unless $section;
+
+    my @labs     = $self->labs->list;
+    my @teachers = $section->teachers;
+    my @streams  = $section->streams;
+    foreach my $teach (@teachers) {
+        $section->remove_teacher($teach);
+    }
+    foreach my $stream (@streams) {
+        $section->remove_stream($stream);
+    }
+    foreach my $lab (@labs) {
+        $section->remove_lab($lab);
+    }
+}
+
+# ================================================
+# clear_all_from_block
+# ================================================
+
+=head2 $clear_all_from_course($block)
+
+removes  all teachers, labs, and streams from block
+
+=cut
+
+sub clear_all_from_block {
+    my $self  = shift;
+    my $block = shift;
+    return unless $block;
+
+    my @teachers = $block->teachers;
+    my @labs     = $block->labs;
+    foreach my $teach (@teachers) {
+        $block->remove_teacher($teach);
+    }
+    foreach my $lab (@labs) {
+        $block->remove_lab($lab);
+    }
 }
 
 # =================================================================
