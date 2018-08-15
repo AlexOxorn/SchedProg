@@ -288,7 +288,6 @@ sub setup_assign_blocks {
                my $y        = shift;
                my $assblock = AssignBlock->find( $x, $y, \@allBlocks );
                return unless $assblock;
-               $assblock->set_colour();
                my $day = $assblock->day();
                $self->_dragBind( $cn, $day, $x, $y, \@allBlocks );
            },
