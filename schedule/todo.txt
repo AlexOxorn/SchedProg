@@ -70,7 +70,26 @@ no longer relevant: In EditCourse, when adding sections, max is 10 (ok...?)
   but when you do it again, the section numbers listed are still 1..10, 
   confusing because I didn't think it was working (it was... 
   but maybe numbers should be section numbers)
-  
+
+======================================================================
+
+Olivia Testing
+
+- make drag and drop functionality more obvious
+- relabel blocks when you delete one out of the middle
+- create way to add resource to a bunch of blocks at once
+-fix label of max number of sections (should be 50, says 100)
+- give user warning message if they try to add more than the max number of sections/blocks/hours/etc
+-allow user to name sections during course creation?
+-add limit to blocks/sections with new course menu
+-in data entry, deleting all fields should delete resource/teacher
+-in resource creation, if you fill out room/description fields with your mouse hovering outside the region and switch between them by hitting tab, then leave the resource tab without clicking on a field box, the resource is not created (tabbing should also create resource)
+-deleting resources does not relabel ids, no new rooms with that id can be created
+-empty name resources show up in the drag/drop menu but have no effect when dragged onto a section
+
+tree->selectionGet returned reference to array, not the element
+
+
 
 
   

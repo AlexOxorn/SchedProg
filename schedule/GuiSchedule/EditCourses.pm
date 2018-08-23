@@ -287,6 +287,8 @@ sub refresh_course {
 	my $not_hide = shift;
 	$tree->delete( 'offsprings', $path );
 
+	
+
 	# add all the sections for each course
 	foreach my $s ( sort { &_number_sort } $course->sections ) {
 		my $s_id     = "Section" . $s->id;
@@ -314,9 +316,12 @@ sub refresh_section {
 	my $s        = shift;
 	my $path     = shift;
 	my $not_hide = shift;
+	
+	
+	
 	$tree->delete( 'offsprings', $path );
 	$tree->update;
-
+	
 	# add all the blocks for this section
 	foreach my $bl ( sort { &_block_sort2 } $s->blocks ) {
 		my $b_id     = "Block" . $bl->id;
@@ -343,6 +348,9 @@ sub refresh_block {
 	my $bl       = shift;
 	my $path     = shift;
 	my $not_hide = shift;
+	
+	print "Block PATH = $path\n";
+	
 	$tree->delete( 'offsprings', $path );
 	$tree->update;
 
@@ -818,16 +826,17 @@ sub edit_course {
 	my $frame = shift;
 	my $tree  = shift;
 	my $input = $tree->selectionGet();
+	
 	my $obj   = _what_to_edit( $tree, $input );
 	if ($obj) {
 		if ( $obj->isa('Course') ) {
-			_edit_course2( $frame, $tree, $obj, $input );
+			_edit_course2( $frame, $tree, $obj, $input->[0] );
 		}
 		elsif ( $obj->isa('Section') ) {
-			_edit_section2( $frame, $tree, $obj, $input );
+			_edit_section2( $frame, $tree, $obj, $input->[0] );
 		}
 		elsif ( $obj->isa('Block') ) {
-			_edit_block2( $frame, $tree, $obj, $input );
+			_edit_block2( $frame, $tree, $obj, $input->[0] );
 		}
 		else {
 			$frame->bell;
