@@ -349,7 +349,7 @@ sub refresh_block {
 	my $path     = shift;
 	my $not_hide = shift;
 	
-	print "Block PATH = $path\n";
+	#print "Block PATH = $path\n";
 	
 	$tree->delete( 'offsprings', $path );
 	$tree->update;
