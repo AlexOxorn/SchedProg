@@ -1,3 +1,6 @@
-- In the schedule view, if you zoom out using the view button, then zoom back in, the program window doesn't re-expand
+- In the schedule view, if you zoom out using the view button, 
+  then zoom back in, the program window doesn't re-expand
 
-- From the courses tab, if you drag a stream to a Block instead of a section, it will temporarily cause that block itself to have blocks. Move out of then back to the Courses tab to fix the problem.
+- From the courses tab, if you drag a stream to a Block instead of a section, 
+  it will temporarily cause that block itself to have blocks. 
+  Move out of then back to the Courses tab to fix the problem.

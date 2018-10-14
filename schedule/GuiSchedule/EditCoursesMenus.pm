@@ -2070,7 +2070,7 @@ sub _add_block {
 # Return either Ok or Cancel
 #==========================================================
 sub _add_section {
-    my $frame = shift;
+    my $inputframe = shift;
     my $tree  = shift;
     my $obj   = shift;
     my $input = shift;
@@ -2081,7 +2081,7 @@ sub _add_section {
     my @blocks;
     my @names;
 
-    my $db0 = $frame->DialogBox(
+    my $db0 = $inputframe->DialogBox(
         -title   => 'How Many Sections',
         -buttons => [ 'Ok', 'Cancel' ],
 
@@ -2096,7 +2096,7 @@ sub _add_section {
                                  -textvariable    => \$numS,
                                  -validate        => 'key',
                                  -validatecommand => \&is_integer,
-                                 -invalidcommand  => sub { $frame->bell },
+                                 -invalidcommand  => sub { $inputframe->bell },
                                )->pack( -fill => 'x' );
 
     $db0->configure( -focus => $secNumEntry );
@@ -2107,7 +2107,7 @@ sub _add_section {
     if ( $answer eq 'Ok' && defined $numS && $numS ne "" && $numS > 0 ) {
         $numS = $MAX_SECTIONS if $numS > $MAX_SECTIONS;
 
-        my $db3 = $frame->DialogBox( -title   => 'Name The Sections',
+        my $db3 = $inputframe->DialogBox( -title   => 'Name The Sections',
                                      -buttons => [ 'Ok', 'Cancel' ], );
 
 # stop the dialog box from executing the default button press when hitting return
@@ -2115,7 +2115,7 @@ sub _add_section {
 
         my $top = $db3->Subwidget("top");
 
-        my $frame = $top->Scrolled(
+        my $scrolledframe = $top->Scrolled(
                                     'Pane',
                                     -scrollbars => 'oe',
                                     -width      => 300,
@@ -2123,7 +2123,7 @@ sub _add_section {
                                     -sticky     => 'nsew',
                                   )->pack( -expand => 1, -fill => 'both' );
 
-        $frame->Label( -text => "Name the Sections (OPTIONAL)" )
+        $scrolledframe->Label( -text => "Name the Sections (OPTIONAL)" )
           ->pack( -side => 'top' );
         foreach my $i ( 1 ... $numS ) {
             push( @names, "" );
@@ -2132,7 +2132,7 @@ sub _add_section {
         my $sectionNameEntry;
 
         foreach my $i ( 1 ... $numS ) {
-            my $x = $frame->Frame()->pack( -fill => 'x' );
+            my $x = $scrolledframe->Frame()->pack( -fill => 'x' );
 
             #$x->Label( -text => "Name", -width => 5, -anchor => 'w' )
             #  ->pack( -side => 'left' );
@@ -2143,19 +2143,19 @@ sub _add_section {
                                                                 -fill   => 'x'
             );
             $y->bind( "<Return>",  sub { $y->focusNext; } );
-            $y->bind( "<FocusIn>", sub { $frame->see($y) } );
+            $y->bind( "<FocusIn>", sub { $scrolledframe->see($y) } );
 
             $sectionNameEntry = $y if $i == 1;
         }
 
-        $frame->Label( -text => "", )->pack( -expand => 1, -fill => 'both' );
+        $scrolledframe->Label( -text => "", )->pack( -expand => 1, -fill => 'both' );
 
         $db3->configure( -focus => $sectionNameEntry );
         $answer = $db3->Show();
         $answer = "Cancel" unless $answer;
 
         if ( $answer eq 'Ok' ) {
-            my $db1 = $frame->DialogBox(
+            my $db1 = $inputframe->DialogBox(
                 -title          => 'How Many Blocks',
                 -buttons        => [ 'Ok', 'Cancel' ],
                 -default_button => 'Ok',
@@ -2172,7 +2172,7 @@ sub _add_section {
                          -textvariable    => \$numB,
                          -validate        => 'key',
                          -validatecommand => \&is_integer,
-                         -invalidcommand  => sub { $frame->bell },
+                         -invalidcommand  => sub { $inputframe->bell },
                          -width           => 20,
                        )->pack( -fill => 'x' );
             $answer = "";
@@ -2190,7 +2190,7 @@ sub _add_section {
                 $numB = $MAX_BLOCK if $numB > $MAX_BLOCK;
 
                 if ($numB) {
-                    my $db2 = $frame->DialogBox(
+                    my $db2 = $inputframe->DialogBox(
                         -title          => 'How Many Hours',
                         -buttons        => [ 'Ok', 'Cancel' ],
                         -default_button => 'Ok',
@@ -2220,7 +2220,7 @@ sub _add_section {
                                        -textvariable    => \$hrs[ $i - 1 ],
                                        -validate        => 'key',
                                        -validatecommand => \&is_number,
-                                       -invalidcommand  => sub { $frame->bell },
+                                       -invalidcommand  => sub { $inputframe->bell },
                                      );
                         $hoursEntry = $B if $i == 1;
                         $A->grid( $B, -sticky => 'new' );

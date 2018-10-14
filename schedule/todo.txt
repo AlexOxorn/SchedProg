@@ -59,6 +59,9 @@ X Clear All
 - In naming sections, or adding hours to blocks, Bind return -> tab
 - See current selected
 
+- On windows (not checked yet for MAC), Edit Course, add sections, can no
+  longer close the dialog box
+
 + CSV hardening
 
 (X) Can't close top level
