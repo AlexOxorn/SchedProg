@@ -95,32 +95,33 @@ sub set {
     $size = $size - 2 if $^O =~ /win/i;
     my $family = "arial";
     $family = "lucida" if $^O =~ /darwin/i;
-    $size = $size if $^O =~ /darwin/i;
+    $size = $size+2 if $^O =~ /darwin/i;
     my %normalfont = (
-        '-family',    'arial',  '-size',       $size,
-        '-weight',    'normal', '-slant',      'roman',
-        '-underline', 0,        '-overstrike', 0
+    '-family',    'arial',  '-size',       $size,
+    '-weight',    'normal', '-slant',      'roman',
+    '-underline', 0,        '-overstrike', 0
     );
-
+    
     # make fonts
     my $fonts = {
         normal => $mw->fontCreate(%normalfont),
         bold   => $mw->fontCreate( %normalfont, -weight => 'bold' ),
         big    => $mw->fontCreate( %normalfont, -size => $size + 2 ),
+        bigbold=> $mw->fontCreate( %normalfont, -size => $size + 2, -weight=>'bold' ),
         fixed  => $mw->fontCreate(
-            %normalfont,
-            -size   => $size + 1,
-            -family => 'courier new'
+        %normalfont,
+        -size   => $size + 1,
+        -family => 'courier new'
         ),
         fixedbold => $mw->fontCreate(
-            %normalfont,
-            -family => 'courier new',
-            -weight => 'bold',
-            -size   => $size + 1,
+        %normalfont,
+        -family => 'courier new',
+        -weight => 'bold',
+        -size   => $size + 1,
         ),
         small => $mw->fontCreate( %normalfont, -size => $size - 2 ),
     };
-
+    
     # set fonts
     $mw->optionAdd( "*font", $fonts->{normal} );
 

@@ -266,9 +266,9 @@ sub undo {
         }
         else {
 
-            # performing redo, store current block time/day for undo
-            my $undo = Undo->new( $block->id, $block->start, $block->day,
-                                  $action->origin_obj, $action->move_type );
+            # performing redo, store current block time/day for undoobj          my $undo = Undo->new( $block->id, $block->start, $block->day,
+            my $undo = Undo->new ( $block->id, $block->start, $block->day, 
+                                $action->origin_obj, $action->move_type);
             $self->add_undo($undo);
             $self->remove_last_redo;
             $View::Undo_left = scalar $self->undoes . " undoes left";
@@ -380,7 +380,8 @@ sub add_redo {
 
 =head2 add_button_refs ( \button, Teacher/Lab/Stream Object )
 
-Adds a button reference to the hash of all button references and the Object it is associated to.
+Adds a button reference to the hash of all button references and the 
+Object it is associated to.
 
 =cut
 
@@ -633,7 +634,7 @@ sub update_for_conflicts {
     my $openViews = $self->views;
 
     foreach my $view ( values %$openViews ) {
-        $view->update_for_conflicts;
+        $view->update_for_conflicts($view->type);
     }
 }
 
@@ -649,6 +650,7 @@ sub determine_button_colours {
     my $self  = shift;
     my $array = shift;
     my $type  = shift;
+    
 
     # get schedule object from reference
     my $schedule_ptr = $self->schedule_ptr;
@@ -679,7 +681,7 @@ sub determine_button_colours {
         # for every block
         foreach my $block (@blocks) {
             $view_conflict =
-              Conflict->most_severe( $view_conflict | $block->is_conflicted );
+              Conflict->most_severe( $view_conflict | $block->is_conflicted, $type );
             last if $view_conflict == $Conflict::Sorted_Conflicts[0];
         }
 
@@ -687,15 +689,15 @@ sub determine_button_colours {
         my $button_ptrs = $self->_button_refs;
         my $btn         = $button_ptrs->{$obj};
 
-   # set button colour to colour of conflict found if conflict found in schedule
+        # set button colour to conflict colour if there is a conflict
+        my $colour = $Scheduler::Colours->{ButtonBackground};
         if ($view_conflict) {
-            my $colour = $Scheduler::ConflictColours->{$view_conflict} || 'red';
-            $$btn->configure( -background => $colour );
+            $colour = Conflict->Colours->{$view_conflict} || 'red';
         }
-        else {
+        my $active = Colour->darken(10,$colour);
             $$btn->configure(
-                       -background => $Scheduler::Colours->{ButtonBackground} );
-        }
+                       -background =>$colour,
+                       -activebackground => $active) if $btn;
     }
 }
 
@@ -710,6 +712,7 @@ Populates frame with buttons for all Teachers, Labs or Streams depending on Type
 =cut
 
 sub create_frame {
+    
     my $self        = shift;
     my $frame       = shift;
     my $type        = shift;
@@ -775,10 +778,6 @@ sub create_frame {
         $self->add_button_refs( \$btn, $obj );
 
         my $openView = $self->is_open( $obj->id, $type );
-        if ($openView) {
-            $openView->button_ptr( \$btn );
-        }
-
         $col++;
 
         # reset to next row
@@ -787,6 +786,7 @@ sub create_frame {
 
     # determine the colour of the buttons for
     # every teacher/lab/stream in the frame
+    
     $self->determine_button_colours( \@ordered, $type );
 }
 
@@ -829,7 +829,7 @@ sub create_new_view {
     my $obj     = shift;
     my $type    = shift;
     my $btn_ptr = shift;
-
+    
     my $mw           = $self->main_window;
     my $open         = $self->is_open( $obj->id, $type );
     my $schedule_ptr = $self->schedule_ptr;
@@ -850,7 +850,7 @@ sub create_new_view {
             print "Calling new view with <$mw>, <\@blocks>, <$schedule>, "
               . "<$obj>, <$type>, <$btn_ptr>\n";
         }
-        my $view = View->new( $mw, \@blocks, $schedule, $obj, $type, $btn_ptr );
+        my $view = View->new( $mw, \@blocks, $schedule, $obj, $type );
 
         $self->add_view($view);
         $self->add_guischedule_to_views;
@@ -872,7 +872,7 @@ sub is_open {
     my $self = shift;
     my $id   = shift;
     my $type = shift;
-
+    
     my $openViews = $self->views;
     foreach my $view ( values %$openViews ) {
         if ( $view->type eq $type ) {

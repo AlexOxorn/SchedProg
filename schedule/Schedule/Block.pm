@@ -101,9 +101,10 @@ sub new {
     
     my $self = $class->SUPER::new(-day=>$day,-start=>$start,-duration=>$duration);
     
-    $self->{-id} = ++$Max_id;
+    
     $self->number($number);
-
+	$self->{-id} = ++$Max_id;
+	
     return $self;
 }
 
@@ -310,6 +311,27 @@ sub remove_lab {
 }
 
 # =================================================================
+# remove_all_labs
+# =================================================================
+
+=head2 remove_all_labs ( )
+
+removes all labs from this block
+
+Returns Block object
+
+=cut
+
+sub remove_all_labs {
+    my $self = shift;
+    foreach my $lab ($self->labs) {
+        $self->remove_lab($lab);
+    }
+    return $self;
+
+}
+
+# =================================================================
 # labs
 # =================================================================
 
@@ -329,6 +351,26 @@ sub labs {
     else {
         return [ values %{ $self->{-labs} } ];
     }
+}
+
+# =================================================================
+# has_lab
+# =================================================================
+
+=head2 has_lab ( lab )
+
+returns true if block has lab
+
+=cut
+
+sub has_lab  {
+    my $self = shift;
+    my $lab = shift;
+    return unless $lab;
+    
+    foreach my $l ($self->labs) {
+        return 1 if $l->id == $lab->id;
+    }    
 }
 
 # =================================================================
@@ -388,6 +430,28 @@ sub remove_teacher {
 }
 
 # =================================================================
+# remove_all_teachers
+# =================================================================
+
+=head2 remove_all_teachers (  )
+
+removes all teachers from this block
+
+Returns Block object
+
+=cut
+
+sub remove_all_teachers {
+    my $self    = shift;
+    foreach my $teacher ($self->teachers) {
+        $self->remove_teacher($teacher);
+    }
+
+    return $self;
+
+}
+
+# =================================================================
 # teachers
 # =================================================================
 
@@ -406,6 +470,28 @@ sub teachers {
     else {
         return [ values %{ $self->{-teachers} } ];
     }
+
+}
+
+# =================================================================
+# has_teacher
+# =================================================================
+
+=head2 has_teacher ( teacher )
+
+returns true if block has teacher
+
+=cut
+
+sub has_teacher {
+    my $self = shift;
+    my $teacher = shift;
+    return unless $teacher;
+    
+    foreach my $t ($self->teachers) {
+        return 1 if $t->id == $teacher->id;
+    }
+    return;
 
 }
 

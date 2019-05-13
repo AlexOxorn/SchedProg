@@ -21,7 +21,8 @@ use Schedule::Streams;
 use Schedule::Stream;
 use Scalar::Util 'refaddr';
 
-my @Schedule_classes = map {s/Schedule\/(.+).pm/$1/;$_} grep {/Schedule\//} keys %INC;
+my @Schedule_classes =
+  map { s/Schedule\/(.+).pm/$1/; $_ } grep { /Schedule\// } keys %INC;
 
 use List::Util qw/all min max/;
 
@@ -91,26 +92,26 @@ sub new {
                  -labs      => Labs->new(),
                  -streams   => Streams->new(),
                };
-               
+
     # reset MAX_ID for all classes that have Max_id
     foreach my $class (@Schedule_classes) {
         no strict 'refs';
-        my $m = $class."::Max_id";
+        my $m = $class . "::Max_id";
         ${$m} = 0 if defined ${$m};
-    }           
-               
+    }
+
     #$GuiBlocks::Max_id=0;
-	#$GuiSchedule::Max_id=0;
-	#$Undo::Max_id=0;
-	#$View::Max_id=0;
-	
-	#$Block::Max_id=0;
-	#$Course::Max_id=0;
-	#$Lab::Max_id=0;
-	#$Section::Max_id=0;
-	#$Stream::Max_id=0;
-	#$Teacher::Max_id=0;
-	#$Time_slot::Max_id=0;
+    #$GuiSchedule::Max_id=0;
+    #$Undo::Max_id=0;
+    #$View::Max_id=0;
+
+    #$Block::Max_id=0;
+    #$Course::Max_id=0;
+    #$Lab::Max_id=0;
+    #$Section::Max_id=0;
+    #$Stream::Max_id=0;
+    #$Teacher::Max_id=0;
+    #$Time_slot::Max_id=0;
 
     bless $self, $class;
     return $self;
@@ -214,9 +215,9 @@ sub write_YAML {
     # print YAML output
     eval {
         print $fh Dump(
-                        $self,            $Block::Max_id,
-                        $Course::Max_id,  $Lab::Max_id,
-                        $Section::Max_id, $Teacher::Max_id,
+                        $self,              $Block::Max_id,
+                        $Course::Max_id,    $Lab::Max_id,
+                        $Section::Max_id,   $Teacher::Max_id,
                         $Time_slot::Max_id, $Stream::Max_id,
                       );
     };
@@ -284,7 +285,6 @@ sub streams {
     # return streams object
     return $self->{-streams};
 }
-
 
 # =================================================================
 # courses
@@ -387,7 +387,6 @@ sub sections_for_teacher {
         return \@sections;
     }
 }
-
 
 # =================================================================
 # get course info for teacher
@@ -533,15 +532,13 @@ Returns a list of courses sections that are assigned to this stream
 =cut
 
 sub sections_for_stream {
-    my $self    = shift;
+    my $self   = shift;
     my $stream = shift;
 
     # --------------------------------------------------------------
     # validate input
     # --------------------------------------------------------------
-    confess "<"
-      . ref($stream)
-      . ">: invalid stream - must be a Stream object"
+    confess "<" . ref($stream) . ">: invalid stream - must be a Stream object"
       unless ref($stream) && $stream->isa("Stream");
 
     # --------------------------------------------------------------
@@ -578,16 +575,15 @@ Returns a list of courses blocks that is in this stream
 =cut
 
 sub blocks_for_stream {
-    my $self    = shift;
+    my $self   = shift;
     my $stream = shift;
 
     my @sections = $self->sections_for_stream($stream);
     my @blocks;
-    
+
     foreach my $section (@sections) {
         push @blocks, $section->blocks;
     }
-
 
     if (wantarray) {
         return @blocks;
@@ -688,7 +684,7 @@ Removes course from schedule
 =cut
 
 sub remove_course {
-    my $self = shift;
+    my $self   = shift;
     my $course = shift;
     $self->courses->remove($course);
 }
@@ -704,25 +700,25 @@ Removes teacher from schedule
 =cut
 
 sub remove_teacher {
-    my $self = shift;
+    my $self    = shift;
     my $teacher = shift;
-    
+
     # make sure we have a valid teacher as input
-        confess "<"
-          . ref($teacher)
-          . ">: invalid teacher - must be a Teacher object"
-          unless ref($teacher) && $teacher->isa("Teacher");
+    confess "<"
+      . ref($teacher)
+      . ">: invalid teacher - must be a Teacher object"
+      unless ref($teacher) && $teacher->isa("Teacher");
 
     # go through all the blocks in this schedule, and
     # remove teacher from all the blocks
-    foreach my $course ($self->all_courses) {
-        foreach my $block ($course->blocks) {
+    foreach my $course ( $self->all_courses ) {
+        foreach my $block ( $course->blocks ) {
             $block->remove_teacher($teacher);
         }
     }
-    
+
     # now delete teacher from list of teachers
-    $self->teachers->remove($teacher);    
+    $self->teachers->remove($teacher);
 }
 
 # =================================================================
@@ -737,24 +733,22 @@ Removes lab from schedule
 
 sub remove_lab {
     my $self = shift;
-    my $lab = shift;
-    
+    my $lab  = shift;
+
     # make sure we have a valid lab as input
-        confess "<"
-          . ref($lab)
-          . ">: invalid lab - must be a Lab object"
-          unless ref($lab) && $lab->isa("Lab");
+    confess "<" . ref($lab) . ">: invalid lab - must be a Lab object"
+      unless ref($lab) && $lab->isa("Lab");
 
     # go through all the blocks in this schedule, and
     # remove lab from all the blocks
-    foreach my $course ($self->all_courses) {
-        foreach my $block ($course->blocks) {
+    foreach my $course ( $self->all_courses ) {
+        foreach my $block ( $course->blocks ) {
             $block->remove_lab($lab);
         }
     }
-    
+
     # now delete lab from list of labs
-    $self->labs->remove($lab);    
+    $self->labs->remove($lab);
 }
 
 # =================================================================
@@ -768,25 +762,23 @@ Removes stream from schedule
 =cut
 
 sub remove_stream {
-    my $self = shift;
+    my $self   = shift;
     my $stream = shift;
-    
+
     # make sure we have a valid stream as input
-        confess "<"
-          . ref($stream)
-          . ">: invalid stream - must be a Stream object"
-          unless ref($stream) && $stream->isa("Stream");
+    confess "<" . ref($stream) . ">: invalid stream - must be a Stream object"
+      unless ref($stream) && $stream->isa("Stream");
 
     # go through all the sections in this schedule, and
     # remove stream from all the sections
-    foreach my $course ($self->all_courses) {
-        foreach my $section ($course->sections) {
+    foreach my $course ( $self->all_courses ) {
+        foreach my $section ( $course->sections ) {
             $section->remove_stream($stream);
         }
     }
-    
+
     # now delete stream from list of streams
-    $self->streams->remove($stream);    
+    $self->streams->remove($stream);
 }
 
 # =================================================================
@@ -819,184 +811,172 @@ sub calculate_conflicts {
         $block->reset_conflicted();
     }
 
+    # ------------------------------------------------------------------------
     # check all block pairs to see if there is a time overlap
-    
-    for (my $i = 0; $i < scalar(@all_blocks); $i++) {
+    # ------------------------------------------------------------------------
+    for ( my $i = 0 ; $i < scalar(@all_blocks) ; $i++ ) {
         my $block1 = $all_blocks[$i];
 
-        for(my $j = $i + 1; $j < scalar(@all_blocks); $j++) {
+        for ( my $j = $i + 1 ; $j < scalar(@all_blocks) ; $j++ ) {
             my $block2 = $all_blocks[$j];
 
             # skip if we have identical blocks (should not occur)
-            next if ($block1->id == $block2->id);
+            next if ( $block1->id == $block2->id );
 
-            # test that the blocks overlap, but only if they have the same teacher/lab/stream (TODO)
-            if ($block1->conflicts_time($block2)
-                &&
-                ! _disjoint($block1, $block2))
-            {
+            # ----------------------------------------------------------------
+            # if the blocks overlap in time
+            # ----------------------------------------------------------------
+            if ( $block1->conflicts_time($block2) ) {
 
-                    # creat a conflict object and mark the blocks as conflicting
-                my @blocks = ($block1, $block2);
-                $self->conflicts->add( -type   => Conflict->TIME
-                                     , -blocks => \@blocks
-                                     );
-                $block1->conflicted(Conflict->TIME);
-                $block2->conflicted(Conflict->TIME);
+                my $is_conflict = 0;
+
+                # if teachers/labs/streams share these blocks then it is a real
+                # conflict, and must be dealt with
+                if ( Teachers->share_blocks( $block1, $block2 ) ) {
+                    $is_conflict = 1;
+                    $block1->conflicted( Conflict->TIME_TEACHER );
+                    $block2->conflicted( Conflict->TIME_TEACHER );
+                }
+
+                if ( Labs->share_blocks( $block1, $block2 ) ) {
+                    $is_conflict = 1;
+                    $block1->conflicted( Conflict->TIME_LAB );
+                    $block2->conflicted( Conflict->TIME_LAB );
+                }
+
+                if ( Streams->share_blocks( $block1, $block2 ) ) {
+                    $is_conflict = 1;
+                    $block1->conflicted( Conflict->TIME_STREAM );
+                    $block2->conflicted( Conflict->TIME_STREAM );
+                }
+
+                # creat a conflict object and mark the blocks as conflicting
+                if ($is_conflict) {
+                    my @blocks = ( $block1, $block2 );
+                    $self->conflicts->add( -type   => Conflict->TIME,
+                                           -blocks => \@blocks );
+                    $block1->conflicted( Conflict->TIME );
+                    $block2->conflicted( Conflict->TIME );
+                }
+
             }
         }
     }
 
+    # ------------------------------------------------------------------------
     # check for lunch break conflicts by teacher
+    # ------------------------------------------------------------------------
     my $start_lunch = 11;
-    my $end_lunch = 14;
-    my @lunch_periods = map {$_,$_+.5} ($start_lunch .. $end_lunch-1);
-    foreach my $teacher ($self->teachers->list) {
+    my $end_lunch   = 14;
+    my @lunch_periods =
+      map { $_, $_ + .5 } ( $start_lunch .. $end_lunch - 1 );
+    foreach my $teacher ( $self->teachers->list ) {
 
-            # filter to only blocks can can possibly conflict
-            my @relevantBlocks = grep {$_->start_number < $end_lunch && $_->start_number + $_->duration > $start_lunch} $self->blocks_for_teacher($teacher);
+        # filter to only blocks can can possibly conflict
+        my @relevantBlocks = grep {
+                 $_->start_number < $end_lunch
+              && $_->start_number + $_->duration > $start_lunch
+        } $self->blocks_for_teacher($teacher);
 
-            # collect blocks by day
-            my %blocksByDay;
-            foreach my $block (@relevantBlocks) {
-                    push @{$blocksByDay{$block->day_number}}, $block;
+        # collect blocks by day
+        my %blocksByDay;
+        foreach my $block (@relevantBlocks) {
+            push @{ $blocksByDay{ $block->day_number } }, $block;
+        }
+
+        foreach my $day ( keys %blocksByDay ) {
+            my @blocks = @{ $blocksByDay{$day} };
+            continue if ( scalar(@blocks) == 0 );
+
+            # check for the existence of a lunch break in any of the possible
+            #  :30 periods between 11:00 and 13:00
+            my $hasLunch = 0;
+            foreach my $lunchStart (@lunch_periods) {
+
+                # is this period free?
+                $hasLunch = all { !_conflictLunch( $_, $lunchStart ) } @blocks;
+                last if ($hasLunch);
             }
 
-            foreach my $day (keys %blocksByDay) {
-                    my @blocks = @{$blocksByDay{$day}};
-                    continue if(scalar(@blocks) == 0);
+            if ( !$hasLunch ) {
 
-                    # check for the existence of a lunch break in any of the possible :30 periods between 11:00 and 13:00
-                    my $hasLunch = 0;
-                    foreach my $lunchStart (@lunch_periods) {
-                            # is this period free?
-                            $hasLunch = all { !_conflictLunch($_, $lunchStart) } @blocks;
-                           last if($hasLunch);
-                    }
-
-                    if(!$hasLunch) {
-                            # create a conflict object and mark the blocks as conflicting.
-                            $self->conflicts->add( -type   => Conflict->LUNCH
-                                                 , -blocks => \@blocks
-                                                 );                            
-                            map { $_->conflicted(Conflict->LUNCH) } @blocks; 
-                    }
-            }     
+                # create a conflict object and mark the blocks as conflicting.
+                $self->conflicts->add( -type   => Conflict->LUNCH,
+                                       -blocks => \@blocks );
+                map { $_->conflicted( Conflict->LUNCH ) } @blocks;
+            }
+        }
     }
 
+    # ------------------------------------------------------------------------
     # check for 4 day schedule for teacher, also for 32 hours availability (max)
-    foreach my $teacher ($self->teachers->list) {
+    # ------------------------------------------------------------------------
+    foreach my $teacher ( $self->teachers->list ) {
 
-            # skip teachers with release time
-			no warnings;
-            next if($teacher->release ne "" && $teacher->release > 0);
-            
-            # collect blocks by day
-            my %blocksByDay;
-            foreach my $block ($self->blocks_for_teacher($teacher)) {
-                    push @{$blocksByDay{$block->day_number}}, $block;
-            }
+        # skip teachers with release time
+        no warnings;
+        next if ( $teacher->release ne "" && $teacher->release > 0 );
 
-            my $dayCount = 0;
-            foreach my $day (keys %blocksByDay) {
-                    $dayCount++ if(scalar(@{$blocksByDay{$day}}) > 0);
-            }
+        # collect blocks by day
+        my %blocksByDay;
+        foreach my $block ( $self->blocks_for_teacher($teacher) ) {
+            push @{ $blocksByDay{ $block->day_number } }, $block;
+        }
 
-            if($dayCount < 4) {
-                    # create a conflict object and mark the blocks as conflicting.
-                    $self->conflicts->add( -type   => Conflict->MINIMUM_DAYS
-                                         , -blocks => \@{$self->blocks_for_teacher($teacher)}
-                                         );                            
-                    map { $_->conflicted(Conflict->MINIMUM_DAYS) } $self->blocks_for_teacher($teacher);
-            }
+        my $dayCount = 0;
+        foreach my $day ( keys %blocksByDay ) {
+            $dayCount++ if ( scalar( @{ $blocksByDay{$day} } ) > 0 );
+        }
 
-            # compute weekly availability for the teacher
-            my $availability = 0;
-            foreach my $day (keys %blocksByDay) {
-                    my $dayStart = min(map {$_->start_number} @{$blocksByDay{$day}});
-                    my $dayEnd   = max(map {$_->start_number + $_->duration} @{$blocksByDay{$day}});
-                    continue if($dayEnd <= $dayStart);
-                    $availability += $dayEnd - $dayStart - 0.5;
-            }
+        if ( $dayCount < 4 ) {
 
-            # if over limit, then create the conflict.
-            if($availability > 32) {
-                   # create a conflict object and mark the blocks as conflicting.
-                    $self->conflicts->add( -type   => Conflict->AVAILABILITY
-                                         , -blocks => \@{$self->blocks_for_teacher($teacher)}
-                                         );                            
-                    map { $_->conflicted(Conflict->AVAILABILITY) } $self->blocks_for_teacher($teacher);
-            }                    
-            
+            # create a conflict object and mark the blocks as conflicting.
+            $self->conflicts->add(
+                            -type   => Conflict->MINIMUM_DAYS,
+                            -blocks => \@{ $self->blocks_for_teacher($teacher) }
+            );
+            map { $_->conflicted( Conflict->MINIMUM_DAYS ) }
+              $self->blocks_for_teacher($teacher);
+        }
+
+        # compute weekly availability for the teacher
+        my $availability = 0;
+        foreach my $day ( keys %blocksByDay ) {
+            my $dayStart =
+              min( map { $_->start_number } @{ $blocksByDay{$day} } );
+            my $dayEnd =
+              max( map { $_->start_number + $_->duration }
+                   @{ $blocksByDay{$day} } );
+            continue if ( $dayEnd <= $dayStart );
+            $availability += $dayEnd - $dayStart - 0.5;
+        }
+
+        # if over limit, then create the conflict.
+        if ( $availability > 32 ) {
+
+            # create a conflict object and mark the blocks as conflicting.
+            $self->conflicts->add(
+                            -type   => Conflict->AVAILABILITY,
+                            -blocks => \@{ $self->blocks_for_teacher($teacher) }
+            );
+            map { $_->conflicted( Conflict->AVAILABILITY ) }
+              $self->blocks_for_teacher($teacher);
+        }
+
     }
 
-    
- 
     return $self;
 }
 
 sub _conflictLunch($$) {
-        my $block = shift;
-        my $lunchStart = shift;
+    my $block      = shift;
+    my $lunchStart = shift;
 
-        my $lunchEnd = $lunchStart + 0.5;
-        my $blockEndNumber = $block->start_number + $block->duration;
-        return ($block->start_number < $lunchEnd && $lunchStart < $blockEndNumber)
-                  ||
-               ($lunchStart < $blockEndNumber && $block->start_number < $lunchEnd);
-}
-
-### TODO maybe replace with Teachers::disjoint 
-
-sub _disjoint {
-    my $block1 = shift; 
-    my $block2 = shift;
-
-    # to compute the disjoint of 2 sets, count occurences in both sets and ensure that all values are < 2
-    my %teacher_occurences;
-
-    # get all the teachers the first and second set.
-    foreach my $teacher ($block1->teachers) {
-        $teacher_occurences{$teacher->id}++;
-    }
-    foreach my $teacher ($block2->teachers) {
-        $teacher_occurences{$teacher->id}++;
-    }
-
-    # a teacher count of 2 means that they are in both sets.
-    foreach my $count (values %teacher_occurences) {
-        return 0 if ($count >= 2);
-    } 
-
-    # same for labs
-    my %lab_occurences;
-
-    foreach my $lab ($block1->labs) {
-        $lab_occurences{$lab->id}++;
-    }
-    foreach my $lab ($block2->labs) {
-        $lab_occurences{$lab->id}++;
-    }
-
-    foreach my $count (values %lab_occurences) {
-        return 0 if ($count >= 2);
-    } 
-
-    # same for streams
-    my %stream_occurences;
-
-    foreach my $stream ($block1->section->streams) {
-        $stream_occurences{$stream->id}++;
-    }
-    foreach my $stream ($block2->section->streams) {
-        $stream_occurences{$stream->id}++;
-    }
-
-    foreach my $count (values %stream_occurences) {
-        return 0 if ($count >= 2);
-    } 
-    
-    return 1;
+    my $lunchEnd       = $lunchStart + 0.5;
+    my $blockEndNumber = $block->start_number + $block->duration;
+    return ( $block->start_number < $lunchEnd && $lunchStart < $blockEndNumber )
+      || (    $lunchStart < $blockEndNumber
+           && $block->start_number < $lunchEnd );
 }
 
 # ================================================
@@ -1009,115 +989,214 @@ Returns a text string that gives some teacher statistics
 
 =cut
 
-sub teacher_stat{
-	my $self = shift;
-	my $teacher = shift;
-	
-	my @courses = $self->courses_for_teacher($teacher);
-	my @sections = $self->sections_for_teacher($teacher);
-	my @blocks =  $self->blocks_for_teacher($teacher);
-	
-	my %week;
-	$week{'Monday'} = 0;
-	$week{'Tuesday'} = 0;
-	$week{'Wednesday'} = 0;
-	$week{'Thursday'} = 0;
-	$week{'Friday'} = 0;
-	$week{'Saturday'} = 0;
-	$week{'Sunday'} = 0;
-	
-	my $hoursOfWork;
-	
-	foreach my $i (@blocks){
-		$hoursOfWork += $i->duration;
-		if($i->day eq 'mon'){ $week{'Monday'} = 1 }
-		elsif($i->day eq 'tue'){ $week{'Tuesday'} = 1 }
-		elsif($i->day eq 'wed'){ $week{'Wednesday'} = 1 }
-		elsif($i->day eq 'thu'){ $week{'Thursday'} = 1 }
-		elsif($i->day eq 'fri'){ $week{'Friday'} = 1 }
-		elsif($i->day eq 'sat'){ $week{'Saturday'} = 1 }
-		elsif($i->day eq 'sun'){ $week{'Sunday'} = 1 }
-	}
-	
-	my $message = $teacher->firstname . " " . $teacher->lastname . "'s Stats.\n\n";
-	
-	$message = $message . "Days of the week working:\n";
-	
-	$message = $message . "Monday " 		if($week{'Monday'});
-	$message = $message . "Tuesday " 	if($week{'Tuesday'});
-	$message = $message . "Wednesday " 	if($week{'Wednesday'});
-	$message = $message . "Thursday " 	if($week{'Thursday'});
-	$message = $message . "Friday " 		if($week{'Friday'});
-	$message = $message . "Saturday " 	if($week{'Saturday'});
-	$message = $message . "Sunday " 		if($week{'Sunday'});
-	
-	$message = $message . "\nHours of Work: $hoursOfWork\n\n";
-	
-	$message = $message . "Courses being taught:\n";
-	
-	foreach my $i (@courses){
-		my $numSections = 0;
-		foreach my $j (@sections){
-			$numSections++ if refaddr($j->course) == refaddr($i);
-		}
-		$message = $message . "->" . $i->print_description2 . " ($numSections Section(s))\n";
-	}
-	
-	return $message;
+sub teacher_stat {
+    my $self    = shift;
+    my $teacher = shift;
+
+    my @courses  = $self->courses_for_teacher($teacher);
+    my @sections = $self->sections_for_teacher($teacher);
+    my @blocks   = $self->blocks_for_teacher($teacher);
+
+    my %week;
+    $week{'Monday'}    = 0;
+    $week{'Tuesday'}   = 0;
+    $week{'Wednesday'} = 0;
+    $week{'Thursday'}  = 0;
+    $week{'Friday'}    = 0;
+    $week{'Saturday'}  = 0;
+    $week{'Sunday'}    = 0;
+
+    my $hoursOfWork = 0;
+
+    foreach my $i (@blocks) {
+        $hoursOfWork += $i->duration;
+        if    ( $i->day eq 'mon' ) { $week{'Monday'}    = 1 }
+        elsif ( $i->day eq 'tue' ) { $week{'Tuesday'}   = 1 }
+        elsif ( $i->day eq 'wed' ) { $week{'Wednesday'} = 1 }
+        elsif ( $i->day eq 'thu' ) { $week{'Thursday'}  = 1 }
+        elsif ( $i->day eq 'fri' ) { $week{'Friday'}    = 1 }
+        elsif ( $i->day eq 'sat' ) { $week{'Saturday'}  = 1 }
+        elsif ( $i->day eq 'sun' ) { $week{'Sunday'}    = 1 }
+    }
+
+    my $message =
+      $teacher->firstname . " " . $teacher->lastname . "'s Stats.\n\n";
+
+    $message = $message . "Days of the week working:\n";
+
+    $message = $message . "Monday "    if ( $week{'Monday'} );
+    $message = $message . "Tuesday "   if ( $week{'Tuesday'} );
+    $message = $message . "Wednesday " if ( $week{'Wednesday'} );
+    $message = $message . "Thursday "  if ( $week{'Thursday'} );
+    $message = $message . "Friday "    if ( $week{'Friday'} );
+    $message = $message . "Saturday "  if ( $week{'Saturday'} );
+    $message = $message . "Sunday "    if ( $week{'Sunday'} );
+
+    $message = $message . "\nHours of Work: $hoursOfWork\n\n";
+
+    $message = $message . "Courses being taught:\n";
+
+    foreach my $i (@courses) {
+        my $numSections = 0;
+        foreach my $j (@sections) {
+            $numSections++ if refaddr( $j->course ) == refaddr($i);
+        }
+        $message =
+            $message . "->"
+          . $i->print_description2
+          . " ($numSections Section(s))\n";
+    }
+
+    return $message;
 }
 
-sub teacher_details{
-	my $self = shift;
-	my $teacher = shift;
-	
-	my $text = "";
+# ================================================
+# Teacher details
+# ================================================
+
+=head2 $Schedule->details($teacher)
+
+Prints a schedule for a specific teacher
+
+=cut
+
+sub teacher_details {
+    my $self    = shift;
+    my $teacher = shift;
+
+    my $text = "";
 
     # header
     $text .= "\n\n" . "=" x 50 . "\n";
     $text .= "$teacher\n";
     $text .= "=" x 50 . "\n";
 
-	foreach my $c ( sort {lc($a->number) cmp lc($b->number)} $self->courses_for_teacher($teacher)){
-		
-		$text .= "\n" . $c->number . " " . $c->name . "\n";
-		$text .= "-" x 80 ;
-		
-		# sections
-	    foreach my $s ( sort {$a->number <=> $b->number} $c->sections ) {
-	        my @sTeacher = $s->teachers;
-	        my $contains = 0;
-	        foreach my $st (@sTeacher){
-	        		$contains = 1 if refaddr($st) == refaddr($teacher);
-	        }
-	        if($contains){
-		        	$text .= "\n\t$s\n";
-		        $text .= "\t" . "- " x 25 . "\n";
-		
-		        # blocks
-		        foreach my $b ( sort{$a->day_number <=> $b->day_number || $a->start_number <=> $b->start_number }$s->blocks ) {
-		            my @bTeacher = $b->teachers;
-			        my $contains = 0;
-			        foreach my $bt (@bTeacher){
-			        		$contains = 1 if refaddr($bt) == refaddr($teacher);
-			        }
-		            if($contains){
-			            	$text .=
-			              "\t" . $b->day . " " . $b->start . ", " . $b->duration . " hours\n";
-			            $text .=
-			              "\t\tlabs: " . join( ", ", map { "$_" } $b->labs ) . "\n";
-		            }
-		        }
-	        } 
-	    }	
-	}
+    foreach my $c ( sort { lc( $a->number ) cmp lc( $b->number ) }
+                    $self->courses_for_teacher($teacher) )
+    {
+
+        $text .= "\n" . $c->number . " " . $c->name . "\n";
+        $text .= "-" x 80;
+
+        # sections
+        foreach my $s ( sort { $a->number <=> $b->number } $c->sections ) {
+            my @sTeacher = $s->teachers;
+            my $contains = 0;
+            foreach my $st (@sTeacher) {
+                $contains = 1 if refaddr($st) == refaddr($teacher);
+            }
+            if ($contains) {
+                $text .= "\n\t$s\n";
+                $text .= "\t" . "- " x 25 . "\n";
+
+                # blocks
+                foreach my $b (
+                    sort {
+                             $a->day_number <=> $b->day_number
+                          || $a->start_number <=> $b->start_number
+                    } $s->blocks
+                  )
+                {
+                    my @bTeacher = $b->teachers;
+                    my $contains = 0;
+                    foreach my $bt (@bTeacher) {
+                        $contains = 1 if refaddr($bt) == refaddr($teacher);
+                    }
+                    if ($contains) {
+                        $text .= "\t"
+                          . $b->day . " "
+                          . $b->start . ", "
+                          . $b->duration
+                          . " hours\n";
+                        $text .= "\t\tlabs: "
+                          . join( ", ", map { "$_" } $b->labs ) . "\n";
+                    }
+                }
+            }
+        }
+    }
 
     return $text;
+}
+
+# ================================================
+# clear_all_from_course
+# ================================================
+
+=head2 $clear_all_from_course($course)
+
+removes  all teachers, labs, and streams from course
+
+=cut
+
+sub clear_all_from_course {
+    my $self   = shift;
+    my $course = shift;
+    return unless $course;
+
+    foreach my $sec ( $course->sections ) {
+        $self->clear_all_from_section($sec);
+    }
+
+}
+
+# ================================================
+# clear_all_from_section
+# ================================================
+
+=head2 $clear_all_from_section ($section)
+
+removes  all teachers, labs, and streams from section
+
+=cut
+
+sub clear_all_from_section {
+    my $self    = shift;
+    my $section = shift;
+    return unless $section;
+
+    my @labs     = $self->labs->list;
+    my @teachers = $section->teachers;
+    my @streams  = $section->streams;
+    foreach my $teach (@teachers) {
+        $section->remove_teacher($teach);
+    }
+    foreach my $stream (@streams) {
+        $section->remove_stream($stream);
+    }
+    foreach my $lab (@labs) {
+        $section->remove_lab($lab);
+    }
+}
+
+# ================================================
+# clear_all_from_block
+# ================================================
+
+=head2 $clear_all_from_course($block)
+
+removes  all teachers, labs, and streams from block
+
+=cut
+
+sub clear_all_from_block {
+    my $self  = shift;
+    my $block = shift;
+    return unless $block;
+
+    my @teachers = $block->teachers;
+    my @labs     = $block->labs;
+    foreach my $teach (@teachers) {
+        $block->remove_teacher($teach);
+    }
+    foreach my $lab (@labs) {
+        $block->remove_lab($lab);
+    }
 }
 
 # =================================================================
 # footer
 # =================================================================
-
 
 =head1 AUTHOR
 

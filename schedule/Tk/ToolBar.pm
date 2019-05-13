@@ -163,7 +163,6 @@ sub Populate {
     $self->{-defaults}{-image} = $default_img;
     # buttons
     $self->{-buttons} = {};
-print "Found all images\n";
     return $self;    # ??
 
 }

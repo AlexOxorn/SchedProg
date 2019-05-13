@@ -175,10 +175,25 @@ Section name
 sub name {
     my $self = shift;
     $self->{-name} = shift if @_;
-    if ($self->{-name} eq "") {
-        $self->{-name} = "Section " . $self->number;
-    }
     return $self->{-name};
+}
+
+# =================================================================
+# title
+# =================================================================
+
+=head2 title (  )
+
+Section title 
+
+Returns name if defined, else "Section num" 
+
+=cut
+
+sub title {
+    my $self = shift;
+    my $title = $self->{-name} || "Section ".$self->number;
+    return $title;
 }
 
 # =================================================================
@@ -226,6 +241,30 @@ sub course {
         $self->{-course} = $course;
     }
     return $self->{-course};
+}
+
+# =================================================================
+# get_bloc_by_id
+# =================================================================
+
+=head2 get_block_by_id ( block id )
+
+gets block from this section that has block id
+
+Returns Block object
+
+=cut
+
+sub get_block_by_id {
+    my $self    = shift;
+    my $id 		= shift;
+
+    my @blocks = $self->blocks;
+    foreach my $i (@blocks){
+    		return $i if $i->id == $id;
+    }
+
+    return;
 }
 
 # =================================================================
@@ -383,6 +422,28 @@ sub remove_teacher {
 }
 
 # =================================================================
+# remove_all_teachers
+# =================================================================
+
+=head2 remove_all_teachers ( )
+
+removes all teacher from all blocks in this section
+
+Returns Section object
+
+=cut
+
+sub remove_all_teachers {
+    my $self    = shift;
+    foreach my $teacher ($self->teachers) {
+        $self->remove_teacher($teacher);
+    }
+
+    return $self;
+
+}
+
+# =================================================================
 # teachers
 # =================================================================
 
@@ -408,6 +469,27 @@ sub teachers {
     else {
         return [ values %teachers ];
     }
+}
+
+# =================================================================
+# has_teacher
+# =================================================================
+
+=head2 has_teacher ( teacher )
+
+returns true if section has teacher
+
+=cut
+
+sub has_teacher {
+    my $self = shift;
+    my $teacher = shift;
+    return unless $teacher;
+    
+    foreach my $t ($self->teachers) {
+        return 1 if $t->id == $teacher->id;
+    }
+    return;
 }
 
 # =================================================================
@@ -487,6 +569,49 @@ sub streams {
     else {
         return [ values %{$self->{-streams}} ];
     }
+}
+
+# =================================================================
+# has_stream
+# =================================================================
+
+=head2 has_stream ( stream )
+
+returns true if this section has specified stream
+
+=cut
+
+sub has_stream {
+    my $self = shift;
+    my $stream = shift;
+    return unless $stream;
+    
+    foreach my $s ($self->streams) {
+        return 1 if $s->id == $stream->id;
+    }
+    return;
+}
+
+# =================================================================
+# remove_all_streams
+# =================================================================
+
+=head2 remove_all_streams ( )
+
+removes all streams from this section
+
+Returns Section object
+
+=cut
+
+sub remove_all_streams {
+    my $self    = shift;
+    foreach my $stream ($self->streams) {
+        $self->remove_stream($stream);
+    }
+
+    return $self;
+
 }
 
 
@@ -617,10 +742,8 @@ sub print_description{
 	
 	
 	if($self->name ne ""){
-		
 		return "Section " . $self->number . ": " . $self->name;
 	}else{
-		
 		return "Section " . $self->number;
 	}
 }

@@ -19,6 +19,8 @@ X Giving Blocks Numbers
 
 X Change max id >= 1
 
+- FIX tabbing order in AssignRescrece
+
 X Import CSV
 X CSV Icon
 X last opened change (current schedule something)
@@ -30,12 +32,12 @@ X Disallow multiple labs with same room number
 X Fallback
 + Pretty up menu2s
 	+ Line up label with drop down menu (Mom)
-- get rid of trash icon / code
+X get rid of trash icon / code
 + fix weird variable names
 + add missing dirty flags
 
 X Limit number of things that can be added
-- Add scrolled object
++ Add scrolled object
 
 X Edit Course -> change sec name: doesn't update section list
 ~ Section/Course->rightclick: add change name
@@ -51,6 +53,46 @@ X Dragging Lab on course, BUG (assign lab Courses)
 X Remove Block from new course not enabled
 
 - Attempting to edit something in the tree as it is being updated will give a pathname error
-- Section/Section->clear all doesn't clear all (LABs)
 <> Optimize tree
+X Clear All
 
+- In naming sections, or adding hours to blocks, Bind return -> tab
+- See current selected
+
+- On windows (not checked yet for MAC), Edit Course, add sections, can no
+  longer close the dialog box
+
++ CSV hardening
+
+(X) Can't close top level
+(X) View scaling doesn't work properly
+(X) Why did change to _get_canvas_coords break code
+(X) Change colour coding
+
+no longer relevant: In EditCourse, when adding sections, max is 10 (ok...?) 
+  but when you do it again, the section numbers listed are still 1..10, 
+  confusing because I didn't think it was working (it was... 
+  but maybe numbers should be section numbers)
+
+======================================================================
+
+Olivia Testing
+
+- make drag and drop functionality more obvious
+- relabel blocks when you delete one out of the middle
+- create way to add resource to a bunch of blocks at once
+-fix label of max number of sections (should be 50, says 100)
+- give user warning message if they try to add more than the max number of sections/blocks/hours/etc
+-allow user to name sections during course creation?
+-add limit to blocks/sections with new course menu
+-in data entry, deleting all fields should delete resource/teacher
+-in resource creation, if you fill out room/description fields with your mouse hovering outside the region and switch between them by hitting tab, then leave the resource tab without clicking on a field box, the resource is not created (tabbing should also create resource)
+-deleting resources does not relabel ids, no new rooms with that id can be created
+-empty name resources show up in the drag/drop menu but have no effect when dragged onto a section
+
+tree->selectionGet returned reference to array, not the element
+
+
+
+
+  

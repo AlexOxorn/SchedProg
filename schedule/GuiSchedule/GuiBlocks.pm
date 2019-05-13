@@ -88,7 +88,7 @@ sub new {
     # get needed block information
     my $blockNum         = $block->section->course->number || " ";
     my $blockSec         = " (" . $block->section->number . ")";
-    my $blockSectionName = $block->section->name;
+    my $blockSectionName = $block->section->title;
     my @teachers         = $block->teachers;
     my $blockTeacher     = join( "\n", @teachers );
     my @labs             = $block->labs;
@@ -261,6 +261,7 @@ sub change_colour {
 
     my ( $light, $dark, $textcolour ) = _get_colour_shades( $colour, $Edge );
 
+    eval {
     my ( $rect, $text, @lines ) = $cn->itemcget( $group, -members );
     $cn->itemconfigure( $rect, -fill => $colour, -outline => $colour );
     $cn->itemconfigure( $text, -fill => $textcolour );
@@ -268,6 +269,10 @@ sub change_colour {
     foreach my $i ( 0 .. @lines ) {
         $cn->itemconfigure( $lines[ $i * 2 ],     -fill => $dark->[$i] );
         $cn->itemconfigure( $lines[ $i * 2 + 1 ], -fill => $light->[$i] );
+    }
+    };
+    if ($@) {
+        print "FAILED CHANGE_COLOUR\n";
     }
 }
 

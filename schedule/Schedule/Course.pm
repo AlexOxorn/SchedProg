@@ -8,9 +8,9 @@ use FindBin;
 use lib ("$FindBin::Bin/..");
 use Carp;
 use Schedule::Section;
-use overload  
-	fallback=> 1,
-	'""' => \&print_description;
+use overload
+  fallback => 1,
+  '""'     => \&print_description;
 
 =head1 NAME
 
@@ -201,11 +201,11 @@ Returns Section object
 =cut
 
 sub get_section {
-    my $self    = shift;
+    my $self   = shift;
     my $number = shift;
 
-    if (exists $self->{-sections}{ $number }) {
-        return $self->{-sections}{$number}
+    if ( exists $self->{-sections}{$number} ) {
+        return $self->{-sections}{$number};
     }
 
     return;
@@ -224,15 +224,42 @@ Returns Section object
 =cut
 
 sub get_section_by_id {
-    my $self    = shift;
-    my $id = shift;
+    my $self = shift;
+    my $id   = shift;
 
     my @sections = $self->sections;
-    foreach my $i (@sections){
-    		return $i if $i->id == $id;
+    foreach my $i (@sections) {
+        return $i if $i->id == $id;
     }
 
     return;
+}
+
+# =================================================================
+# get_section_by_name
+# =================================================================
+
+=head2 get_section_by_name ( section name )
+
+gets section from this course that has section name
+
+Returns Section object
+
+=cut
+
+sub get_section_by_name {
+    my $self = shift;
+    my $name = shift;
+
+    my @toReturn;
+    if ($name) {
+        my @sections = $self->sections;
+        foreach my $i (@sections) {
+            push( @toReturn, $i ) if $i->name eq $name;
+        }
+    }
+
+    return @toReturn;
 }
 
 # =================================================================
@@ -247,25 +274,13 @@ Returns Course object
 
 =cut
 
-# ===================================
-# Alex Code
-# Assign teacher to Course
-# ===================================
-
-sub course_assign_teacher(){
-	my $self = shift;
-	my $teacher = shift;
-	
-	foreach my $sec ( $self->sections ){
-		$sec->assign_teacher($teacher);
-	}
-}
-
 sub remove_section {
     my $self    = shift;
     my $section = shift;
 
-    confess "<" . ref($section) . ">: invalid section - must be a Section object"
+    confess "<"
+      . ref($section)
+      . ">: invalid section - must be a Section object"
       unless ref($section) && $section->isa("Section");
 
     delete $self->{-sections}{ $section->number }
@@ -290,10 +305,10 @@ Returns undef
 =cut
 
 sub delete {
-    my $self    = shift;
-    
-    foreach my $section ($self->sections) {
-        $self->remove_section($section);    
+    my $self = shift;
+
+    foreach my $section ( $self->sections ) {
+        $self->remove_section($section);
     }
     undef $self;
 
@@ -312,12 +327,12 @@ returns an list of sections assigned to this course
 
 sub sections {
     my $self = shift;
-    
+
     if (wantarray) {
         return values %{ $self->{-sections} };
     }
     else {
-        return [values %{ $self->{-sections} }];
+        return [ values %{ $self->{-sections} } ];
     }
 }
 
@@ -333,7 +348,7 @@ returns the maximum 'section number'
 
 sub max_section_number {
     my $self = shift;
-    my @sections = sort {$a->number <=> $b->number} $self->sections;
+    my @sections = sort { $a->number <=> $b->number } $self->sections;
     return $sections[-1]->number if @sections;
     return 0;
 }
@@ -354,7 +369,7 @@ sub blocks {
     foreach my $section ( $self->sections ) {
         push @blocks, $section->blocks;
     }
-    
+
     if (wantarray) {
         return @blocks;
     }
@@ -400,18 +415,23 @@ sub print_description {
     $text .= "=" x 50 . "\n";
 
     # sections
-    foreach my $s ( sort {$a->number <=> $b->number} $self->sections ) {
+    foreach my $s ( sort { $a->number <=> $b->number } $self->sections ) {
         $text .= "\n$s\n";
         $text .= "-" x 50 . "\n";
 
         # blocks
-        foreach my $b ( sort{$a->day_number <=> $b->day_number || $a->start_number <=> $b->start_number }$s->blocks ) {
+        foreach my $b (
+            sort {
+                     $a->day_number <=> $b->day_number
+                  || $a->start_number <=> $b->start_number
+            } $s->blocks
+          )
+        {
             $text .=
               $b->day . " " . $b->start . ", " . $b->duration . " hours\n";
-            $text .=
-              "\tlabs: " . join( ", ", map { "$_" } $b->labs ) . "\n";
+            $text .= "\tlabs: " . join( ", ", map { "$_" } $b->labs ) . "\n";
             $text .= "\tteachers: ";
-            $text .= join(", ",map {"$_"} $b->teachers);
+            $text .= join( ", ", map { "$_" } $b->teachers );
             $text .= "\n";
         }
     }
@@ -451,13 +471,13 @@ sub teachers {
     my $self = shift;
     my %teachers;
 
-	foreach my $section ($self->sections){
-		foreach my $block ( $section->blocks ) {
-        		foreach my $teacher ( $block->teachers ) {
-            		$teachers{$teacher} = $teacher;
-        		}
-    		}	
-	}
+    foreach my $section ( $self->sections ) {
+        foreach my $block ( $section->blocks ) {
+            foreach my $teacher ( $block->teachers ) {
+                $teachers{$teacher} = $teacher;
+            }
+        }
+    }
 
     if (wantarray) {
         return values %teachers;
@@ -468,10 +488,31 @@ sub teachers {
 }
 
 # =================================================================
+# has teacher
+# =================================================================
+
+=head2 has_teacher ( $teacher )
+
+returns true if teacher assigned to this course
+
+=cut
+
+sub has_teacher {
+    my $self    = shift;
+    my $teacher = shift;
+    return unless $teacher;
+
+    foreach my $t ( $self->teachers ) {
+        return 1 if $t->id == $teacher->id;
+    }
+    return 0;
+}
+
+# =================================================================
 # streams
 # =================================================================
 
-=head2 teachers ( )
+=head2 streams ( )
 
 returns an list of streams assigned to all sections in this course
 
@@ -481,11 +522,11 @@ sub streams {
     my $self = shift;
     my %streams;
 
-	foreach my $section ($self->sections){
-		foreach my $stream ( $section->streams ) {
-            	$streams{$stream} = $stream;
-    		}	
-	}
+    foreach my $section ( $self->sections ) {
+        foreach my $stream ( $section->streams ) {
+            $streams{$stream} = $stream;
+        }
+    }
 
     if (wantarray) {
         return values %streams;
@@ -493,6 +534,27 @@ sub streams {
     else {
         return [ values %streams ];
     }
+}
+
+# =================================================================
+# has_stream
+# =================================================================
+
+=head2 has_stream (stream )
+
+returns true if this course has stream
+
+=cut
+
+sub has_stream {
+    my $self   = shift;
+    my $stream = shift;
+    return unless $stream;
+
+    foreach my $s ( $self->streams ) {
+        return 1 if $s->id == $stream->id;
+    }
+
 }
 
 # =================================================================
@@ -514,6 +576,31 @@ sub assign_teacher {
         my $teacher = shift;
         foreach my $section ( $self->sections ) {
             $section->assign_teacher($teacher);
+        }
+    }
+
+    return $self;
+}
+
+# =================================================================
+# assign_lab
+# =================================================================
+
+=head2 assign_lab ( lab object )
+
+Assign a lab to all sectionss in this course
+
+Returns course object
+
+=cut
+
+sub assign_lab {
+    my $self = shift;
+
+    if (@_) {
+        my $lab = shift;
+        foreach my $section ( $self->sections ) {
+            $section->assign_lab($lab);
         }
     }
 
@@ -570,12 +657,34 @@ sub remove_teacher {
 }
 
 # =================================================================
+# remove_all_teachers
+# =================================================================
+
+=head2 remove_all_teachers
+
+removes all teachers from all blocks in this course
+
+Returns Course object
+
+=cut
+
+sub remove_all_teachers {
+    my $self = shift;
+    foreach my $teacher ( $self->teachers ) {
+        $self->remove_teacher($teacher);
+    }
+
+    return $self;
+
+}
+
+# =================================================================
 # remove_stream
 # =================================================================
 
-=head2 remove_stream ( stream # )
+=head2 remove_stream ( stream  )
 
-removes all streams from this course
+removes stream from this course
 
 Returns Course object
 
@@ -593,6 +702,28 @@ sub remove_stream {
 
 }
 
+# =================================================================
+# remove_all_streams
+# =================================================================
+
+=head2 remove_all_streams
+
+removes all streams from all blocks in this course
+
+Returns Course object
+
+=cut
+
+sub remove_all_streams {
+    my $self = shift;
+    foreach my $stream ( $self->streams ) {
+        $self->remove_stream($stream);
+    }
+
+    return $self;
+
+}
+
 #=======================================
 # Get unused section number (Alex Code)
 #=======================================
@@ -603,13 +734,13 @@ returns the first unused section number
 
 =cut
 
-sub get_new_number{
-	my $self = shift;
-	my $number = 1;
-	while($self->get_section($number)){
-		$number++;
-	}
-	return $number;
+sub get_new_number {
+    my $self   = shift;
+    my $number = 1;
+    while ( $self->get_section($number) ) {
+        $number++;
+    }
+    return $number;
 }
 
 =head2 more stuff about conflicts to come

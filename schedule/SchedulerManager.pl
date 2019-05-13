@@ -18,6 +18,7 @@ use GuiSchedule::DataEntry;
 use GuiSchedule::EditCourses;
 use Schedule::Conflict;
 use PerlLib::Colours;
+use GuiSchedule::AssignToResource;
 
 use Export::CSV;
 use Export::Excel;
@@ -66,7 +67,7 @@ read_ini();
 # ==================================================================
 # global vars
 # ==================================================================
-our ( $mw, $Colours, $Fonts, $ConflictColours );
+our ( $mw, $Colours, $Fonts );
 my $Schedule;                 # the current schedule
 my $Current_schedule_file;    # will save to this file when save is requested
 my $Current_directory = $Preferences->{-current_dir} || $User_base_dir;
@@ -107,12 +108,7 @@ $Colours = {
 	DataBackground            => "white",
 	DataForeground            => "black",
 };
-$ConflictColours = {
-	Conflict->TIME         => "#FF0000",
-	Conflict->LUNCH        => "orange",
-	Conflict->MINIMUM_DAYS => "#FF80FF",
-	Conflict->AVAILABILITY => "pink"
-};
+
 SetSystemColours( $mw, $Colours );
 $mw->configure( -bg => $Colours->{WorkspaceColour} );
 ( $Menu, $Toolbar ) = create_menu();
@@ -213,6 +209,10 @@ sub menu_info {
 			cb => \&save_schedule,
 			hn => "Save Schedule File",
 		},
+		junk => {
+			cb => \&junkA,	
+			hn => "JUNK",
+		},
 	);
 
 	# ----------------------------------------------------------
@@ -254,7 +254,6 @@ sub menu_info {
 
 			]
 		],
-		[ "command", "View", -command => $b_props{open}{view} ],
 	];
 
 	# ------------------------------------------------------------------------
@@ -275,6 +274,13 @@ sub menu_info {
 	return \@buttons, \%b_props, $menu;
 
 }
+
+sub junkA{
+	EditLabs->new($mw, $Schedule, \$Dirtyflag, $Colours, $Fonts,
+				$image_dir, $guiSchedule);
+	
+}
+
 
 # ==================================================================
 # create front page
@@ -495,7 +501,6 @@ sub new_schedule {
 	$guiSchedule->destroy_all;
 
 	# TODO: save previous schedule?
-
 	$Schedule = Schedule->new();
 	
 	undef $Current_schedule_file;

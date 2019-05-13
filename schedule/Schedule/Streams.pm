@@ -61,6 +61,44 @@ sub new {
 }
 
 # =================================================================
+# share_blocks
+# =================================================================
+
+=head2 share_blocks(block1, block2)  CLASS METHOD
+
+Are there streams who share these two blocks?
+
+Returns true/false
+
+=cut
+
+sub share_blocks {
+    my $class = shift;
+    my $block1 = shift;
+    my $block2 = shift;
+    
+    
+    # count occurences in both sets and ensure that all values are < 2
+    my %occurences;
+
+    # get all the streams for the first and second set.
+    foreach my $stream ($block1->section->streams) {
+        $occurences{$stream->id}++;
+    }
+    foreach my $stream ($block2->section->streams) {
+        $occurences{$stream->id}++;
+    }
+
+    # a count of 2 means that they are in both sets.
+    foreach my $count (values %occurences) {
+        return $count if ($count >= 2);
+    } 
+
+    return;
+}
+
+
+# =================================================================
 # add
 # =================================================================
 

@@ -248,6 +248,8 @@ sub print_description {
     my $self = shift;
     my $text = $self->number;
 
+	$text = $text . ": " . $self->descr if $self->descr;
+
     return $text;
 
 }

@@ -32,7 +32,9 @@ Version 1.00
 
 Manages the array of teachers.
 
-=head1 METHODS
+=cut 
+
+=head1 Class METHODS
 
 =cut
 
@@ -59,6 +61,48 @@ sub new {
     bless $self, $class;
     return $self;
 }
+
+# =================================================================
+# share_blocks
+# =================================================================
+
+=head2 share_blocks(block1, block2)  CLASS METHOD
+
+Are there teachers who share these two blocks?
+
+Returns true/false
+
+=cut
+
+sub share_blocks {
+    my $class = shift;
+    my $block1 = shift;
+    my $block2 = shift;
+    
+    
+    # count occurences in both sets and ensure that all values are < 2
+    my %occurences;
+
+    # get all the teachers the first and second set.
+    foreach my $teacher ($block1->teachers) {
+        $occurences{$teacher->id}++;
+    }
+    foreach my $teacher ($block2->teachers) {
+        $occurences{$teacher->id}++;
+    }
+
+    # a count of 2 means that they are in both sets.
+    foreach my $count (values %occurences) {
+        return $count if ($count >= 2);
+    } 
+
+    return;
+}
+
+
+=head1 Instance METHODS
+
+=cut
 
 # =================================================================
 # add
