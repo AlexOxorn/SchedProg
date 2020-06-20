@@ -21,10 +21,11 @@ Version 1.00
 	use GuiSchedule::ViewV2;
 	my $mw = MainWindow->new;
 	my @blocks =  
-	my $View = ViewV2->new($mw, \@blocks);
-    my @coords = [10, 15, 15, 15];
+	my $View = View->new($mw, \@blocks);
+	
+    my $coords = [10, 15, 15, 15];
     my $block = $blocks[0];
-    my $guiBlocks = GuiBlocks->new($mw, $block, @coords);
+    my $guiblock = GuiBlocks->new( $View, $block, $coords );
     
     $guiBlocks->change_colour("red");
     

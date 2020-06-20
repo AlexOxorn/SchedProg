@@ -11,7 +11,7 @@ use Schedule::Stream;
 
 =head1 NAME
 
-Undo - 
+Undo - Holds info about a block so that it can be used as an "undo"
 
 =head1 VERSION
 
@@ -19,10 +19,16 @@ Version 1.00
 
 =head1 SYNOPSIS
 
-    Example of how to use code here
+    use Schedule::Schedule;
+    my $Schedule    = Schedule->read('myschedule_file.yaml');
 
-=head1 DESCRIPTION
-
+    my $teacher = $Schedule->teachers()->get_by_name("Sandy","Bultena");
+    my @blocks = $Schedule->blocks_for_teachers($teacher);
+    my @undos = ();
+    
+    # save block[0] before modifying it
+    push @undos, Undo->new( $block->id, $block->start,
+                            $block->day, $teacher, "Day/Time" );
 
 
 =head1 METHODS

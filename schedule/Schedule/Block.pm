@@ -718,9 +718,9 @@ sub conflicts {
 # Refresh Number
 #===================================
 
-=head2 conflicts ( )
+=head2 refresh_number ( )
 
-Assigns a number to a block without one
+Assigns a number to a block that doesn't have one
 
 =cut
 

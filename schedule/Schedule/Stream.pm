@@ -161,10 +161,6 @@ sub print_description2 {
 # footer
 # =================================================================
 
-1;
-
-=cut
-
 =head1 AUTHOR
 
 Sandy Bultena, Ian Clement, Jack Burns
@@ -181,3 +177,7 @@ and/or modified under the terms of the Perl Artistic License
      (see http://www.perl.com/perl/misc/Artistic.html)
 
 =cut
+
+1;
+
+

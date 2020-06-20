@@ -20,11 +20,11 @@ Version 1.00
 
 =head1 SYNOPSIS
 
-    Example of how to use code here
+    # Don't call this directly
 
 =head1 DESCRIPTION
 
-Describes a View
+Base class for different types of schedule views
 
 =head1 METHODS
 

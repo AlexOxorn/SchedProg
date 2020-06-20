@@ -943,7 +943,7 @@ sub write_ini {
 			}
 			else {
 				$de =
-				  DataEntry->new( $f, $Schedule->teachers, 'Teacher',
+				  DataEntry->new( $f, $Schedule->teachers,
 					$Schedule, \$Dirtyflag, $guiSchedule );
 			}
 		}
@@ -965,7 +965,7 @@ sub write_ini {
 			}
 			else {
 				$de =
-				  DataEntry->new( $f, $Schedule->streams, 'Stream', $Schedule,
+				  DataEntry->new( $f, $Schedule->streams,  $Schedule,
 					\$Dirtyflag, $guiSchedule );
 			}
 		}
@@ -987,7 +987,7 @@ sub write_ini {
 			}
 			else {
 				$de = $de =
-				  DataEntry->new( $f, $Schedule->labs, 'Lab', $Schedule,
+				  DataEntry->new( $f, $Schedule->labs, $Schedule,
 					\$Dirtyflag, $guiSchedule );
 			}
 
@@ -1006,7 +1006,7 @@ sub write_ini {
 			my $f = $Pages{courses};
 			$de =
 			  EditCourses->new( $f, $Schedule, \$Dirtyflag, $Colours, $Fonts,
-				$image_dir, $guiSchedule )
+				$guiSchedule )
 			  unless $de;
 
 		}

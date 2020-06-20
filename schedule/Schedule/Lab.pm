@@ -258,9 +258,6 @@ sub print_description {
 # footer
 # =================================================================
 
-1;
-
-=cut
 
 =head1 AUTHOR
 
@@ -278,3 +275,6 @@ and/or modified under the terms of the Perl Artistic License
      (see http://www.perl.com/perl/misc/Artistic.html)
 
 =cut
+
+1;
+

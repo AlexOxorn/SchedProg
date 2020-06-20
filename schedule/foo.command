@@ -1,3 +1,0 @@
-
-perl SchedulerManager.pl
-pause

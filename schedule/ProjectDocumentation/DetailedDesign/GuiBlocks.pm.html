@@ -1,0 +1,149 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new ()</a></li>
+      <li><a href="#change_colour-colour">change_colour ($colour)</a></li>
+      <li><a href="#get_colour_shades-colour-edge">_get_colour_shades ($colour, $edge)</a></li>
+      <li><a href="#id">id ()</a></li>
+      <li><a href="#block-block">block ( [block] )</a></li>
+      <li><a href="#view-view">view ( [view] )</a></li>
+      <li><a href="#coords-coords">coords ( [coords] )</a></li>
+      <li><a href="#colour-colour">colour ( [colour] )</a></li>
+      <li><a href="#rectangle-rectangle-object">rectangle ( [rectangle object] )</a></li>
+      <li><a href="#text-text-object">text ( [text object] )</a></li>
+      <li><a href="#group-group">group ( [group] )</a></li>
+      <li><a href="#is_controlled-boolean">is_controlled ( [boolean] )</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>GuiBlock - describes the visual representation of a Block</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>        use GuiSchedule::GuiBlocks;
+        use GuiSchedule::ViewV2;
+        my $mw = MainWindow-&gt;new;
+        my @blocks =  
+        my $View = View-&gt;new($mw, \@blocks);
+        
+    my $coords = [10, 15, 15, 15];
+    my $block = $blocks[0];
+    my $guiblock = GuiBlocks-&gt;new( $View, $block, $coords );
+    
+    $guiBlocks-&gt;change_colour(&quot;red&quot;);
+    
+    print &quot;This is the GuiBlock for &quot;.$guiBlocks-&gt;block.&quot;\n&quot;;</code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Describes a GuiBlock</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new ()</h2>
+
+<p>creates, draws and returns a GuiBlocks object</p>
+
+<p><b>Parameters</b></p>
+
+<p>-view =&gt; View the GuiBlock will be drawn on</p>
+
+<p>-block =&gt; Block to turn into a GuiBlock</p>
+
+<p>-coords =&gt; Where to draw the GuiBlock on the View</p>
+
+<p><b>Returns</b></p>
+
+<p>GuiBlock object</p>
+
+<h2 id="change_colour-colour">change_colour ($colour)</h2>
+
+<p>Change the colour of the guiblock (including text and shading)</p>
+
+<h2 id="get_colour_shades-colour-edge">_get_colour_shades ($colour, $edge)</h2>
+
+<p>Get the shading of the GuiBlock</p>
+
+<h2 id="id">id ()</h2>
+
+<p>Returns the unique id for this guiblock object</p>
+
+<h2 id="block-block">block ( [block] )</h2>
+
+<p>Get/set the block for this guiblock</p>
+
+<h2 id="view-view">view ( [view] )</h2>
+
+<p>Get/set the view for this guiblock</p>
+
+<h2 id="coords-coords">coords ( [coords] )</h2>
+
+<p>Get/set the coordinates for this guiblock</p>
+
+<h2 id="colour-colour">colour ( [colour] )</h2>
+
+<p>Get/set the colour for this guiblock</p>
+
+<h2 id="rectangle-rectangle-object">rectangle ( [rectangle object] )</h2>
+
+<p>Get/set the rectangle object for this guiblock</p>
+
+<h2 id="text-text-object">text ( [text object] )</h2>
+
+<p>Get/set the text object for this guiblock</p>
+
+<h2 id="group-group">group ( [group] )</h2>
+
+<p>Get/set the group for this guiblock. The group is what moves on the canvas.</p>
+
+<h2 id="is_controlled-boolean">is_controlled ( [boolean] )</h2>
+
+<p>Get/set the group for this guiblock. The group is what moves on the canvas.</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+

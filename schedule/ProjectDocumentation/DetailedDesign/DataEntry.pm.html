@@ -1,0 +1,112 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new ()</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>DataEntry - provides methods/objects for entering schedule data manually</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Schedule;
+    use GuiSchedule::GuiSchedule;
+    use GuiSchedule::DataEntry;
+    use Tk;
+    
+    my $Dirtyflag   = 0;
+    my $mw          = MainWindow-&gt;new();
+    my $Schedule    = Schedule-&gt;read(&#39;myschedule_file.yaml&#39;);
+    my $guiSchedule = GuiSchedule-&gt;new( $mw, \$Dirtyflag, \$Schedule );
+    
+    # create a data entry list
+    # NOTE: requires $guiSchedule just so that it can update
+    #       the views if data has changed (via the dirty flag)
+    my $de = DataEntry-&gt;new( $mw, $Schedule-&gt;teachers, &#39;Teacher&#39;,
+                    $Schedule, \$Dirtyflag, $guiSchedule );</code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>A generic data entry widget</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new ()</h2>
+
+<p>creates the basic Data Entry (simple matrix)</p>
+
+<p><b>Inputs</b></p>
+
+<ul>
+
+<li><p>Tk frame where to draw data entry widgets</p>
+
+</li>
+<li><p>List of objects (teachers or labs, or streams)</p>
+
+</li>
+<li><p>What type of data object (&quot;Teacher&quot;, &quot;Lab&quot;, &quot;Stream&quot;)</p>
+
+</li>
+<li><p>the schedule object</p>
+
+</li>
+<li><p>reference to the dirty pointer</p>
+
+</li>
+<li><p>guiSchedule - the object that manages the views</p>
+
+</li>
+</ul>
+
+<p><b>Returns</b></p>
+
+<p>data entry object</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2020, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+

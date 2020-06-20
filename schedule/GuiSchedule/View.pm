@@ -7,10 +7,11 @@ use FindBin;
 use lib "$FindBin::Bin/..";
 use List::Util qw( min max );
 use GuiSchedule::GuiBlocks;
-use GuiSchedule::Undo;
+use Schedule::Undo;
 use GuiSchedule::ViewBase;
 use Schedule::Conflict;
 use GuiSchedule::AssignBlock;
+use Schedule::Blocks;
 
 use Tk;
 our @ISA = qw(ViewBase);
@@ -25,7 +26,20 @@ Version 1.00
 
 =head1 SYNOPSIS
 
-    Example of how to use code here
+    use Schedule::Schedule;
+    use GuiSchedule::View
+    use Tk;
+    
+    my $mw          = MainWindow->new();
+    my $Schedule    = Schedule->read('myschedule_file.yaml');
+
+    my $teacher = $Schedule->teachers()->get_by_name("Sandy","Bultena");
+    my $View = View->new($mw,$schedule,$teacher);
+    
+    #... change the schedule... 
+    
+    $View->redraw;
+    
 
 =head1 DESCRIPTION
 
@@ -43,7 +57,7 @@ my $Redo_number   = "";
 my $Clicked_block = 0;
 my $EarliestTime  = $ViewBase::EarliestTime;
 my $LatestTime    = $ViewBase::LatestTime;
-my $selectColour = 'royalblue';
+my $selectColour  = 'royalblue';
 
 # =================================================================
 # new
@@ -55,17 +69,11 @@ creates a View object, draws the necessary GuiBlocks and returns the View object
 
 B<Parameters>
 
--cn => Canvas for the View to draw on
-
--blocks => Blocks that need to be drawn on the View
+-mw => Tk mainWindow
 
 -schedule => where course-sections/teachers/labs/streams are defined
 
 -obj => Teacher/Lab/Stream that the View is being made for
-
--type => Whether the view is a Teacher, Lab or Stream View
-
--btn_ptr => Reference to the button that creates this view
 
 B<Returns>
 
@@ -77,10 +85,26 @@ sub new {
 
     my $class    = shift;
     my $mw       = shift;
-    my $blocks   = shift;
     my $schedule = shift;
     my $obj      = shift;
-    my $type     = shift;
+
+    # ---------------------------------------------------------------
+    # type of view depends on which object it is for
+    # ---------------------------------------------------------------
+    my $type;
+    my @blocks;
+    if ( $obj->isa("Teacher") ) {
+        @blocks = $schedule->blocks_for_teacher($obj);
+        $type   = "teacher";
+    }
+    elsif ( $obj->isa("Lab") ) {
+        @blocks = $schedule->blocks_in_lab($obj);
+        $type   = "lab";
+    }
+    else {
+        @blocks = $schedule->blocks_for_stream($obj);
+        $type   = "stream";
+    }
 
     # ---------------------------------------------------------------
     # create the ViewBase
@@ -92,7 +116,7 @@ sub new {
     # ---------------------------------------------------------------
     # set some parameters
     # ---------------------------------------------------------------
-    $self->blocks($blocks);
+    $self->blocks( \@blocks );
     $self->schedule($schedule);
     $self->type($type);
     $self->obj($obj);
@@ -120,7 +144,7 @@ sub new {
     $self->setup_undo_redo($mw);
 
     # ---------------------------------------------------------------
-    # refresh drawing
+    # refresh drawing - redrawing creates the guiblocks
     # ---------------------------------------------------------------
     $self->redraw();
     $self->schedule->calculate_conflicts;
@@ -202,12 +226,11 @@ create code for undo and redo
 
 =cut
 
-
 sub setup_undo_redo {
     my $self = shift;
     my $mw   = shift;
     my $tl   = $self->toplevel;
-    
+
     # ---------------------------------------------------------------
     # bind keys
     # ---------------------------------------------------------------
@@ -225,12 +248,12 @@ sub setup_undo_redo {
                     'command',
                     -label   => "Undo",
                     -command => [ \&undo, $tl, $self, 'undo' ]
-                  );
+    );
     $mainMenu->add(
                     'command',
                     -label   => "Redo",
                     -command => [ \&undo, $tl, $self, 'redo' ]
-                  );
+    );
 
     # ---------------------------------------------------------------
     # add undo/redo to status_frame
@@ -241,14 +264,14 @@ sub setup_undo_redo {
                           -borderwidth  => 1,
                           -relief       => 'ridge',
                           -width        => 15
-                        )->pack( -side => 'right', -fill => 'x' );
+    )->pack( -side => 'right', -fill => 'x' );
 
     $status_frame->Label(
                           -textvariable => \$Redo_number,
                           -borderwidth  => 1,
                           -relief       => 'ridge',
                           -width        => 15
-                        )->pack( -side => 'right', -fill => 'x' );
+    )->pack( -side => 'right', -fill => 'x' );
 
 }
 
@@ -266,9 +289,10 @@ Allows for creation of new sections and teachers
 
 sub setup_assign_blocks {
     my $self = shift;
-    my $cn = $self->canvas;
+    my $cn   = $self->canvas;
 
-    #Loop through each half hour time slot, and create and draw AsignBlock for each
+    #Loop through each half hour time slot,
+    # and create and draw AsignBlock for each
     my @allBlocks;
     foreach my $day ( 1 ... 5 ) {
         foreach my $start ( $EarliestTime * 2 ... ( $LatestTime * 2 ) - 1 ) {
@@ -282,7 +306,7 @@ sub setup_assign_blocks {
         '<Button-1>',
         [
            sub {
-               return if $Clicked_block;  # allow another event to take control
+               return if $Clicked_block;   # allow another event to take control
                my $cn       = shift;
                my $x        = shift;
                my $y        = shift;
@@ -308,35 +332,35 @@ sub _dragBind {
     my @chosen;
 
     #Get a list of all the AssignBlocks associated with a given day
-    my @dayBlocks = AssignBlock->get_day_blocks( $day, $allBlocks );
+    my @dayBlocks = Blocks->get_day_blocks( $day, $allBlocks );
 
     #Binds motion to a motion sub to handel the selection of multiple time slots
     #when moving mouse
     $cn->CanvasBind(
-        '<Motion>',
-        [
-            \&_motionSub, Ev('x'), Ev('y'), \$lx,
-            \$ly, \@chosen, \@dayBlocks,
-        ]
+                     '<Motion>',
+                     [
+                        \&_motionSub, Ev('x'),  Ev('y'), \$lx,
+                        \$ly,         \@chosen, \@dayBlocks,
+                     ]
     );
 
-    #Binds the release of Mouse 1 to the end binding routine to open the 
+    #Binds the release of Mouse 1 to the end binding routine to open the
     #block adding menu and unbind everything else
     $cn->CanvasBind(
         '<ButtonRelease-1>',
         [
-            sub {
-                my $cn     = shift;
-                my $x      = shift;
-                my $y1     = shift;
-                my $y2     = shift;
-                my $chosen = shift;
-                $self->_endBinding( $cn, $x, $y1, $y2, $chosen );
-            },
-            $lx,
-            $ly,
-            Ev('y'),
-            \@chosen
+           sub {
+               my $cn     = shift;
+               my $x      = shift;
+               my $y1     = shift;
+               my $y2     = shift;
+               my $chosen = shift;
+               $self->_endBinding( $cn, $x, $y1, $y2, $chosen );
+           },
+           $lx,
+           $ly,
+           Ev('y'),
+           \@chosen
         ]
     );
 }
@@ -348,11 +372,11 @@ sub _endBinding {
     my $y1     = shift;
     my $y2     = shift;
     my $chosen = shift;
-    
+
     #Unbind everything
     $cn->CanvasBind( '<Motion>',          sub { } );
     $cn->CanvasBind( '<ButtonRelease-1>', sub { } );
-    
+
     my $something_to_do = $chosen && @$chosen;
     return unless $something_to_do;
 
@@ -361,8 +385,8 @@ sub _endBinding {
       AssignBlock->Get_day_start_duration($chosen);
 
     #create the menu to select the block to assign to the timeslot
-    AssignToResource->new( $cn, $self->schedule, $self->guiSchedule, $day, $start, $duration,
-        $self->obj, $self->type );
+    AssignToResource->new( $cn, $self->schedule, $self->guiSchedule, $day,
+                           $start, $duration, $self->obj, $self->type );
 
     #redraw
     $self->redraw();
@@ -392,11 +416,15 @@ sub _motionSub {
     }
 
     #rebind Motion
-    $cn->CanvasBind( '<Motion>',
-        [ \&_motionSub, Ev('x'), Ev('y'), $x1, $y1, $chosen, $dayBlocks ] );
+    $cn->CanvasBind(
+                     '<Motion>',
+                     [
+                        \&_motionSub, Ev('x'), Ev('y'), $x1,
+                        $y1,          $chosen, $dayBlocks
+                     ]
+    );
 
 }
-
 
 # =================================================================
 # toggle_movement
@@ -465,7 +493,7 @@ sub move_class {
                           $self->obj,
                           $self->type,
                           $obj
-                        );
+    );
     $self->guiSchedule->add_undo($undo);
 
     # new move, so reset redo
@@ -497,14 +525,13 @@ sub redraw {
     my $currentScale = $self->currentScale;
 
     $self->SUPER::redraw();
-    
+
     # ---------------------------------------------------------------
-    # If this is a lab view, then add 'AssignBlocks' to the view,
-    # and bind as necessary
+    # If this is a lab or teacher view, then add 'AssignBlocks' 
+    # to the view, and bind as necessary
     # ---------------------------------------------------------------
     my $type = $self->type;
     $self->setup_assign_blocks if lc($type) eq 'lab' || lc($type) eq 'teacher';
-
 
     # ---------------------------------------------------------------
     # set colour for all buttons on main window, "Schedules" tab
@@ -530,7 +557,7 @@ sub redraw {
                                     $self,       Tk::Ev("x"),
                                     Tk::Ev("y")
                                  ]
-                               );
+            );
         }
 
         # double click opens companion views
@@ -685,7 +712,7 @@ sub _on_click {
                         Tk::Ev("y"),   $startingX,
                         $startingY
                      ]
-                   );
+    );
 
     # bind for release of mouse up
     $cn->CanvasBind( "<ButtonRelease-1>", [ \&_end_move, $guiblock, $self ] );
@@ -705,7 +732,7 @@ sub _mouse_move {
     my (
          $cn,     $guiblock, $self,      $xstart, $ystart,
          $xmouse, $ymouse,   $startingX, $startingY
-       ) = @_;
+    ) = @_;
 
     # temporarily dis-able motion while we process stuff
     # (keeps execution cycles down)
@@ -767,7 +794,7 @@ sub _mouse_move {
                             Tk::Ev("y"),   $startingX,
                             $startingY
                          ]
-                       );
+        );
     }
 
 }
@@ -827,7 +854,7 @@ sub _end_move {
                $guiblock->group,
                $coords->[0] - $curXpos,
                $coords->[1] - $curYpos
-             );
+    );
     $self->refresh_gui;
 
     # update all the views that have the block just moved to its new position

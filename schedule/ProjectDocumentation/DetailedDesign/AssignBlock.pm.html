@@ -1,0 +1,207 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#CLASS-METHODS">CLASS METHODS</a>
+    <ul>
+      <li><a href="#new-view-day-start">new ($view, $day, $start)</a></li>
+      <li><a href="#at_canvas_coords-x-y-blocks">at_canvas_coords ($x, $y, $blocks)</a></li>
+      <li><a href="#in_range-x1-y1-x2-y2-blocks">in_range ($x1,$y1,$x2,$y2, $blocks)</a></li>
+    </ul>
+  </li>
+  <li><a href="#INSTANCE-METHODS">INSTANCE METHODS</a>
+    <ul>
+      <li><a href="#at_canvas_coords-x-y">at_canvas_coords ($x, $y)</a></li>
+      <li><a href="#set_colour">set_colour</a></li>
+      <li><a href="#set_colour-unfill">set_colour | unfill</a></li>
+      <li><a href="#getters-setters">getters / setters</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>AssignBlock - A half hour time block used to select time slots on a view</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    # Use from a View object
+    
+    use GuiSchedule::AssignBlock;
+    my $view = $self;
+    
+    # Create blocks for each time
+    my @all_blocks;
+    foreach my $day ( 1 ... 5 ) {
+        foreach my $start ( $EarliestTime * 2 ... ( $LatestTime * 2 ) - 1 ) {
+            push @all_blocks, AssignBlock-&gt;new($view,$day,$start);
+        }
+    }
+    
+    # Get block at canvas position x,y (use class method)
+    my $block = AssignBlock-&gt;find( $x, $y,\@all_blocks);
+
+    # use the AssignBlock object to get info
+    my $day = $block-&gt;day;
+    $block-&gt;colour(&quot;lime green&quot;);
+    
+    # Get all the blocks for a specific day between start &amp; stop time (inclusive) (use class method)
+    my @selected = AssignBlock-&gt;get_day_blocks( $day, \@all_blocks);
+    
+    # Find all blocks that contain a certain x,y range
+    my @selected = AssignBlock-&gt;in_range($x1,$y1,$x2,$y2, \@day_blocks)
+    </code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Defines a 1/2 hour block of time within a view.</p>
+
+<p>You can find this time block by specifying the x/y canvas coordinates, or by the day, start and end time.</p>
+
+<p>The block can be coloured, or uncoloured.</p>
+
+<h1 id="CLASS-METHODS">CLASS METHODS</h1>
+
+<h2 id="new-view-day-start">new ($view, $day, $start)</h2>
+
+<p>creates, draws and returns an AssignBlock</p>
+
+<p><b>Parameters</b></p>
+
+<p>$view View the GuiBlock will be drawn on</p>
+
+<p>$day day of the week (integer, 1=monday etc)</p>
+
+<p>$start time that this gui block starts (real number)</p>
+
+<p><b>Returns</b></p>
+
+<p>AssignBlock object</p>
+
+<h2 id="at_canvas_coords-x-y-blocks">at_canvas_coords ($x, $y, $blocks)</h2>
+
+<p>find the first block within blocks that contains the canvas coords $x, $y</p>
+
+<p><b>Parameters</b></p>
+
+<p>($x, $y) canvas coordinates</p>
+
+<p>$blocks array pointer of AssignBlocks</p>
+
+<p><b>Returns</b></p>
+
+<p>Assign Block object</p>
+
+<h2 id="in_range-x1-y1-x2-y2-blocks">in_range ($x1,$y1,$x2,$y2, $blocks)</h2>
+
+<p>return an array of all blocks within a certain rectangular area</p>
+
+<p><b>Parameters</b></p>
+
+<p>$x1,$y1,$x2,$y2 rectangle area coordinates</p>
+
+<p>$blocks array pointer of AssignBlocks</p>
+
+<p><b>Returns</b></p>
+
+<p>Array of AssignBlock objects</p>
+
+<h1 id="INSTANCE-METHODS">INSTANCE METHODS</h1>
+
+<h2 id="at_canvas_coords-x-y">at_canvas_coords ($x, $y)</h2>
+
+<p>does this block contain the canvas coords $x, $y</p>
+
+<p>NOTE: will not return true if edge is detected, which is not a bad thing because maybe user wanted something else</p>
+
+<p><b>Parameters</b></p>
+
+<p>($x, $y) canvas coordinates</p>
+
+<p><b>Returns</b></p>
+
+<p>true or false</p>
+
+<h2 id="set_colour">set_colour</h2>
+
+<p>fills the block with specified colour</p>
+
+<p>Colour string can be of type &quot;#rrggbb&quot; or a valid unix colour name</p>
+
+<p><b>Parameters</b></p>
+
+<p>$colour (default &quot;mistyrose3&quot;)</p>
+
+<p><b>Returns</b></p>
+
+<p>block</p>
+
+<h2 id="set_colour-unfill">set_colour | unfill</h2>
+
+<p>removes any colour from the block</p>
+
+<p><b>Returns</b></p>
+
+<p>block</p>
+
+<h2 id="getters-setters">getters / setters</h2>
+
+<pre><code>    id
+
+    day
+
+    start
+    
+    view
+    
+    canvas
+    
+    x1
+    
+    y1
+    
+    x2
+    
+    y2</code></pre>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Alex Oxorn</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2020, Sandy Bultena, Alex Oxorn.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+

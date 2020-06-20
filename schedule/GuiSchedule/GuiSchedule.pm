@@ -7,7 +7,7 @@ use FindBin;
 use lib "$FindBin::Bin/..";
 use GuiSchedule::GuiBlocks;
 use GuiSchedule::View;
-use GuiSchedule::Undo;
+use Schedule::Undo; 
 
 =head1 NAME
 
@@ -19,11 +19,29 @@ Version 1.00
 
 =head1 SYNOPSIS
 
-    Example of how to use code here
+    use Schedule::Schedule;
+    use GuiSchedule::GuiSchedule
+    use Tk;
+    
+    my $Dirtyflag   = 0;
+    my $mw          = MainWindow->new();
+    my $Schedule    = Schedule->read('myschedule_file.yaml');
+    my $guiSchedule = GuiSchedule->new( $mw, \$Dirtyflag, \$Schedule );
+    
+    # create clickable buttons for every teacher in $Schedule
+    $guiSchedule->create_frame( $mw, 'teacher' );
+    
+    #display a view (schedule) for a specific teacher
+    my @all_teachers = $Schedule->all_teachers();
+    my $teacher = $all_teachers[0];
+    $guiSchedule->create_new_view($teacher,"teacher");   
 
 =head1 DESCRIPTION
 
+This class creates a button interface to access the all of the views,
+and it manages those views.
 
+Manages all the "undo" and "redo" of actions taken upon the views.
 
 =head1 METHODS
 
@@ -822,6 +840,8 @@ sub _create_view {
 Creates a new View for the selected Teacher, Lab or Stream, depending on the object. 
 If View is already open, the View for that object is brought to front.
 
+Button Pointer is only used in debug mode
+
 =cut
 
 sub create_new_view {
@@ -836,21 +856,11 @@ sub create_new_view {
     my $schedule     = $$schedule_ptr;
 
     if ( $open == 0 ) {
-        my @blocks;
-        if ( $obj->isa("Teacher") ) {
-            @blocks = $schedule->blocks_for_teacher($obj);
-        }
-        elsif ( $obj->isa("Lab") ) {
-            @blocks = $schedule->blocks_in_lab($obj);
-        }
-        else {
-            @blocks = $schedule->blocks_for_stream($obj);
-        }
         if ( $ENV{DEBUG} ) {
-            print "Calling new view with <$mw>, <\@blocks>, <$schedule>, "
-              . "<$obj>, <$type>, <$btn_ptr>\n";
+            print "Calling new view with <$mw>, <$schedule>, "
+              . "<$obj>, <$btn_ptr>\n";
         }
-        my $view = View->new( $mw, \@blocks, $schedule, $obj, $type );
+        my $view = View->new( $mw, $schedule, $obj );
 
         $self->add_view($view);
         $self->add_guischedule_to_views;

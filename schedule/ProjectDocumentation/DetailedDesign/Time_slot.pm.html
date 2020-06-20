@@ -1,0 +1,155 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new ()</a></li>
+      <li><a href="#id">id ()</a></li>
+      <li><a href="#day-day">day ( [day] )</a></li>
+      <li><a href="#start-time">start ( [time] )</a></li>
+      <li><a href="#duration-duration">duration ( [duration] )</a></li>
+      <li><a href="#movable-true-false">movable ( [true | false] )</a></li>
+      <li><a href="#start_number">start_number</a></li>
+      <li><a href="#day_number">day_number</a></li>
+      <li><a href="#snap_to_time">snap_to_time</a></li>
+      <li><a href="#snap_to_day">snap_to_day</a></li>
+      <li><a href="#conflicts">conflicts</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>Time_slot - a time slot (day, start, duration)</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Time_slot;
+    
+    my $time_slot = Time_slot-&gt;new (-day=&gt;&quot;Wed&quot;,
+                                    -start=&gt;&quot;9:30&quot;,
+                                    -duration=&gt;1.5,
+                                    -movable=&gt;1);</code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>A time slot is specified by a day of the week, start time, length (in hours), and a whether or not it is allowed to move.</p>
+
+<p>Example: the &#39;Block&#39; object has a time slot used for teaching, whilst a &#39;Lab&#39; object has a time slot indicating when it is not available.</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new ()</h2>
+
+<p>creates and returns a time_slot object</p>
+
+<p><b>Parameters</b></p>
+
+<p>-day =&gt; &#39;Mon&#39;, &#39;Tue&#39;, &#39;Wed&#39;, &#39;Thu&#39;, &#39;Fri&#39;, &#39;Sat&#39;, &#39;Sun&#39;</p>
+
+<p>-start =&gt; start time using 24 h clock (i.e 1pm is &quot;13:00&quot;)</p>
+
+<p>-duration =&gt; how long does this class last, in hours</p>
+
+<p><b>Returns</b></p>
+
+<p>Time_slot object</p>
+
+<h2 id="id">id ()</h2>
+
+<p>Returns the unique id for this time_slot object</p>
+
+<h2 id="day-day">day ( [day] )</h2>
+
+<p>Get/set the day of the week for this time_slot</p>
+
+<h2 id="start-time">start ( [time] )</h2>
+
+<p>Get/set start time of time_slot, in 24hr clock</p>
+
+<h2 id="duration-duration">duration ( [duration] )</h2>
+
+<p>Gets and sets the length of the time_slot, in hours</p>
+
+<h2 id="movable-true-false">movable ( [true | false] )</h2>
+
+<p>Gets and sets the course section object which contains this time_slot</p>
+
+<h2 id="start_number">start_number</h2>
+
+<p>Sets or returns the start time in hours (i.e. 1:30 pm = 13.5 hours)</p>
+
+<p>This time info is set every time the start method is invoked on the object. Modifying this hash directly <i>does not</i> modify the value stored in &#39;start&#39;.</p>
+
+<p>To set the time according to this data (to the nearest grid level), use the method <code>snap_to_time</code></p>
+
+<h2 id="day_number">day_number</h2>
+
+<p>Returns a hash ref that defines the day of the week as a real number, starting from monday (i.e. tues = 2.0)</p>
+
+<p>This info is set every time the method is invoked on the object. Modifying directly <i>does not</i> modify the values stored in &#39;day&#39;.</p>
+
+<p>To set the day according to the data in this hash, use the method <code>snap_to_day</code></p>
+
+<h2 id="snap_to_time">snap_to_time</h2>
+
+<p>Takes the start_number, and converts it to the nearest fraction of an hour (if $Max_hour_div = 2, then snaps to every 1/2 hour).</p>
+
+<p>Resets the &#39;start&#39; property to the new clock time</p>
+
+<p>Returns true if the new time is different than the previous time</p>
+
+<h2 id="snap_to_day">snap_to_day</h2>
+
+<p>Takes the start_day, and converts it to the nearest day</p>
+
+<p>Resets the &#39;day&#39; property to the appropriate string</p>
+
+<p>Returns true if the new time is different than the previous time</p>
+
+<h2 id="conflicts">conflicts</h2>
+
+<p>Test that the current Time_slot conflicts with another time slot.</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+

@@ -5,6 +5,7 @@ MAC OS X
 Install perl (this version used 5.30.3)
 ----------------------------------------
 https://www.perl.org/get.html#osx
+(build from source, don't use ActivePerl)
 
 ----------------------------------------
 Install required Perl Packages

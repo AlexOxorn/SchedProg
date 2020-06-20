@@ -1,0 +1,271 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new ()</a></li>
+      <li><a href="#id">id ()</a></li>
+      <li><a href="#main_window-MainWindow">main_window ( [MainWindow] )</a></li>
+      <li><a href="#schedule_ptr-Schedule">schedule_ptr ( [Schedule] )</a></li>
+      <li><a href="#dirty_flag-DirtyFlag">dirty_flag ( [DirtyFlag] )</a></li>
+      <li><a href="#set_dirty">set_dirty ( )</a></li>
+      <li><a href="#views">views ( )</a></li>
+      <li><a href="#add_view-View">add_view ( View )</a></li>
+      <li><a href="#Undoes">Undoes ( )</a></li>
+      <li><a href="#Redoes">Redoes ( )</a></li>
+      <li><a href="#undo">undo ( )</a></li>
+      <li><a href="#add_undo-Undo">add_undo ( Undo )</a></li>
+      <li><a href="#add_redo-Undo">add_redo ( Undo )</a></li>
+      <li><a href="#add_button_refs-button-Teacher-Lab-Stream-Object">add_button_refs ( \button, Teacher/Lab/Stream Object )</a></li>
+      <li><a href="#button_refs">_button_refs</a></li>
+      <li><a href="#add_guischedule_to_views">add_guischedule_to_views ( )</a></li>
+      <li><a href="#remove_view-view">remove_view ( $view )</a></li>
+      <li><a href="#remove_all_views">remove_all_views ( )</a></li>
+      <li><a href="#remove_undo-Undo">remove_undo ( Undo )</a></li>
+      <li><a href="#remove_last_undo">remove_last_undo ( )</a></li>
+      <li><a href="#remove_last_redo">remove_last_redo ( )</a></li>
+      <li><a href="#remove_redo-Undo">remove_redo ( Undo )</a></li>
+      <li><a href="#remove_all_undoes">remove_all_undoes ( )</a></li>
+      <li><a href="#remove_all_redoes">remove_all_redoes ( )</a></li>
+      <li><a href="#destroy_all">destroy_all ( )</a></li>
+      <li><a href="#reset_button_refs">reset_button_refs</a></li>
+      <li><a href="#close_view-View">_close_view ( View )</a></li>
+      <li><a href="#update_all_views-Block">update_all_views ( Block )</a></li>
+      <li><a href="#redraw_all_views">redraw_all_views ( )</a></li>
+      <li><a href="#update_for_conflicts">update_for_conflicts ( )</a></li>
+      <li><a href="#determine_button_colours-Array-of-Teachers-Labs-Streams-Type-of-Object">determine_button_colours ( Array of Teachers/Labs/Streams, Type of Object )</a></li>
+      <li><a href="#create_frame-Frame-Type">create_frame ( Frame, Type )</a></li>
+      <li><a href="#create_view-Array-Pointer-Type">_create_view ( Array Pointer, Type )</a></li>
+      <li><a href="#create_new_view-Teacher-Lab-Stream-Object-Type-Button-Pointer">create_new_view ( Teacher/Lab/Stream Object, Type, Button Pointer )</a></li>
+      <li><a href="#is_open-Teacher-Lab-Stream-ID-object-type">is_open ( Teacher/Lab/Stream ID, object type )</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>GuiSchedule -</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Schedule;
+    use GuiSchedule::GuiSchedule
+    use Tk;
+    
+    my $Dirtyflag   = 0;
+    my $mw          = MainWindow-&gt;new();
+    my $Schedule    = Schedule-&gt;read(&#39;myschedule_file.yaml&#39;);
+    my $guiSchedule = GuiSchedule-&gt;new( $mw, \$Dirtyflag, \$Schedule );
+    
+    # create clickable buttons for every teacher in $Schedule
+    $guiSchedule-&gt;create_frame( $mw, &#39;teacher&#39; );
+    
+    #display a view (schedule) for a specific teacher
+    my @all_teachers = $Schedule-&gt;all_teachers();
+    my $teacher = $all_teachers[0];
+    $guiSchedule-&gt;create_new_view($teacher,&quot;teacher&quot;);   </code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>This class creates a button interface to access the all of the views, and it manages those views.</p>
+
+<p>Manages all the &quot;undo&quot; and &quot;redo&quot; of actions taken upon the views.</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new ()</h2>
+
+<p>creates a GuiSchedule object</p>
+
+<p><b>Parameters</b></p>
+
+<p>-mw =&gt; MainWindow to create new Views from</p>
+
+<p>-dirtyFlag =&gt; Flag to know when the GuiSchedule has changed since last save</p>
+
+<p>-schedule =&gt; where course-sections/teachers/labs/streams are defined</p>
+
+<p><b>Returns</b></p>
+
+<p>GuiSchedule object</p>
+
+<h2 id="id">id ()</h2>
+
+<p>Returns the unique id for this GuiSchedule object.</p>
+
+<h2 id="main_window-MainWindow">main_window ( [MainWindow] )</h2>
+
+<p>Get/sets the MainWindow for this GuiSchedule object.</p>
+
+<h2 id="schedule_ptr-Schedule">schedule_ptr ( [Schedule] )</h2>
+
+<p>Get/sets the Schedule for this GuiSchedule object.</p>
+
+<h2 id="dirty_flag-DirtyFlag">dirty_flag ( [DirtyFlag] )</h2>
+
+<p>Get/sets the DirtyFlag for this GuiSchedule object.</p>
+
+<h2 id="set_dirty">set_dirty ( )</h2>
+
+<p>Sets the dirty flag for changes to Schedule.</p>
+
+<h2 id="views">views ( )</h2>
+
+<p>Get the Views of this GuiSchedule object.</p>
+
+<h2 id="add_view-View">add_view ( View )</h2>
+
+<p>Add a View to the list of Views for this GuiSchedule object.</p>
+
+<h2 id="Undoes">Undoes ( )</h2>
+
+<p>Get the Undoes of this GuiSchedule object.</p>
+
+<h2 id="Redoes">Redoes ( )</h2>
+
+<p>Get the Redoes of this GuiSchedule object.</p>
+
+<h2 id="undo">undo ( )</h2>
+
+<p>Undo/Redo last action</p>
+
+<h2 id="add_undo-Undo">add_undo ( Undo )</h2>
+
+<p>Add a Undo to the list of Undoes for this GuiSchedule object.</p>
+
+<h2 id="add_redo-Undo">add_redo ( Undo )</h2>
+
+<p>Add a Redo to the list of Redoes for this GuiSchedule object.</p>
+
+<h2 id="add_button_refs-button-Teacher-Lab-Stream-Object">add_button_refs ( \button, Teacher/Lab/Stream Object )</h2>
+
+<p>Adds a button reference to the hash of all button references and the Object it is associated to.</p>
+
+<h2 id="button_refs">_button_refs</h2>
+
+<p>Returns a hash of all button hashes for this GuiSchedule object</p>
+
+<h2 id="add_guischedule_to_views">add_guischedule_to_views ( )</h2>
+
+<p>Adds the current GuiSchedule object to all open Views.</p>
+
+<h2 id="remove_view-view">remove_view ( $view )</h2>
+
+<p>Remove a View from the list of Views for this GuiSchedule object</p>
+
+<h2 id="remove_all_views">remove_all_views ( )</h2>
+
+<p>Removes all Views associated with this GuiSchedule object.</p>
+
+<h2 id="remove_undo-Undo">remove_undo ( Undo )</h2>
+
+<p>Remove a Undo from the list of Undoes for this GuiSchedule object</p>
+
+<h2 id="remove_last_undo">remove_last_undo ( )</h2>
+
+<p>Remove last undo</p>
+
+<h2 id="remove_last_redo">remove_last_redo ( )</h2>
+
+<p>Remove last redo</p>
+
+<h2 id="remove_redo-Undo">remove_redo ( Undo )</h2>
+
+<p>Remove a Redo from the list of Redoes for this GuiSchedule object</p>
+
+<h2 id="remove_all_undoes">remove_all_undoes ( )</h2>
+
+<p>Removes all Undoes associated with this GuiSchedule object.</p>
+
+<h2 id="remove_all_redoes">remove_all_redoes ( )</h2>
+
+<p>Removes all Redoes associated with this GuiSchedule object.</p>
+
+<h2 id="destroy_all">destroy_all ( )</h2>
+
+<p>Closes all open Views.</p>
+
+<h2 id="reset_button_refs">reset_button_refs</h2>
+
+<p>Resets the hash of button references for this GuiSchedule object.</p>
+
+<h2 id="close_view-View">_close_view ( View )</h2>
+
+<p>Closes the selected View.</p>
+
+<h2 id="update_all_views-Block">update_all_views ( Block )</h2>
+
+<p>Updates the position of the current moving GuiBlock across all open Views.</p>
+
+<h2 id="redraw_all_views">redraw_all_views ( )</h2>
+
+<p>Redraw all open Views with new GuiBlocks (if any).</p>
+
+<h2 id="update_for_conflicts">update_for_conflicts ( )</h2>
+
+<p>Goes through all open Views and updates their GuiBlocks for any new Conflicts.</p>
+
+<h2 id="determine_button_colours-Array-of-Teachers-Labs-Streams-Type-of-Object">determine_button_colours ( Array of Teachers/Labs/Streams, Type of Object )</h2>
+
+<p>Finds the highest conflict for each teacher/lab/stream in the array and sets the colour of the button accordingly.</p>
+
+<h2 id="create_frame-Frame-Type">create_frame ( Frame, Type )</h2>
+
+<p>Populates frame with buttons for all Teachers, Labs or Streams depending on Type in alphabetical order.</p>
+
+<h2 id="create_view-Array-Pointer-Type">_create_view ( Array Pointer, Type )</h2>
+
+<p>Preparation function for creating a new View when double clicking on a GuiBlock.</p>
+
+<h2 id="create_new_view-Teacher-Lab-Stream-Object-Type-Button-Pointer">create_new_view ( Teacher/Lab/Stream Object, Type, Button Pointer )</h2>
+
+<p>Creates a new View for the selected Teacher, Lab or Stream, depending on the object. If View is already open, the View for that object is brought to front.</p>
+
+<p>Button Pointer is only used in debug mode</p>
+
+<h2 id="is_open-Teacher-Lab-Stream-ID-object-type">is_open ( Teacher/Lab/Stream ID, object type )</h2>
+
+<p>Checks if the View corresponding to the button pressed by user is open. Returns the View object if View is open, else 0.</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+
