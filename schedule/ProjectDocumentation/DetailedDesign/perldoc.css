@@ -1,0 +1,36 @@
+body
+    {
+    background: #FFFFFF;
+    font-family: Tacoma, Arial, Helvetica, sans-serif;
+    font-weight: normal;
+    font-size: 90%;
+    }
+td
+    {
+    font-size: 90%;
+    font-family: Tacoma, Arial, Helvetica, sans-serif;
+    font-weight: normal;
+    text-decoration: none;
+    }
+
+h1 {font-size: 150%; font-weight: bold; page-break-after: avoid;   color: #006699;}
+h2 {font-size: 120%; font-weight: bold; page-break-after: avoid;  color: #006699;
+    background-color: #99ddff;
+}
+h2 {font-size: 120%; font-weight: bold; page-break-after: avoid;  color: #006699;
+    background-color: #cceeff;
+}
+h3 {font-size: 110%; font-style: italic; font-weight: bold; page-break-after: avoid;  color: #006699;}
+h4 {font-size: 110%; font-style: italic; font-weight: normal; page-break-after: avoid;  color: #006699;}
+
+code {font: "courier new"; font-size: 100%; font-weight: normal; page-break-after: avoid; color: black}
+
+PRE     {
+  background: #eeeeee;
+  border: 1px solid #888888;
+  color: black;
+  padding: 1em;
+  white-space: pre;
+  font: "courier new"; 
+  font-size: 100%;
+}

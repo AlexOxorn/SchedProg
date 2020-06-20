@@ -1,0 +1,99 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new ()</a></li>
+      <li><a href="#add">add()</a></li>
+      <li><a href="#remove-conflict_object">remove ($conflict_object)</a></li>
+      <li><a href="#list">list ()</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>Conflicts - a class containing an array of conflict objects</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Conflicts;
+    
+    my $conflicts = Conflicts-&gt;new();
+    
+    $conflicts-&gt;add($conflict_object);
+    $conflicts-&gt;remove($conflict_object);
+    my $array = $conflicts-&gt;list();</code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Manages the array of conflicts.</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new ()</h2>
+
+<p>creates an empty Conflicts object</p>
+
+<p><b>Returns</b></p>
+
+<p>Conflicts object</p>
+
+<h2 id="add">add()</h2>
+
+<p>Adds a new conflict Conflicts object</p>
+
+<p>Returns Conflicts object</p>
+
+<h2 id="remove-conflict_object">remove ($conflict_object)</h2>
+
+<p>Removes conflict from the Conflicts object</p>
+
+<p>Returns conflict object</p>
+
+<h2 id="list">list ()</h2>
+
+<p>Returns reference to array of Conflict objects</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+

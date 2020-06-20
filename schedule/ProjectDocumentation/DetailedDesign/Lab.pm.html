@@ -1,0 +1,156 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new ()</a></li>
+      <li><a href="#id">id ()</a></li>
+      <li><a href="#number">number ()</a></li>
+      <li><a href="#descr">descr ()</a></li>
+      <li><a href="#add_unavailabe">add_unavailabe ()</a></li>
+      <li><a href="#remove_unavailabe-id">remove_unavailabe (id)</a></li>
+      <li><a href="#get_unavailabe-id">get_unavailabe (id)</a></li>
+      <li><a href="#unavailabe">unavailabe ()</a></li>
+      <li><a href="#print_description">print_description</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>Lab - describes a distinct contiguous course/section/class</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Lab;
+    
+    my $lab = Lab-&gt;new (-number=&gt;&quot;P322&quot;);
+    $section-&gt;add_unavailable(-start=&gt;&quot;3:22&quot;,
+                              -day=&gt;&quot;Mon&quot;,
+                              -duration=5);
+    </code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Describes a physical room where classes are taught.</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new ()</h2>
+
+<p>creates and returns a lab object</p>
+
+<p><b>Parameters</b></p>
+
+<p>-number =&gt; Room number</p>
+
+<p><b>Returns</b></p>
+
+<p>Lab object</p>
+
+<h2 id="id">id ()</h2>
+
+<p>Returns the unique id for this lab object</p>
+
+<h2 id="number">number ()</h2>
+
+<p>Sets/returns the room number for this lab object</p>
+
+<h2 id="descr">descr ()</h2>
+
+<p>Sets/returns the description for this lab object</p>
+
+<h2 id="add_unavailabe">add_unavailabe ()</h2>
+
+<p>creates a time slot where this lab is not available</p>
+
+<p><b>Parameters</b></p>
+
+<p>-day =&gt; &#39;Mon&#39;, &#39;Tue&#39;, &#39;Wed&#39;, &#39;Thu&#39;, &#39;Fri&#39;, &#39;Sat&#39;, &#39;Sun&#39;</p>
+
+<p>-start =&gt; start time using 24 h clock (i.e 1pm is &quot;13:00&quot;)</p>
+
+<p>-duration =&gt; how long does this class last, in hours</p>
+
+<p><b>Returns</b></p>
+
+<p>Lab object</p>
+
+<h2 id="remove_unavailabe-id">remove_unavailabe (id)</h2>
+
+<p>remove the unavailable time slot from this lab</p>
+
+<p><b>Parameters</b></p>
+
+<p>id: the id of the time slot to be removed</p>
+
+<p><b>Returns</b></p>
+
+<p>Lab object</p>
+
+<h2 id="get_unavailabe-id">get_unavailabe (id)</h2>
+
+<p>return the unavailable time slot object for this lab</p>
+
+<p><b>Parameters</b></p>
+
+<p>id =&gt; the id of the time slot to be returned</p>
+
+<p><b>Returns</b></p>
+
+<p>Time_slot object</p>
+
+<h2 id="unavailabe">unavailabe ()</h2>
+
+<p>returns all the unavailable time slot objects for this lab</p>
+
+<p><b>Returns</b></p>
+
+<p>List of Time_slot objects</p>
+
+<h2 id="print_description">print_description</h2>
+
+<p>Returns a text string that describes the lab</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+

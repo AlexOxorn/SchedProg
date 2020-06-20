@@ -18,9 +18,25 @@ Version 1.00
 
 =head1 SYNOPSIS
 
+    use Schedule::Schedule;
+    use GuiSchedule::GuiSchedule;
+    use GuiSchedule::DataEntry;
+    use Tk;
+    
+    my $Dirtyflag   = 0;
+    my $mw          = MainWindow->new();
+    my $Schedule    = Schedule->read('myschedule_file.yaml');
+    my $guiSchedule = GuiSchedule->new( $mw, \$Dirtyflag, \$Schedule );
+    
+    # create a data entry list
+    # NOTE: requires $guiSchedule just so that it can update
+    #       the views if data has changed (via the dirty flag)
+    my $de = DataEntry->new( $mw, $Schedule->teachers, 'Teacher',
+                    $Schedule, \$Dirtyflag, $guiSchedule );
 
 =head1 DESCRIPTION
 
+A generic data entry widget
 
 =head1 METHODS
 
@@ -43,6 +59,24 @@ my $id_index   = 0;
 
 creates the basic Data Entry (simple matrix)
 
+B<Inputs>
+
+=over
+
+=item * Tk frame where to draw data entry widgets
+
+=item * List of objects (teachers or labs, or streams)
+
+=item * What type of data object ("Teacher", "Lab", "Stream")
+
+=item * the schedule object
+
+=item * reference to the dirty pointer
+
+=item * guiSchedule - the object that manages the views
+
+=back
+
 B<Returns>
 
 data entry object
@@ -56,12 +90,21 @@ sub new {
     my $class    = shift; # class
     my $frame    = shift; # frame where new GUI stuff is attached to
     my $list_obj = shift; # composite list object (teachers, labs, streasm, etc)
-    my $type     = shift; # what type of data entry
     my $schedule = shift; # the actual schedule object
     my $dirty_ptr = shift;    # has the data changed
     $guiSchedule = shift;     # the object containing all GUI stuff
     undef @Delete_queue;
 
+    my $type;
+    if ( $list_obj->isa("Teachers") ) {
+        $type   = "Teacher";
+    }
+    elsif ( $list_obj->isa("Labs") ) {
+        $type   = "Lab";
+    }
+    else {
+        $type   = "Stream";
+    }
     my $self = {
                  -dirty    => $dirty_ptr,
                  -type     => $type,
@@ -329,7 +372,7 @@ Sandy Bultena, Ian Clement, Jack Burns
 
 =head1 COPYRIGHT
 
-Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement. 
+Copyright (c) 2020, Jack Burns, Sandy Bultena, Ian Clement. 
 
 All Rights Reserved.
 

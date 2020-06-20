@@ -1,0 +1,109 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new ()</a></li>
+      <li><a href="#add-Course-Object-s">add( Course Object(s) )</a></li>
+      <li><a href="#remove-course_object">remove ($course_object)</a></li>
+      <li><a href="#get-lab_id">get(lab_id)</a></li>
+      <li><a href="#get_by_number-course-number">get_by_number(course number)</a></li>
+      <li><a href="#list">list ()</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>Courses - a class containing an array of course objects</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Courses;
+    
+    my $courses = Courses-&gt;new();
+    
+    $courses-&gt;add($course_object);
+    $courses-&gt;remove($course_object);
+    my $array = $courses-&gt;list();</code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Manages the array of courses.</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new ()</h2>
+
+<p>creates an empty Courses object</p>
+
+<p><b>Returns</b></p>
+
+<p>Courses object</p>
+
+<h2 id="add-Course-Object-s">add( Course Object(s) )</h2>
+
+<p>Adds a new course Courses object</p>
+
+<p>Returns Courses object</p>
+
+<h2 id="remove-course_object">remove ($course_object)</h2>
+
+<p>Removes course from the Courses object</p>
+
+<p>Returns course object</p>
+
+<h2 id="get-lab_id">get(lab_id)</h2>
+
+<p>Returns Courses object with id</p>
+
+<h2 id="get_by_number-course-number">get_by_number(course number)</h2>
+
+<p>Return course which matches this course number</p>
+
+<h2 id="list">list ()</h2>
+
+<p>Returns reference to array of Course objects</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+

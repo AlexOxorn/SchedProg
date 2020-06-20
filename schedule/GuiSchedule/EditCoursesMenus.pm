@@ -18,8 +18,23 @@ our $Schedule;
 my $MAX_SECTIONS = 100;
 my $MAX_BLOCK    = 10;
 
+=head1 NAME
+
+EditCourses - extension to EditCourses 
+
+=head1 VERSION
+
+Version 1.00
+
+=head1 DESCRIPTION
+
+Contains the code to create the dialog boxes used by EditCourses
+
+=cut
+
+
 #==================================================================
-# coded by ALEX
+# coded by ALEX, updated and commented by Mom
 #==================================================================
 
 #==================================================================
@@ -2269,5 +2284,26 @@ sub _add_section {
     }
     return $answer;
 }
+
+# =================================================================
+# footer
+# =================================================================
+
+=head1 AUTHOR
+
+Sandy Bultena, Alex Oxorn
+
+=head1 COPYRIGHT
+
+Copyright (c) 2020, Sandy Bultena, Alex Oxorn. 
+
+All Rights Reserved.
+
+This module is free software. It may be used, redistributed
+and/or modified under the terms of the Perl Artistic License
+
+     (see http://www.perl.com/perl/misc/Artistic.html)
+
+=cut
 
 1;

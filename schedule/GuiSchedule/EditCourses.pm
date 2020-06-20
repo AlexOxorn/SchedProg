@@ -20,7 +20,6 @@ use Tk::Menu;
 use Tk::LabEntry;
 use Tk::Optionmenu;
 use Tk::JBrowseEntry;
-my $image_dir = Tk::FindImages::get_image_dir();
 
 =head1 NAME
 
@@ -32,9 +31,27 @@ Version 1.00
 
 =head1 SYNOPSIS
 
+    use Schedule::Schedule;
+    use GuiSchedule::GuiSchedule
+    use Tk;
+    use Tk::InitGui;
+    
+    my $Dirtyflag           = 0;
+    my $mw                  = MainWindow->new();
+    my ( $Colours, $Fonts ) = InitGui->set($mw);    
+    my $Schedule            = Schedule->read('myschedule_file.yaml');
+    my $guiSchedule         = GuiSchedule->new( $mw, \$Dirtyflag, \$Schedule );
+    
+    # create gui for editing courses
+    # NOTE: requires $guiSchedule just so that it can update
+    #       the views if data has changed (via the dirty flag)
+    
+    my $de = EditCourses->new( $mw, $Schedule, \$Dirtyflag, $Colours, $Fonts,
+                $guiSchedule )
 
 =head1 DESCRIPTION
 
+Create / Delete courses, assign teacheres, labs, etc.
 
 =head1 METHODS
 
@@ -77,7 +94,6 @@ sub new {
 	$Dirty_ptr = shift;
 	$Colours   = shift;
 	$Fonts     = shift;
-	my $image_dir = shift;
 	$GuiSchedule = shift;
 
 	# ----------------------------------------------------------------
@@ -1312,7 +1328,7 @@ Sandy Bultena, Ian Clement, Jack Burns
 
 =head1 COPYRIGHT
 
-Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement. 
+Copyright (c) 2020, Jack Burns, Sandy Bultena, Ian Clement. 
 
 All Rights Reserved.
 

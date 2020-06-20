@@ -1,0 +1,283 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new ()</a></li>
+      <li><a href="#set_title-title">set_title (title)</a></li>
+      <li><a href="#resize_view-View-Scale">resize_view ( View, Scale )</a></li>
+      <li><a href="#refresh_gui">refresh_gui ()</a></li>
+      <li><a href="#snap_guiblock-guiblock">snap_guiblock (guiblock)</a></li>
+      <li><a href="#create_status_bar">create_status_bar {</a></li>
+      <li><a href="#add_guiblock-GuiBlock">add_guiblock ( GuiBlock )</a></li>
+      <li><a href="#remove_all_guiblocks">remove_all_guiblocks ( )</a></li>
+      <li><a href="#draw_block-Block">draw_block ( Block )</a></li>
+      <li><a href="#draw_background">draw_background ( )</a></li>
+      <li><a href="#postmenu-Canvas-Menu-X-Y">postmenu ( Canvas, Menu, X, Y )</a></li>
+      <li><a href="#unpostmenu-Canvas-Menu">unpostmenu ( Canvas, Menu )</a></li>
+      <li><a href="#update-block">update ( $block )</a></li>
+      <li><a href="#update_for_conflicts">update_for_conflicts ( )</a></li>
+      <li><a href="#colour_block">colour_block()</a></li>
+      <li><a href="#redraw">redraw ( )</a></li>
+      <li><a href="#id">id ()</a></li>
+      <li><a href="#obj-Teacher-Lab-Stream-Object">obj ( [Teacher/Lab/Stream Object] )</a></li>
+      <li><a href="#canvas-Canvas">canvas ( [Canvas] )</a></li>
+      <li><a href="#mainMenu-menu">mainMenu ([menu])</a></li>
+      <li><a href="#status_bar-status_bar">status_bar ([status_bar])</a></li>
+      <li><a href="#type-type">type ( [type] )</a></li>
+      <li><a href="#toplevel-toplevel">toplevel ( [toplevel] )</a></li>
+      <li><a href="#blocks-Blocks-Ref">blocks ( [Blocks Ref] )</a></li>
+      <li><a href="#popup_guiblock-guiblock">popup_guiblock ( [guiblock] )</a></li>
+      <li><a href="#unset_popup_guiblock">unset_popup_guiblock ()</a></li>
+      <li><a href="#popup_menu-menu">popup_menu ( [menu] )</a></li>
+      <li><a href="#schedule-Schedule">schedule ( [Schedule] )</a></li>
+      <li><a href="#conflict_status-Conflict">conflict_status ( [Conflict] )</a></li>
+      <li><a href="#xOffset-Int">xOffset ( [Int] )</a></li>
+      <li><a href="#yOffset-Int">yOffset ( [Int] )</a></li>
+      <li><a href="#xScale-Int">xScale ( [Int] )</a></li>
+      <li><a href="#yScale-Int">yScale ( [Int] )</a></li>
+      <li><a href="#wScale-Int">wScale ( [Int] )</a></li>
+      <li><a href="#hScale-Int">hScale ( [Int] )</a></li>
+      <li><a href="#currentScale-Int">currentScale ( [Int] )</a></li>
+      <li><a href="#guiBlocks">guiBlocks ( )</a></li>
+      <li><a href="#close_view">_close_view ( )</a></li>
+      <li><a href="#get_pixel_coords-Block">_get_pixel_coords ( Block )</a></li>
+      <li><a href="#set_pixel_coords-GuiBlock-x-y">_set_pixel_coords ( GuiBlock, x, y )</a></li>
+      <li><a href="#set_pixel_coords-x-y-y2">_set_pixel_coords ( x, y, y2)</a></li>
+      <li><a href="#get_time_coords-day-start-duration">get_time_coords ( day, start, duration )</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>ViewBase - Basic View with days/weeks printed on it</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    # Don&#39;t call this directly</code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Base class for different types of schedule views</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new ()</h2>
+
+<p>creates a View object, draws the necessary grid and returns ViewBase.</p>
+
+<p><b>Parameters</b></p>
+
+<p><code>$mw</code> Main Window</p>
+
+<p><b>Returns</b></p>
+
+<p>View object</p>
+
+<h2 id="set_title-title">set_title (title)</h2>
+
+<p>Sets the title of the toplevel widget</p>
+
+<h2 id="resize_view-View-Scale">resize_view ( View, Scale )</h2>
+
+<p>Resizes the View to the new Scale</p>
+
+<h2 id="refresh_gui">refresh_gui ()</h2>
+
+<p>Update the graphics</p>
+
+<h2 id="snap_guiblock-guiblock">snap_guiblock (guiblock)</h2>
+
+<p>Takes the guiblock and forces it to be located on the nearest day and 1/2 hour boundary</p>
+
+<h2 id="create_status_bar">create_status_bar {</h2>
+
+<p>Status bar at the bottom of each View to show current movement type.</p>
+
+<h2 id="add_guiblock-GuiBlock">add_guiblock ( GuiBlock )</h2>
+
+<p>Adds the GuiBlock to the list of GuiBlocks on the View. Returns the View object.</p>
+
+<h2 id="remove_all_guiblocks">remove_all_guiblocks ( )</h2>
+
+<p>Remove all Guiblocks associated with this View.</p>
+
+<h2 id="draw_block-Block">draw_block ( Block )</h2>
+
+<p>Turns the block into a GuiBlock and draws it on the View. Binds a popup menu if one is defined</p>
+
+<h2 id="draw_background">draw_background ( )</h2>
+
+<p>Draws the Schedule timetable on the View canvas.</p>
+
+<h2 id="postmenu-Canvas-Menu-X-Y">postmenu ( Canvas, Menu, X, Y )</h2>
+
+<p>Creates a Context Menu on the Canvas at X and Y.</p>
+
+<h2 id="unpostmenu-Canvas-Menu">unpostmenu ( Canvas, Menu )</h2>
+
+<p>Removes the Context Menu.</p>
+
+<h2 id="update-block">update ( $block )</h2>
+
+<p>Updates the position of any GuiBlocks, that have the same Block as the currently moving GuiBlock.</p>
+
+<h2 id="update_for_conflicts">update_for_conflicts ( )</h2>
+
+<p>Determines conflict status for all GuiBlocks on this View and colours them accordingly.</p>
+
+<h2 id="colour_block">colour_block()</h2>
+
+<p>colours the block according to conflicts</p>
+
+<h2 id="redraw">redraw ( )</h2>
+
+<p>Redraws the View with new GuiBlocks and their positions.</p>
+
+<h2 id="id">id ()</h2>
+
+<p>Returns the unique id for this View object.</p>
+
+<h2 id="obj-Teacher-Lab-Stream-Object">obj ( [Teacher/Lab/Stream Object] )</h2>
+
+<p>Get/set the Teacher, Lab or Stream associated to this View.</p>
+
+<h2 id="canvas-Canvas">canvas ( [Canvas] )</h2>
+
+<p>Get/set the canvas of this View object.</p>
+
+<h2 id="mainMenu-menu">mainMenu ([menu])</h2>
+
+<p>Get/set the main menu at top of View</p>
+
+<h2 id="status_bar-status_bar">status_bar ([status_bar])</h2>
+
+<p>Get/set the main menu at top of View</p>
+
+<h2 id="type-type">type ( [type] )</h2>
+
+<p>Get/set the type of this View object.</p>
+
+<h2 id="toplevel-toplevel">toplevel ( [toplevel] )</h2>
+
+<p>Get/set the toplevel of this View object.</p>
+
+<h2 id="blocks-Blocks-Ref">blocks ( [Blocks Ref] )</h2>
+
+<p>Get/set the Blocks of this View object.</p>
+
+<h2 id="popup_guiblock-guiblock">popup_guiblock ( [guiblock] )</h2>
+
+<p>Stores which button was used to generate the popup menu</p>
+
+<h2 id="unset_popup_guiblock">unset_popup_guiblock ()</h2>
+
+<p>No block has a popup menu, so unset popup_guiblock</p>
+
+<h2 id="popup_menu-menu">popup_menu ( [menu] )</h2>
+
+<p>Get/set the popup menu for this guiblock</p>
+
+<h2 id="schedule-Schedule">schedule ( [Schedule] )</h2>
+
+<p>Get/set the Schedule of this View object.</p>
+
+<h2 id="conflict_status-Conflict">conflict_status ( [Conflict] )</h2>
+
+<p>Get/set the Conflict Status of this View object.</p>
+
+<h2 id="xOffset-Int">xOffset ( [Int] )</h2>
+
+<p>Get/set the xOffset of this View object.</p>
+
+<h2 id="yOffset-Int">yOffset ( [Int] )</h2>
+
+<p>Get/set the yOffset of this View object.</p>
+
+<h2 id="xScale-Int">xScale ( [Int] )</h2>
+
+<p>Get/set the xScale of this View object.</p>
+
+<h2 id="yScale-Int">yScale ( [Int] )</h2>
+
+<p>Get/set the yScale of this View object.</p>
+
+<h2 id="wScale-Int">wScale ( [Int] )</h2>
+
+<p>Get/set the wScale of this View object.</p>
+
+<h2 id="hScale-Int">hScale ( [Int] )</h2>
+
+<p>Get/set the hScale of this View object.</p>
+
+<h2 id="currentScale-Int">currentScale ( [Int] )</h2>
+
+<p>Get/set the currentScale of this View object.</p>
+
+<h2 id="guiBlocks">guiBlocks ( )</h2>
+
+<p>Returns the GuiBlocks of this View object.</p>
+
+<h2 id="close_view">_close_view ( )</h2>
+
+<p>Close the current View.</p>
+
+<h2 id="get_pixel_coords-Block">_get_pixel_coords ( Block )</h2>
+
+<p>Gets the coordinates in pixels for where the time of the Block is placed on the View.</p>
+
+<h2 id="set_pixel_coords-GuiBlock-x-y">_set_pixel_coords ( GuiBlock, x, y )</h2>
+
+<p>Converts the X and Y coordinates into times and sets the time to the Block.</p>
+
+<h2 id="set_pixel_coords-x-y-y2">_set_pixel_coords ( x, y, y2)</h2>
+
+<p>Converts the X and Y coordinates into times.</p>
+
+<h2 id="get_time_coords-day-start-duration">get_time_coords ( day, start, duration )</h2>
+
+<p>Converts the times into X and Y coordinates and returns them</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+

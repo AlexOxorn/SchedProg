@@ -4,7 +4,7 @@ use warnings;
 
 package Conflict;
 use FindBin;
-use lib "$FindBin::Bin/";
+use lib "$FindBin::Bin/..";
 use lib "$FindBin::Bin/Library";
 use PerlLib::Colour;
 use Carp;

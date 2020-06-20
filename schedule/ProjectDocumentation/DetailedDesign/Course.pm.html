@@ -1,0 +1,257 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new ()</a></li>
+      <li><a href="#id">id ()</a></li>
+      <li><a href="#name-name">name ( [name] )</a></li>
+      <li><a href="#number-course-number">number ( [course number] )</a></li>
+      <li><a href="#add_section-section-object">add_section ( section object )</a></li>
+      <li><a href="#get_section-section-number">get_section ( section number )</a></li>
+      <li><a href="#get_section_by_id-section-id">get_section_by_id ( section id )</a></li>
+      <li><a href="#get_section_by_name-section-name">get_section_by_name ( section name )</a></li>
+      <li><a href="#remove_section-section-object">remove_section ( section object )</a></li>
+      <li><a href="#delete">delete</a></li>
+      <li><a href="#sections">sections ( )</a></li>
+      <li><a href="#max_section_number">max_section_number ( )</a></li>
+      <li><a href="#blocks">blocks ( )</a></li>
+      <li><a href="#section-section-number">section (section number )</a></li>
+      <li><a href="#print_description">print_description</a></li>
+      <li><a href="#print_description2">print_description2</a></li>
+      <li><a href="#teachers">teachers ( )</a></li>
+      <li><a href="#has_teacher-teacher">has_teacher ( $teacher )</a></li>
+      <li><a href="#streams">streams ( )</a></li>
+      <li><a href="#has_stream-stream">has_stream (stream )</a></li>
+      <li><a href="#assign_teacher-teacher-object">assign_teacher ( teacher object )</a></li>
+      <li><a href="#assign_lab-lab-object">assign_lab ( lab object )</a></li>
+      <li><a href="#assign_teacher-teacher-object1">assign_teacher ( teacher object )</a></li>
+      <li><a href="#remove_teacher-teacher-object">remove_teacher ( teacher object )</a></li>
+      <li><a href="#remove_all_teachers">remove_all_teachers</a></li>
+      <li><a href="#remove_stream-stream">remove_stream ( stream )</a></li>
+      <li><a href="#remove_all_streams">remove_all_streams</a></li>
+      <li><a href="#get_new_number">get_new_number</a></li>
+      <li><a href="#more-stuff-about-conflicts-to-come">more stuff about conflicts to come</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>Course - describes a distinct course</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Course;
+    
+    my $block = Block-&gt;new (-day=&gt;&quot;Wed&quot;,-start=&gt;&quot;9:30&quot;,-duration=&gt;1.5);
+    my $section = Section-&gt;new(-number=&gt;1, -hours=&gt;6);
+
+    my $course = Course-&gt;new(-name=&gt;&quot;Basket Weaving&quot;, -course_id=&quot;420-ABC-DEF&quot;);
+    $course-&gt;add_section($section);
+    $section-&gt;add_block($block);
+    
+    print &quot;Course consists of the following sections: &quot;;
+    foreach my $section ($course-&gt;sections) {
+        # print info about $section
+    }
+    </code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Describes a course</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new ()</h2>
+
+<p>creates and returns a course object</p>
+
+<p><b>Parameters</b></p>
+
+<p>-number =&gt; course number</p>
+
+<p>-name =&gt; course name</p>
+
+<p><b>Returns</b></p>
+
+<p>Course object</p>
+
+<h2 id="id">id ()</h2>
+
+<p>Returns the unique id for this section object</p>
+
+<h2 id="name-name">name ( [name] )</h2>
+
+<p>Course name</p>
+
+<h2 id="number-course-number">number ( [course number] )</h2>
+
+<p>Gets and sets the course number</p>
+
+<h2 id="add_section-section-object">add_section ( section object )</h2>
+
+<p>Assign a section to this course</p>
+
+<p>returns course object</p>
+
+<h2 id="get_section-section-number">get_section ( section number )</h2>
+
+<p>gets section from this course that has section number</p>
+
+<p>Returns Section object</p>
+
+<h2 id="get_section_by_id-section-id">get_section_by_id ( section id )</h2>
+
+<p>gets section from this course that has section id</p>
+
+<p>Returns Section object</p>
+
+<h2 id="get_section_by_name-section-name">get_section_by_name ( section name )</h2>
+
+<p>gets section from this course that has section name</p>
+
+<p>Returns Section object</p>
+
+<h2 id="remove_section-section-object">remove_section ( section object )</h2>
+
+<p>removes section from this course</p>
+
+<p>Returns Course object</p>
+
+<h2 id="delete">delete</h2>
+
+<p>Deletes this object (and all its dependants)</p>
+
+<p>Returns undef</p>
+
+<h2 id="sections">sections ( )</h2>
+
+<p>returns an list of sections assigned to this course</p>
+
+<h2 id="max_section_number">max_section_number ( )</h2>
+
+<p>returns the maximum &#39;section number&#39;</p>
+
+<h2 id="blocks">blocks ( )</h2>
+
+<p>returns an list of blocks assigned to this course</p>
+
+<h2 id="section-section-number">section (section number )</h2>
+
+<p>returns the section associated with this section number</p>
+
+<h2 id="print_description">print_description</h2>
+
+<p>Returns a text string that describes the course, sections, blocks, teachers, labs.</p>
+
+<h2 id="print_description2">print_description2</h2>
+
+<p>Number: Name</p>
+
+<h2 id="teachers">teachers ( )</h2>
+
+<p>returns an list of teachers assigned to all sections in this course</p>
+
+<h2 id="has_teacher-teacher">has_teacher ( $teacher )</h2>
+
+<p>returns true if teacher assigned to this course</p>
+
+<h2 id="streams">streams ( )</h2>
+
+<p>returns an list of streams assigned to all sections in this course</p>
+
+<h2 id="has_stream-stream">has_stream (stream )</h2>
+
+<p>returns true if this course has stream</p>
+
+<h2 id="assign_teacher-teacher-object">assign_teacher ( teacher object )</h2>
+
+<p>Assign a teacher to all sectionss in this course</p>
+
+<p>Returns course object</p>
+
+<h2 id="assign_lab-lab-object">assign_lab ( lab object )</h2>
+
+<p>Assign a lab to all sectionss in this course</p>
+
+<p>Returns course object</p>
+
+<h2 id="assign_teacher-teacher-object1">assign_teacher ( teacher object )</h2>
+
+<p>Assign a steam to all sections in this course</p>
+
+<p>Returns course object</p>
+
+<h2 id="remove_teacher-teacher-object">remove_teacher ( teacher object )</h2>
+
+<p>removes teacher from all blocks in this course</p>
+
+<p>Returns Course object</p>
+
+<h2 id="remove_all_teachers">remove_all_teachers</h2>
+
+<p>removes all teachers from all blocks in this course</p>
+
+<p>Returns Course object</p>
+
+<h2 id="remove_stream-stream">remove_stream ( stream )</h2>
+
+<p>removes stream from this course</p>
+
+<p>Returns Course object</p>
+
+<h2 id="remove_all_streams">remove_all_streams</h2>
+
+<p>removes all streams from all blocks in this course</p>
+
+<p>Returns Course object</p>
+
+<h2 id="get_new_number">get_new_number</h2>
+
+<p>returns the first unused section number</p>
+
+<h2 id="more-stuff-about-conflicts-to-come">more stuff about conflicts to come</h2>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+

@@ -1,0 +1,91 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#most_severe-number">most_severe(number)</a></li>
+      <li><a href="#new">new (...)</a></li>
+      <li><a href="#type-type">type ( [type] )</a></li>
+      <li><a href="#blocks-blocks">blocks ( [blocks] )</a></li>
+      <li><a href="#add_block-block">add_block ( [block] )</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>Conflict - create the Conflict object</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Conflict;
+
+    $schedule-&gt;conflicts-&gt;add( -type   =&gt; Conflict-&gt;MINIMUM_DAYS
+                             , -blocks =&gt; \@blocks
+                             );      
+        </code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Describes a conflict</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="most_severe-number">most_severe(number)</h2>
+
+<p>CLASS or object method</p>
+
+<p>Input a conflict number, returns number of most severe conflict</p>
+
+<h2 id="new">new (...)</h2>
+
+<p>creates and returns a conflict object</p>
+
+<p><b>Parameters</b></p>
+
+<p>-type =&gt; the type of the conflict</p>
+
+<p>-blocks =&gt; the blocks involved in the conflict</p>
+
+<p><b>Returns</b></p>
+
+<p>Conflict object</p>
+
+<h2 id="type-type">type ( [type] )</h2>
+
+<p>Gets and sets the conflict&#39;s type</p>
+
+<h2 id="blocks-blocks">blocks ( [blocks] )</h2>
+
+<p>Gets and sets the conflict&#39;s blocks</p>
+
+<h2 id="add_block-block">add_block ( [block] )</h2>
+
+<p>Add a block to the blocks</p>
+
+
+</body>
+
+</html>
+
+

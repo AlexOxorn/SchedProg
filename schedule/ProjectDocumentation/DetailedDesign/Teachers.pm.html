@@ -1,0 +1,127 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#Class-METHODS">Class METHODS</a>
+    <ul>
+      <li><a href="#new">new ()</a></li>
+      <li><a href="#share_blocks-block1-block2-CLASS-METHOD">share_blocks(block1, block2) CLASS METHOD</a></li>
+    </ul>
+  </li>
+  <li><a href="#Instance-METHODS">Instance METHODS</a>
+    <ul>
+      <li><a href="#add-teacher1-teacher2">add(teacher1, [teacher2, ...])</a></li>
+      <li><a href="#get-teacher_id">get(teacher_id)</a></li>
+      <li><a href="#get_by_name-first_name-last_name">get_by_name(first_name,last_name)</a></li>
+      <li><a href="#remove-teacher_object">remove ($teacher_object)</a></li>
+      <li><a href="#list">list ()</a></li>
+      <li><a href="#disjoint-Teachers">disjoint ( [Teachers] )</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>Teachers - a class containing an array of teacher objects</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Teachers;
+    
+    my $teachers = Teachers-&gt;new();
+    
+    $teachers-&gt;add($teacher_object);
+    $teachers-&gt;remove($teacher_object);
+    my $array = $teachers-&gt;list();</code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Manages the array of teachers.</p>
+
+<h1 id="Class-METHODS">Class METHODS</h1>
+
+<h2 id="new">new ()</h2>
+
+<p>creates an empty Teachers object</p>
+
+<p><b>Returns</b></p>
+
+<p>Teachers object</p>
+
+<h2 id="share_blocks-block1-block2-CLASS-METHOD">share_blocks(block1, block2) CLASS METHOD</h2>
+
+<p>Are there teachers who share these two blocks?</p>
+
+<p>Returns true/false</p>
+
+<h1 id="Instance-METHODS">Instance METHODS</h1>
+
+<h2 id="add-teacher1-teacher2">add(teacher1, [teacher2, ...])</h2>
+
+<p>Adds a new teacher Teachers object</p>
+
+<p>Returns Teachers object</p>
+
+<h2 id="get-teacher_id">get(teacher_id)</h2>
+
+<p>Returns Teachers object with id</p>
+
+<h2 id="get_by_name-first_name-last_name">get_by_name(first_name,last_name)</h2>
+
+<p>Returns first teacher found which matches first name / last name</p>
+
+<h2 id="remove-teacher_object">remove ($teacher_object)</h2>
+
+<p>Removes teacher from the Teachers object</p>
+
+<p>Returns teachers object</p>
+
+<h2 id="list">list ()</h2>
+
+<p>Returns reference to array of Course objects</p>
+
+<h2 id="disjoint-Teachers">disjoint ( [Teachers] )</h2>
+
+<p>Determine is the current set of teachers is disjoint with the provided set of teachers.</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+

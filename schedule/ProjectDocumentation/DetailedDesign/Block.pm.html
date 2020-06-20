@@ -1,0 +1,252 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new ()</a></li>
+      <li><a href="#number-block-number">number ( [block number] )</a></li>
+      <li><a href="#delete">delete</a></li>
+      <li><a href="#start-time">start ( [time] )</a></li>
+      <li><a href="#start-time1">start ( [time] )</a></li>
+      <li><a href="#id">id</a></li>
+      <li><a href="#section-section-id">section ( [section id] )</a></li>
+      <li><a href="#assign_lab-lab">assign_lab ( lab # )</a></li>
+      <li><a href="#remove_lab-lab">remove_lab ( lab # )</a></li>
+      <li><a href="#remove_all_labs">remove_all_labs ( )</a></li>
+      <li><a href="#labs">labs ( )</a></li>
+      <li><a href="#has_lab-lab">has_lab ( lab )</a></li>
+      <li><a href="#assign_teacher-teacher-object">assign_teacher ( teacher object )</a></li>
+      <li><a href="#remove_teacher-teacher-object">remove_teacher ( teacher object )</a></li>
+      <li><a href="#remove_all_teachers">remove_all_teachers ( )</a></li>
+      <li><a href="#teachers">teachers ( )</a></li>
+      <li><a href="#has_teacher-teacher">has_teacher ( teacher )</a></li>
+      <li><a href="#teachersObj">teachersObj ( )</a></li>
+      <li><a href="#sync_block-block-object">sync_block ( block object )</a></li>
+      <li><a href="#unsync_block-block-object">unsync_block ( block object )</a></li>
+      <li><a href="#synced">synced ( )</a></li>
+      <li><a href="#reset_conflicted">reset_conflicted ( )</a></li>
+      <li><a href="#conflicted-boolean">conflicted ( [boolean] )</a></li>
+      <li><a href="#is_conflicted">is_conflicted ( )</a></li>
+      <li><a href="#print_description">print_description</a></li>
+      <li><a href="#conflicts">conflicts ( )</a></li>
+      <li><a href="#more-stuff-about-conflicts-to-come">more stuff about conflicts to come</a></li>
+      <li><a href="#refresh_number">refresh_number ( )</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>Block - describes a distinct contiguous course/section/class</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Course;
+    use Schedule::Section;
+    use Schedule::Block;
+    
+    my $block = Block-&gt;new (-day=&gt;&quot;Wed&quot;,-start=&gt;&quot;9:30&quot;,-duration=&gt;1.5);
+
+    my $course = Course-&gt;new(-name=&gt;&quot;Basket Weaving&quot;);
+    my $section = $course-&gt;create_section(-section_number=&gt;1);
+    $section-&gt;add_block($block);
+    
+    print &quot;block belongs to section &quot;,$block-&gt;section;
+    
+    $block-&gt;assign_teacher($teacher);
+    $block-&gt;remove_teacher($teacher);
+    $block-&gt;teachers();
+    
+    $block-&gt;add_lab(&quot;P327&quot;);
+    $block-&gt;remove_lab(&quot;P325&quot;);
+    $block-&gt;labs();
+    </code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Base Clase:: <code>Time_slot</code></p>
+
+<p>Describes a block which is a specific time slot for teaching part of a section of a course.</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new ()</h2>
+
+<p>creates and returns a block object</p>
+
+<p><b>Parameters</b></p>
+
+<p>-day =&gt; &#39;Mon&#39;, &#39;Tue&#39;, &#39;Wed&#39;, &#39;Thu&#39;, &#39;Fri&#39;, &#39;Sat&#39;, &#39;Sun&#39;</p>
+
+<p>-start =&gt; start time using 24 h clock (i.e 1pm is &quot;13:00&quot;)</p>
+
+<p>-duration =&gt; how long does this class last, in hours</p>
+
+<p><b>Returns</b></p>
+
+<p>Block object</p>
+
+<h2 id="number-block-number">number ( [block number] )</h2>
+
+<p>Gets and sets the block number</p>
+
+<h2 id="delete">delete</h2>
+
+<p>Deletes this object (and all its dependants)</p>
+
+<p>Returns undef</p>
+
+<h2 id="start-time">start ( [time] )</h2>
+
+<p>Get/set start time of block, in 24hr clock</p>
+
+<h2 id="start-time1">start ( [time] )</h2>
+
+<p>Get/set start time of block, in 24hr clock</p>
+
+<h2 id="id">id</h2>
+
+<p>Gets and returns the block id</p>
+
+<h2 id="section-section-id">section ( [section id] )</h2>
+
+<p>Gets and sets the course section object which contains this block</p>
+
+<h2 id="assign_lab-lab">assign_lab ( lab # )</h2>
+
+<p>Assign a lab to this block</p>
+
+<h2 id="remove_lab-lab">remove_lab ( lab # )</h2>
+
+<p>removes lab from this block</p>
+
+<p>Returns Block object</p>
+
+<h2 id="remove_all_labs">remove_all_labs ( )</h2>
+
+<p>removes all labs from this block</p>
+
+<p>Returns Block object</p>
+
+<h2 id="labs">labs ( )</h2>
+
+<p>returns an list of labs assigned to this block</p>
+
+<h2 id="has_lab-lab">has_lab ( lab )</h2>
+
+<p>returns true if block has lab</p>
+
+<h2 id="assign_teacher-teacher-object">assign_teacher ( teacher object )</h2>
+
+<p>assigns a new teacher to this block</p>
+
+<p>Returns Block object</p>
+
+<h2 id="remove_teacher-teacher-object">remove_teacher ( teacher object )</h2>
+
+<p>removes teacher from this block</p>
+
+<p>Returns Block object</p>
+
+<h2 id="remove_all_teachers">remove_all_teachers ( )</h2>
+
+<p>removes all teachers from this block</p>
+
+<p>Returns Block object</p>
+
+<h2 id="teachers">teachers ( )</h2>
+
+<p>returns a list of teachers assigned to this block</p>
+
+<h2 id="has_teacher-teacher">has_teacher ( teacher )</h2>
+
+<p>returns true if block has teacher</p>
+
+<h2 id="teachersObj">teachersObj ( )</h2>
+
+<p>returns a list of teacher objects to this block</p>
+
+<h2 id="sync_block-block-object">sync_block ( block object )</h2>
+
+<p>the new block object will be synced with this one (i.e. change the start time of this block, and the synced block will also be changed)</p>
+
+<p>Returns Block object</p>
+
+<h2 id="unsync_block-block-object">unsync_block ( block object )</h2>
+
+<p>removes syncing of block from this block</p>
+
+<p>Returns Block object</p>
+
+<h2 id="synced">synced ( )</h2>
+
+<p>returns an array ref of blocks which are synced to this block</p>
+
+<h2 id="reset_conflicted">reset_conflicted ( )</h2>
+
+<p>Resets conflicted field</p>
+
+<h2 id="conflicted-boolean">conflicted ( [boolean] )</h2>
+
+<p>Gets and sets conflicted field</p>
+
+<h2 id="is_conflicted">is_conflicted ( )</h2>
+
+<p>returns true if there is a conflict with this block, false otherwise</p>
+
+<h2 id="print_description">print_description</h2>
+
+<p>Returns a text string that describes the block</p>
+
+<h2 id="conflicts">conflicts ( )</h2>
+
+<p>returns a list of conflicts related to this block</p>
+
+<h2 id="more-stuff-about-conflicts-to-come">more stuff about conflicts to come</h2>
+
+<h2 id="refresh_number">refresh_number ( )</h2>
+
+<p>Assigns a number to a block that doesn&#39;t have one</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+

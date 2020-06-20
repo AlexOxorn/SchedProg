@@ -1,0 +1,283 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new ()</a></li>
+      <li><a href="#id">id ()</a></li>
+      <li><a href="#hours-hours">hours ( [hours] )</a></li>
+      <li><a href="#add_hours-hours">add_hours ( [hours] )</a></li>
+      <li><a href="#name-name">name ( [name] )</a></li>
+      <li><a href="#title">title ( )</a></li>
+      <li><a href="#number-section-number">number ( [section number] )</a></li>
+      <li><a href="#course-course">course ( [course] )</a></li>
+      <li><a href="#get_block_by_id-block-id">get_block_by_id ( block id )</a></li>
+      <li><a href="#get_block-block-number">get_block ( block number )</a></li>
+      <li><a href="#assign_lab-lab">assign_lab ( lab # )</a></li>
+      <li><a href="#remove_lab-lab">remove_lab ( lab # )</a></li>
+      <li><a href="#labs">labs ( )</a></li>
+      <li><a href="#assign_teacher-teacher-object">assign_teacher ( teacher object )</a></li>
+      <li><a href="#remove_teacher-teacher-object">remove_teacher ( teacher object )</a></li>
+      <li><a href="#remove_all_teachers">remove_all_teachers ( )</a></li>
+      <li><a href="#teachers">teachers ( )</a></li>
+      <li><a href="#has_teacher-teacher">has_teacher ( teacher )</a></li>
+      <li><a href="#assign_stream-stream">assign_stream ( stream # )</a></li>
+      <li><a href="#remove_stream-stream">remove_stream ( stream # )</a></li>
+      <li><a href="#streams">streams ( )</a></li>
+      <li><a href="#has_stream-stream">has_stream ( stream )</a></li>
+      <li><a href="#remove_all_streams">remove_all_streams ( )</a></li>
+      <li><a href="#add_block-block-object">add_block ( block object )</a></li>
+      <li><a href="#remove_block-block-object">remove_block ( block object )</a></li>
+      <li><a href="#delete">delete</a></li>
+      <li><a href="#blocks">blocks ( )</a></li>
+      <li><a href="#block-block_id">block ( block_id )</a></li>
+      <li><a href="#is_conflicted">is_conflicted ( )</a></li>
+      <li><a href="#conflicts">conflicts ( )</a></li>
+      <li><a href="#more-stuff-about-conflicts-to-come">more stuff about conflicts to come</a></li>
+      <li><a href="#get_new_number">get_new_number</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>Section - describes a distinct course/section</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Course;
+    use Schedule::Section;
+    
+    my $block = Block-&gt;new (-day=&gt;&quot;Wed&quot;,-start=&gt;&quot;9:30&quot;,-duration=&gt;1.5);
+    my $section = Section-&gt;new(-number=&gt;1, -hours=&gt;6);
+
+    my $course = Course-&gt;new(-name=&gt;&quot;Basket Weaving&quot;);
+    $course-&gt;add_section($section);
+    $section-&gt;add_block($block);
+    
+    print &quot;Section consists of the following blocks: &quot;;
+    foreach my $block ($section-&gt;blocks) {
+        # print info about $block
+    }
+    
+    $section-&gt;assign_teacher($teacher);
+    $section-&gt;remove_teacher($teacher);
+    $section-&gt;teachers();
+    
+    $section-&gt;add_lab(&quot;P327&quot;);
+    $section-&gt;remove_lab(&quot;P325&quot;);
+    $section-&gt;labs();
+    </code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Describes a section (part of a course)</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new ()</h2>
+
+<p>creates and returns a section object</p>
+
+<p><b>Parameters</b></p>
+
+<p>-number =&gt; section number</p>
+
+<p>-hours =&gt; how many hours per week</p>
+
+<p><b>Returns</b></p>
+
+<p>Section object</p>
+
+<h2 id="id">id ()</h2>
+
+<p>Returns the unique id for this section object</p>
+
+<h2 id="hours-hours">hours ( [hours] )</h2>
+
+<p>How many hours per week is the section?</p>
+
+<h2 id="add_hours-hours">add_hours ( [hours] )</h2>
+
+<p>Add x hours to the hours variable</p>
+
+<h2 id="name-name">name ( [name] )</h2>
+
+<p>Section name</p>
+
+<h2 id="title">title ( )</h2>
+
+<p>Section title</p>
+
+<p>Returns name if defined, else &quot;Section num&quot;</p>
+
+<h2 id="number-section-number">number ( [section number] )</h2>
+
+<p>Gets and sets the course section number</p>
+
+<h2 id="course-course">course ( [course] )</h2>
+
+<p>Gets and sets the course object which contains this section</p>
+
+<h2 id="get_block_by_id-block-id">get_block_by_id ( block id )</h2>
+
+<p>gets block from this section that has block id</p>
+
+<p>Returns Block object</p>
+
+<h2 id="get_block-block-number">get_block ( block number )</h2>
+
+<p>gets block from this section that has block number</p>
+
+<p>Returns Block object</p>
+
+<h2 id="assign_lab-lab">assign_lab ( lab # )</h2>
+
+<p>Assign a lab to all blocks in this section</p>
+
+<p>Returns section object</p>
+
+<h2 id="remove_lab-lab">remove_lab ( lab # )</h2>
+
+<p>removes lab from all blocks in this section</p>
+
+<p>Returns Section object</p>
+
+<h2 id="labs">labs ( )</h2>
+
+<p>returns an list of labs assigned to all blocks in this section</p>
+
+<h2 id="assign_teacher-teacher-object">assign_teacher ( teacher object )</h2>
+
+<p>Assign a teacher to all blocks in this section</p>
+
+<p>Returns section object</p>
+
+<h2 id="remove_teacher-teacher-object">remove_teacher ( teacher object )</h2>
+
+<p>removes teacher from all blocks in this section</p>
+
+<p>Returns Section object</p>
+
+<h2 id="remove_all_teachers">remove_all_teachers ( )</h2>
+
+<p>removes all teacher from all blocks in this section</p>
+
+<p>Returns Section object</p>
+
+<h2 id="teachers">teachers ( )</h2>
+
+<p>returns an list of teachers assigned to all blocks in this section</p>
+
+<h2 id="has_teacher-teacher">has_teacher ( teacher )</h2>
+
+<p>returns true if section has teacher</p>
+
+<h2 id="assign_stream-stream">assign_stream ( stream # )</h2>
+
+<p>Assign a stream to this section</p>
+
+<p>Returns a Section object</p>
+
+<h2 id="remove_stream-stream">remove_stream ( stream # )</h2>
+
+<p>removes stream from this section</p>
+
+<p>Returns Section object</p>
+
+<h2 id="streams">streams ( )</h2>
+
+<p>returns an list of streams assigned to this section</p>
+
+<h2 id="has_stream-stream">has_stream ( stream )</h2>
+
+<p>returns true if this section has specified stream</p>
+
+<h2 id="remove_all_streams">remove_all_streams ( )</h2>
+
+<p>removes all streams from this section</p>
+
+<p>Returns Section object</p>
+
+<h2 id="add_block-block-object">add_block ( block object )</h2>
+
+<p>Assign a block to this section</p>
+
+<p>returns Section object</p>
+
+<h2 id="remove_block-block-object">remove_block ( block object )</h2>
+
+<p>removes block from this section</p>
+
+<p>Returns Section object</p>
+
+<h2 id="delete">delete</h2>
+
+<p>Deletes this object (and all its dependants)</p>
+
+<p>Returns undef</p>
+
+<h2 id="blocks">blocks ( )</h2>
+
+<p>returns an list of blocks assigned to this section</p>
+
+<h2 id="block-block_id">block ( block_id )</h2>
+
+<p>returns block corresponding to block_id</p>
+
+<h2 id="is_conflicted">is_conflicted ( )</h2>
+
+<p>returns true if there is a conflict with this block, false otherwise</p>
+
+<h2 id="conflicts">conflicts ( )</h2>
+
+<p>returns a list of conflicts related to this block</p>
+
+<h2 id="more-stuff-about-conflicts-to-come">more stuff about conflicts to come</h2>
+
+<h2 id="get_new_number">get_new_number</h2>
+
+<p>returns the first unused block number</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+

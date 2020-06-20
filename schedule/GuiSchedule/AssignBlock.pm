@@ -185,36 +185,6 @@ sub find {
 }
 
 # =================================================================
-# get_day_blocks ($day, $blocks)
-# =================================================================
-
-=head2 get_day_blocks ($day, $blocks)
-
-return an array of all blocks within a specific day
-
-B<Parameters>
-
-$day day of the week (integer, 1=monday etc)
-
-$blocks array pointer of AssignBlocks
-
-B<Returns>
-
-Array of AssignBlock objects
-
-=cut
-
-sub get_day_blocks {
-	my $class  = shift;
-	my $day    = shift;
-	my $blocks = shift;
-
-	my @x = @$blocks;
-	return unless $blocks;
-	return grep { $_->day == $day } @$blocks;
-}
-
-# =================================================================
 # in_range ($x1,$y1,$x2,$y2, $blocks)
 # =================================================================
 
@@ -440,5 +410,26 @@ sub Get_day_start_duration {
 
 	return ( $day, $start, $size / 2.0 );
 }
+
+# =================================================================
+# footer
+# =================================================================
+
+=head1 AUTHOR
+
+Sandy Bultena, Alex Oxorn
+
+=head1 COPYRIGHT
+
+Copyright (c) 2020, Sandy Bultena, Alex Oxorn. 
+
+All Rights Reserved.
+
+This module is free software. It may be used, redistributed
+and/or modified under the terms of the Perl Artistic License
+
+     (see http://www.perl.com/perl/misc/Artistic.html)
+
+=cut
 
 1;

@@ -1,0 +1,63 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#CLASS-METHODS">CLASS METHODS</a>
+    <ul>
+      <li><a href="#get_day_blocks-day-blocks">get_day_blocks ($day, $blocks)</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>Blocks - static class to provide useful methods for collections of blocks</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Blocks;
+    
+    #Get a list of all the AssignBlocks associated with a given day
+    my @dayBlocks = AssignBlock-&gt;get_day_blocks( $day, $allBlocks );
+    </code></pre>
+
+<h1 id="CLASS-METHODS">CLASS METHODS</h1>
+
+<h2 id="get_day_blocks-day-blocks">get_day_blocks ($day, $blocks)</h2>
+
+<p>return an array of all blocks within a specific day</p>
+
+<p><b>Parameters</b></p>
+
+<p>$day day of the week (integer, 1=monday etc)</p>
+
+<p>$blocks array pointer of AssignBlocks</p>
+
+<p><b>Returns</b></p>
+
+<p>Array of AssignBlock objects</p>
+
+
+</body>
+
+</html>
+
+

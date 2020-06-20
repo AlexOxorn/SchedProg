@@ -1,0 +1,127 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new ()</a></li>
+      <li><a href="#id">id ()</a></li>
+      <li><a href="#block_id-Block-ID">block_id ( [Block ID] )</a></li>
+      <li><a href="#origin_start-Start-Time">origin_start ( [Start Time] )</a></li>
+      <li><a href="#origin_day-Day-Number">origin_day ( [Day Number] )</a></li>
+      <li><a href="#origin_object-Teacher-Lab-Stream-Object">origin_object ( [Teacher/Lab/Stream Object] )</a></li>
+      <li><a href="#move_type-String">move_type ( [String] )</a></li>
+      <li><a href="#new_obj-Teacher-Lab-Stream-Object">new_obj ( [Teacher/Lab/Stream Object] )</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>Undo - Holds info about a block so that it can be used as an &quot;undo&quot;</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Schedule;
+    my $Schedule    = Schedule-&gt;read(&#39;myschedule_file.yaml&#39;);
+
+    my $teacher = $Schedule-&gt;teachers()-&gt;get_by_name(&quot;Sandy&quot;,&quot;Bultena&quot;);
+    my @blocks = $Schedule-&gt;blocks_for_teachers($teacher);
+    my @undos = ();
+    
+    # save block[0] before modifying it
+    push @undos, Undo-&gt;new( $block-&gt;id, $block-&gt;start,
+                            $block-&gt;day, $teacher, &quot;Day/Time&quot; );</code></pre>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new ()</h2>
+
+<p>creates a GuiSchedule object</p>
+
+<p><b>Parameters</b></p>
+
+<p>-block_id =&gt; ID of the Block this Undo is associated with</p>
+
+<p>-origin_start =&gt; The original start time of the block before moving</p>
+
+<p>-origin_day =&gt; The original day of the block before moving</p>
+
+<p>-origin_obj =&gt; The object the block was associated with before moving (i.e. Teacher/Lab/Stream)</p>
+
+<p>-move_type =&gt; The type of movement this block made (i.e. within schedule, across schedules)</p>
+
+<p>-new_obj =&gt; The object the block is currently associated with after moving (i.e. new Teacher/Lab/Stream)</p>
+
+<p><b>Returns</b></p>
+
+<p>Undo object</p>
+
+<h2 id="id">id ()</h2>
+
+<p>Returns the unique id for this Undo object.</p>
+
+<h2 id="block_id-Block-ID">block_id ( [Block ID] )</h2>
+
+<p>Get/sets the Block ID for the Block this Undo is for.</p>
+
+<h2 id="origin_start-Start-Time">origin_start ( [Start Time] )</h2>
+
+<p>Get/sets the start time for the Block this Undo is for.</p>
+
+<h2 id="origin_day-Day-Number">origin_day ( [Day Number] )</h2>
+
+<p>Get/sets the day number for the Block this Undo is for.</p>
+
+<h2 id="origin_object-Teacher-Lab-Stream-Object">origin_object ( [Teacher/Lab/Stream Object] )</h2>
+
+<p>Get/sets the Teacher/Lab/Stream object for the Block this Undo is for.</p>
+
+<h2 id="move_type-String">move_type ( [String] )</h2>
+
+<p>Get/sets the move type string for the Block this Undo is for.</p>
+
+<h2 id="new_obj-Teacher-Lab-Stream-Object">new_obj ( [Teacher/Lab/Stream Object] )</h2>
+
+<p>Get/sets the new Teacher/Lab/Stream object for the Block this Undo is for.</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+

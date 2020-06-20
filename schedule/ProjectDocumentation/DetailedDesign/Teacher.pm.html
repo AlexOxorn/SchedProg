@@ -1,0 +1,118 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new (...)</a></li>
+      <li><a href="#id">id ()</a></li>
+      <li><a href="#firstname-name">firstname ( [name] )</a></li>
+      <li><a href="#lastname-name">lastname ( [name] )</a></li>
+      <li><a href="#dept-dept">dept ( [dept] )</a></li>
+      <li><a href="#release-release">release ( [release] )</a></li>
+      <li><a href="#print_description">print_description</a></li>
+    </ul>
+  </li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>Teacher - create the Teacher object</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Teacher;
+    
+    my $teacher = Teacher-&gt;new (-firstname =&gt; $name, 
+                                -lastname =&gt; $lname,
+                                -dept     =&gt; $dept
+                               );
+    </code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Describes a teacher</p>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new (...)</h2>
+
+<p>creates and returns a teacher object</p>
+
+<p><b>Parameters</b></p>
+
+<p>-firstname =&gt; first name of teacher</p>
+
+<p>-lastname =&gt; last name of teacher</p>
+
+<p>-dept =&gt; department that teacher is associated with (optional)</p>
+
+<p><b>Returns</b></p>
+
+<p>Teacher object</p>
+
+<h2 id="id">id ()</h2>
+
+<p>Returns the unique id for this teacher object</p>
+
+<h2 id="firstname-name">firstname ( [name] )</h2>
+
+<p>Gets and sets the teacher&#39;s name</p>
+
+<h2 id="lastname-name">lastname ( [name] )</h2>
+
+<p>Gets and sets the teacher&#39;s last name</p>
+
+<h2 id="dept-dept">dept ( [dept] )</h2>
+
+<p>Gets and sets the teacher&#39;s department name</p>
+
+<h2 id="release-release">release ( [release] )</h2>
+
+<p>How much release time does the teacher have (per week) from teaching duties?</p>
+
+<h2 id="print_description">print_description</h2>
+
+<p>Returns a text string that describes the teacher</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Sandy Bultena, Ian Clement, Jack Burns</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright (c) 2016, Jack Burns, Sandy Bultena, Ian Clement.</p>
+
+<p>All Rights Reserved.</p>
+
+<p>This module is free software. It may be used, redistributed and/or modified under the terms of the Perl Artistic License</p>
+
+<pre><code>     (see http://www.perl.com/perl/misc/Artistic.html)</code></pre>
+
+
+</body>
+
+</html>
+
+
