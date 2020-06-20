@@ -31,6 +31,8 @@ use Tk::Notebook;
 use Tk::LabFrame;
 use Tk::ROText;
 use YAML;
+$YAML::LoadBlessed = 1;  # default changed in YAML 1.30
+
 
 use Tk::FindImages;
 my $logo_file = Tk::FindImages::get_logo();
