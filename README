@@ -1,0 +1,17 @@
+MAC OS X
+=========
+
+----------------------------------------
+Install perl (this version used 5.30.3)
+----------------------------------------
+https://www.perl.org/get.html#osx
+
+----------------------------------------
+Install required Perl Packages
+----------------------------------------
+sudo /usr/local/bin/cpan install YAML
+sudo /usr/local/bin/cpan -fi Tk         # must force install Tk
+sudo /usr/local/bin/cpan install Text::CSV
+sudo /usr/local/bin/cpan install Excel::Writer::XLSX
+sudo /usr/local/bin/cpan install PDF::API2
+
