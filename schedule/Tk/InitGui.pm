@@ -104,7 +104,7 @@ sub set {
     
     # make fonts
     my $fonts = {
-        normal => $mw->fontCreate(%normalfont),
+        normal => $mw->fontCreate( %normalfont),
         bold   => $mw->fontCreate( %normalfont, -weight => 'bold' ),
         big    => $mw->fontCreate( %normalfont, -size => $size + 2 ),
         bigbold=> $mw->fontCreate( %normalfont, -size => $size + 2, -weight=>'bold' ),
