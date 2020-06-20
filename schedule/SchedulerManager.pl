@@ -1037,7 +1037,11 @@ sub write_ini {
 			-height     => scalar(@exportFormats)
 		)->pack( -side => 'top', -fill => 'x' )->Subwidget('listbox');
 
-		@exportFormats = ( "Excel (*.xlsx)", "Comma Separated Value (*.csv)" );
+		@exportFormats = ( 
+		  "Excel (*.xlsx)", 
+		  "Comma Separated Value (*.csv)",
+		  "PDF (*.pdf)" 
+		);
 		$currentExport = -1;
 
 		foreach my $exportFormat (@exportFormats) {
@@ -1055,8 +1059,12 @@ sub write_ini {
 		$exportFrame->destroy if $exportFrameDirty;
 
 		my $selection = $exportList->curselection->[0];
+		
+		# not sure why this is here... because other developers 
+		# DON"T COMMENT... gonna ignore it for now
 		return if ( $selection == $currentExport );
-		$currentExport = $selection;
+		
+		# $currentExport = $selection;
 
 		if ( $currentExport == 0 ) {
 			draw_excel_export();
@@ -1066,6 +1074,9 @@ sub write_ini {
 		}
 	}
 
+    # -----------------------------------------------------------------
+    # set up and draw csv
+    # -----------------------------------------------------------------
 	sub draw_csv_export() {
 
 		$exportFrame = $frame->Frame->pack( -expand => 1, -fill => 'both' );
@@ -1078,6 +1089,9 @@ sub write_ini {
 
 	}
 
+    # -----------------------------------------------------------------
+    # set up and draw excel... choose which stuff we want exported
+    # -----------------------------------------------------------------
 	sub draw_excel_export() {
 
 		$exportFrame = $frame->Frame->pack( -expand => 1, -fill => 'both' );
@@ -1160,7 +1174,8 @@ sub write_ini {
 		my @rooms;
 		my @streams;
 
-# extract the selected values from the map, they are the values (keys are "strings").
+        # extract the selected values from the map, 
+        # they are the values (keys are "strings").
 		foreach my $obj ( values %selected ) {
 			next unless $obj;
 

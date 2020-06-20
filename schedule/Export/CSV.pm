@@ -64,19 +64,19 @@ GuiSchedule object
 # new
 #--------------------------------------------------------------------
 sub new {
-	my $class = shift;
-	##??? confess "Bad inputs" if @_%2;
+    my $class = shift;
+    ##??? confess "Bad inputs" if @_%2;
 
-	my %inputs      = @_;
-	my $output_file = $inputs{-output_file} || undef;
-	my $schedule    = $inputs{-schedule} || undef;
+    my %inputs      = @_;
+    my $output_file = $inputs{-output_file} || undef;
+    my $schedule    = $inputs{-schedule} || undef;
 
-	my $self = {};
-	bless $self, $class;
-	$self->output_file($output_file);
-	$self->schedule($schedule);
+    my $self = {};
+    bless $self, $class;
+    $self->output_file($output_file);
+    $self->schedule($schedule);
 
-	return $self;
+    return $self;
 }
 
 # =================================================================
@@ -90,9 +90,9 @@ Gets and sets the output file name.
 =cut
 
 sub output_file {
-	my $self = shift;
-	$self->{-output_file} = shift if @_;
-	return $self->{-output_file};
+    my $self = shift;
+    $self->{-output_file} = shift if @_;
+    return $self->{-output_file};
 }
 
 # =================================================================
@@ -106,9 +106,9 @@ Gets and sets the schedule.
 =cut
 
 sub schedule {
-	my $self = shift;
-	$self->{-schedule} = shift if @_;
-	return $self->{-schedule};
+    my $self = shift;
+    $self->{-schedule} = shift if @_;
+    return $self->{-schedule};
 }
 
 # =================================================================
@@ -122,103 +122,103 @@ Export to file.
 =cut
 
 sub export {
-	my $self = shift;
+    my $self = shift;
 
-	my @flatBlocks;
+    my @flatBlocks;
 
-	my $titleLine = [
-		"Discipline",
-		"Course Name",
-		"Course No.",
-		"Section",
-		"Section Name",
-		"Ponderation",
-		"Start Time",
-		"End Time",
-		"Day",
-		"Type",
-		"Max",
-		"Teacher Last Name",
-		"Teacher First Name",
-		"Teacher ID",
-		"Room",
-		"Other Rooms Used",
-		"Restriction",
-		"Travel Fees",
-		"Approx. Material Fees"
-	];
-	push( @flatBlocks, $titleLine );
+    my $titleLine = [
+                      "Discipline",
+                      "Course Name",
+                      "Course No.",
+                      "Section",
+                      "Section Name",
+                      "Ponderation",
+                      "Start Time",
+                      "End Time",
+                      "Day",
+                      "Type",
+                      "Max",
+                      "Teacher Last Name",
+                      "Teacher First Name",
+                      "Teacher ID",
+                      "Room",
+                      "Other Rooms Used",
+                      "Restriction",
+                      "Travel Fees",
+                      "Approx. Material Fees"
+    ];
+    push( @flatBlocks, $titleLine );
 
-	my %dayNames = (
-		1 => 'Monday',
-		2 => 'Tuesday',
-		3 => 'Wednesday',
-		4 => 'Thursday',
-		5 => 'Friday'
-	);
+    my %dayNames = (
+                     1 => 'Monday',
+                     2 => 'Tuesday',
+                     3 => 'Wednesday',
+                     4 => 'Thursday',
+                     5 => 'Friday'
+    );
 
-	foreach my $course ( sort { $a->number cmp $b->number }
-		$self->schedule->courses->list )
-	{
-		foreach my $section ( $course->sections ) {
-			foreach my $block ( $section->blocks ) {
+    foreach my $course ( sort { $a->number cmp $b->number }
+                         $self->schedule->courses->list )
+    {
+        foreach my $section ( $course->sections ) {
+            foreach my $block ( $section->blocks ) {
 
-				my $start = _military_time( $block->start_number );
-				my $end =
-				  _military_time( $block->start_number + $block->duration );
+                my $start = _military_time( $block->start_number );
+                my $end =
+                  _military_time( $block->start_number + $block->duration );
 
-				# split rooms into "first" and a comma-seperated "rest"
-				my @rooms     = @{ $block->labs };
-				my $firstRoom = $rooms[0];
-				my $Labnumber = $firstRoom->number if $firstRoom;
-				$Labnumber = $Labnumber || "";
-				shift(@rooms);
-				my $remainingRooms = join( ",", @rooms );
+                # split rooms into "first" and a comma-seperated "rest"
+                my @rooms     = @{ $block->labs };
+                my $firstRoom = $rooms[0];
+                my $Labnumber = $firstRoom->number if $firstRoom;
+                $Labnumber = $Labnumber || "";
+                shift(@rooms);
+                my $remainingRooms = join( ",", @rooms );
 
-				foreach my $teacher ( $block->teachers ) {
-					my $teacherLName = $teacher->lastname;
-					my $teacherFName = $teacher->firstname;
-					my $teacherID    = $teacher->id;
+                foreach my $teacher ( $block->teachers ) {
+                    my $teacherLName = $teacher->lastname;
+                    my $teacherFName = $teacher->firstname;
+                    my $teacherID    = $teacher->id;
 
-					push(
-						@flatBlocks,
-						[
-							"420"    # Discipline
-							, $course->name                   # Course Name
-							, $course->number                 # Course No.
-							, $section->number                # Section Number
-							, $section->name                  # Section Name
-							, 90                              # Ponderation
-							, $start                          # Start time
-							, $end                            # End time
-							, $dayNames{ $block->day_number } # Days
-							, "C+-Lecture & Lab combined"     # Type
-							, 30                              # Max
-							, $teacherLName                   # Teacher L Name
-							, $teacherFName                   # Teacher F Name
-							, $teacherID                      # Teacher ID;
-							, $Labnumber                      # Room
-							, $remainingRooms                 # Other Rooms Used
-							, ""                              # Restriction
-							, ""                              # Travel Fees
-							, ""    # Approx. Material Fees
-						]
-					);
+                    push(
+                        @flatBlocks,
+                        [
+                           "420"    # Discipline
+                           , $course->name                    # Course Name
+                           , $course->number                  # Course No.
+                           , $section->number                 # Section Number
+                           , $section->name                   # Section Name
+                           , 90                               # Ponderation
+                           , $start                           # Start time
+                           , $end                             # End time
+                           , $dayNames{ $block->day_number }  # Days
+                           , "C+-Lecture & Lab combined"      # Type
+                           , 30                               # Max
+                           , $teacherLName                    # Teacher L Name
+                           , $teacherFName                    # Teacher F Name
+                           , $teacherID                       # Teacher ID;
+                           , $Labnumber                       # Room
+                           , $remainingRooms                  # Other Rooms Used
+                           , ""                               # Restriction
+                           , ""                               # Travel Fees
+                           , ""    # Approx. Material Fees
+                        ]
+                    );
 
-				}
-			}
-		}
-	}
+                }
+            }
+        }
+    }
 
-	open my $fh, ">", $self->output_file or croak $!;
-	print "opened file for writing\n";
-	my $csv = Text::CSV->new();
-	foreach my $flatBlock (@flatBlocks) {
-		$csv->print( $fh, $flatBlock );
-		print $fh "\n";  # sandy added this... sometimes CSV doesn't work.  why?
+    open my $fh, ">", $self->output_file or croak $!;
+    print "opened file for writing\n";
+    my $csv = Text::CSV->new();
+    foreach my $flatBlock (@flatBlocks) {
+        $csv->print( $fh, $flatBlock );
+        print $fh "\n";  # sandy added this... sometimes CSV doesn't work.  why?
 
-	}
-	close $fh or croak $!;
+    }
+    close $fh or croak $!;
 }
 
 # =====================================================
@@ -228,299 +228,318 @@ sub export {
 # =====================================================
 
 sub import_csv {
-	my @required_headers = (
-		"Course Name",
-		"Course No.",
-		"Section",
-		"Start Time",
-		"End Time",
-		"Day",
-		"Teacher First Name",
-		"Teacher Last Name",
-	);
+    my @required_headers = (
+                             "Course Name",
+                             "Course No.",
+                             "Section",
+                             "Teacher First Name",
+                             "Teacher Last Name",
+    );
+    print "in this import_csv\n";
 
-	my $Schedule2 = Schedule->new();
-	my $Courses   = $Schedule2->courses;
-	my $Teachers  = $Schedule2->teachers;
-	my $Labs      = $Schedule2->labs;
-	my $Streams   = $Schedule2->streams;
+    my $Schedule2 = Schedule->new();
+    my $Courses   = $Schedule2->courses;
+    my $Teachers  = $Schedule2->teachers;
+    my $Labs      = $Schedule2->labs;
+    my $Streams   = $Schedule2->streams;
 
-	my %repeateTeacherName;
-	my %fieldNames;
+    my %repeateTeacherName;
+    my %fieldNames;
 
-	# get parameters
-	my $class = shift;
-	my $file  = shift;
-	unless ($file) {
-		croak("Need an input file!");
-	}
+    # get parameters
+    my $class = shift;
+    my $file  = shift;
+    unless ($file) {
+        croak("Need an input file!");
+    }
 
-	# create a csv object
-	my $csv = Text::CSV->new(
-		{
-			binary    => 1,
-			auto_diag => 1,
-			sep_char  => ','    # not really needed as this is the default
-		}
-	);
+    # create a csv object
+    my $csv = Text::CSV->new(
+        {
+          binary    => 1,
+          auto_diag => 1,
+          sep_char  => ','    # not really needed as this is the default
+        }
+    );
 
-	# read the data file
-	open( my $data, '<:encoding(utf8)', $file )
-	  or croak "Could not open '$file' $!\n";
+    # read the data file
+    open( my $data, '<:encoding(utf8)', $file )
+      or croak "Could not open '$file' $!\n";
 
-	# get the first line so that we can get the field names
-	my $fields = $csv->getline($data);
-	print "[", join( "] [", @{$fields} ) . "]\n\n";
-	foreach my $i ( 1 ... scalar @{$fields} ) {
-		$fieldNames{ lc( $fields->[ $i - 1 ] ) } = $i - 1;
-	}
+    # get the first line so that we can get the field names
+    my $fields = $csv->getline($data);
+    foreach my $i ( 1 ... scalar @{$fields} ) {
+        $fieldNames{ lc( $fields->[ $i - 1 ] ) } = $i - 1;
+    }
 
-	# validate that we have all the necessary field names
-	foreach my $req (@required_headers) {
-		croak "Missing column <$req>" unless exists $fieldNames{ lc($req) };
-	}
+    # validate that we have all the necessary field names
+    foreach my $req (@required_headers) {
+        croak "Missing column <$req>" unless exists $fieldNames{ lc($req) };
+    }
 
-	# now start reading the data, and interpreting it
-	while ( my $fields = $csv->getline($data) ) {
+    # ------------------------------------------------------------------------
+    # now start reading the data, and interpreting it
+    # ------------------------------------------------------------------------
+    while ( my $fields = $csv->getline($data) ) {
 
-		# Course Name and Course No.
+        # --------------------------------------------------------------------
+        # Course Name and Course No.
+        # --------------------------------------------------------------------
 
-		my $courseName = $fields->[ $fieldNames{"course name"} ];
-		my $courseNo   = $fields->[ $fieldNames{"course no."} ];
+        my $courseName = $fields->[ $fieldNames{"course name"} ];
+        my $courseNo   = $fields->[ $fieldNames{"course no."} ];
 
-		my $course = $Courses->get_by_number($courseNo);
+        my $course = $Courses->get_by_number($courseNo);
 
-		unless ($course) {
-			if ( $courseName && $courseNo ) {
-				$course =
-				  Course->new( -name => $courseName, -number => $courseNo );
-				$Courses->add($course);
-			}
-		}
+        # create course if it doesn't already exist
+        unless ($course) {
+            if ( $courseName && $courseNo ) {
+                $course =
+                  Course->new( -name => $courseName, -number => $courseNo );
+                $Courses->add($course);
+            }
+        }
 
-		# Section Number & Name
-		my $section;
+        # --------------------------------------------------------------------
+        # Section Number & Name
+        # --------------------------------------------------------------------
+        my $section;
 
-		my $sectionNum  = $fields->[ $fieldNames{"section"} ];
-		my $sectionName = "";
-		$sectionName = $fields->[ $fieldNames{"section name"} ]
-		  if exists $fieldNames{"section name"};
+        my $sectionNum  = $fields->[ $fieldNames{"section"} ];
+        my $sectionName = "";
+        $sectionName = $fields->[ $fieldNames{"section name"} ]
+          if exists $fieldNames{"section name"};
 
-		unless ( !$sectionNum || looks_like_number($sectionNum) ) {
-			croak "Section number <$sectionNum> needs to be a number";
-		}
+        unless ( !$sectionNum || looks_like_number($sectionNum) ) {
+            croak "Section number <$sectionNum> needs to be a number";
+        }
 
-		print "HELLO 1 \n";
+        # create section if it doesn't already exist
+        if ( $course && $sectionNum ) {
+            $section = $course->get_section($sectionNum);
+            unless ($section) {
+                $section = Section->new(
+                                         -number => $sectionNum,
+                                         -hours  => 0,
+                                         -name   => $sectionName
+                );
+                $course->add_section($section);
+            }
+        }
+        else {
+            if ( $sectionNum || $sectionName ) {
+                croak "Section Can't be specified if course isn't specified";
+            }
+        }
 
-		if ( $course && $sectionNum ) {
-			$section = $course->get_section($sectionNum);
-			unless ($section) {
-				$section = Section->new(
-					-number => $sectionNum,
-					-hours  => 0,
-					-name   => $sectionName
-				);
-				$course->add_section($section);
-			}
-		}
-		else {
-			if ( $sectionNum || $sectionName ) {
-				croak "Section Can't be specified if course isn't specified";
-			}
-		}
+        # --------------------------------------------------------------------
+        # start and end time of a block
+        # --------------------------------------------------------------------
 
-		# [4 Constant] Ponderation (90)
+        my $startIn;
+        my $endIn;
+        my $duration  = '';
+        my $startTime = '';
+        if ( $fieldNames{"start time"} && $fieldNames{"end time"} ) {
+            $startIn = $fields->[ $fieldNames{"start time"} ];
+            $endIn   = $fields->[ $fieldNames{"end time"} ];
 
-		# [5] Start Time
-		# [6] End Time
+            my $start = _to_hours($startIn) if $startIn;
+            my $end   = _to_hours($endIn)   if $endIn;
 
-		print "HELLO 2\n";
+            # add hours to the section
+            if ( $section && $start && $end ) {
 
-		my $startIn = $fields->[ $fieldNames{"start time"} ];
-		my $endIn   = $fields->[ $fieldNames{"end time"} ];
+                $duration = $end - $start;
+                croak "$courseName, $sectionName has starts before it ends"
+                  if $duration < 0;
 
-		my $start = _to_hours($startIn) if $startIn;
-		my $end   = _to_hours($endIn)   if $endIn;
-		my $duration  = '';
-		my $startTime = '';
+                $startTime =
+                  int($start) . ":" . ( ( $start - int($start) ) * 60 )
+                  if int($start) != $start;
+                $startTime = $start . ":00" if int($start) == $start;
 
-		print "HELLO 3\n";
+                $section->add_hours($duration);
+            }
+        }
 
-		if ( $section && $start && $end ) {
+        # --------------------------------------------------------------------
+        # Day
+        # --------------------------------------------------------------------
+        my $dayInput;
+        my $day = "";
+        if ( $fieldNames{"day"} ) {
+            $dayInput = $fields->[ $fieldNames{"day"} ];
 
-			$duration = $end - $start;
-			croak "$courseName, $sectionName has starts before it ends"
-			  if $duration < 0;
+            if ( $section && $dayInput ) {
+                my %day_dict =
+                  (qw(m Mon tu Tue w Wed th Thu f Fri sa Sat su Sun));
+                foreach my $k ( keys %day_dict ) {
+                    do { $day = $day_dict{$k}; last } if $dayInput =~ /^$k/i;
+                }
+            }
+        }
 
-			$startTime = int($start) . ":" . ( ( $start - int($start) ) * 60 )
-			  if int($start) != $start;
-			$startTime = $start . ":00" if int($start) == $start;
+        # --------------------------------------------------------------------
+        # if we have all the info, create the block
+        # --------------------------------------------------------------------
+        my $block;
 
-			$section->add_hours($duration);
-		}
+        if ( $section && $day && $startTime && $duration ) {
+            print "attemting to make a block\n";
+            my $blockNumber = $section->get_new_number;
 
-		# [7] Day
-		my $dayInput = $fields->[ $fieldNames{"day"} ];
+            $block = Block->new(
+                                 -day      => $day,
+                                 -start    => $startTime,
+                                 -duration => $duration,
+                                 -number   => $blockNumber
+            );
+            $section->add_block($block);
+        }
+        else {
+            if ( $day || $startTime || $duration ) {
+                croak
+                  "Block Time Can't be specified if section isn't specified";
+            }
+        }
 
-		my $day      = "";
-		my %day_dict = (qw(m Mon tu Tue w Wed th Thu f Fri sa Sat su Sun));
-		foreach my $k ( keys %day_dict ) {
-			do { $day = $day_dict{$k}; last } if $dayInput =~ /^$k/i;
-		}
+        # --------------------------------------------------------------------
+        # define the teacher
+        # --------------------------------------------------------------------
+        my $teacher;
+        my $firstname = $fields->[ $fieldNames{"teacher first name"} ];
+        my $lastname  = $fields->[ $fieldNames{"teacher last name"} ];
 
-		my $block;
+        # this is an optional field, so must check if it exists
+        my $teachID = "";
+        $teachID = $fields->[ $fieldNames{"teacher id"} ]
+          if $fieldNames{"teacher id"};
 
-		if ($section) {
-			my $blockNumber = $section->get_new_number;
+        # must have a last name or teacher isn't assign to this block
+        if ($lastname) {
 
-			$block = Block->new(
-				-day      => $day,
-				-start    => $startTime,
-				-duration => $duration,
-				-number   => $blockNumber
-			);
-			$section->add_block($block);
-		}
-		else {
-			if ( $day || $startTime || $duration ) {
-				croak
-				  "Block Time Can't be specified if section isn't specified";
-			}
-		}
+            # ********* ALEX MUST COMMENT AND CLEAN UP THIS CODE! **********
+            unless ($teachID) {
 
-		# [8 Constant] Type (C+-Lecture & Lab combined)
-		# [9 Constant] Max (30)
+              # If the id is not specified get the teacher object using its name
+                $teacher = $Teachers->get_by_name( $firstname, $lastname );
+                unless ($teacher) {
 
-		# [10] Teach Last Name
-		# [11] Teach First Name
-		# [12] Teacher ID
-		my $teacher;
-		my $firstname = $fields->[ $fieldNames{"teacher first name"} ];
-		my $lastname  = $fields->[ $fieldNames{"teacher last name"} ];
+                    #if the teacher is a new teacher, create a teacher object
+                    $teacher =
+                      Teacher->new( -firstname => $firstname,
+                                    -lastname  => $lastname );
+                    $Teachers->add($teacher);
+                }
+            }
+            else {
 
-		# this is an optional field, so must check if it exists
-		my $teachID = "";
-		$teachID = $fields->[ $fieldNames{"teacher id"} ]
-		  if $fieldNames{"teacher id"};
+                #if teacher id is specifiec, make sure the input is a number
+                unless ( looks_like_number($teachID) ) {
+                    croak "Teacher ID needs to be a number";
+                }
+                unless (
+                       $repeateTeacherName{ $firstname . $lastname }{$teachID} )
+                {
 
-		# must have a last name or teacher isn't assign to this block
-		if ($lastname) {
+                    #if the specific combination of name and id is
+                    # not already in the hash
+                    #(not in the schedule) create a new teacher
+                    $teacher =
+                      Teacher->new( -firstname => $firstname,
+                                    -lastname  => $lastname );
+                    $Teachers->add($teacher);
+                    $repeateTeacherName{ $firstname . $lastname }{$teachID} =
+                      $teacher;
+                }
+                else {
 
-			# ********* ALEX MUST COMMENT AND CLEAN UP THIS CODE! **********
-			unless ($teachID) {
+                    #otherwise get the teacher associated with
+                    # the name and id in the hash
+                    $teacher =
+                      $repeateTeacherName{ $firstname . $lastname }{$teachID};
+                }
+            }
+            
+            print "We have a teacher assigned\n";
+            if ($block) {
+                $block->assign_teacher($teacher);
+            }
+            elsif ($section) {
+                $section->assign_teacher($teacher);
+                print "Assigning teacher $teacher to this section $section\n";
+            }
+            elsif ($course) {
+                $course->assign_teacher($teacher);
+            }
+        }
 
-			  # If the id is not specified get the teacher object using its name
-				$teacher = $Teachers->get_by_name( $firstname, $lastname );
-				unless ($teacher) {
+        # --------------------------------------------------------------------
+        # room
+        # --------------------------------------------------------------------
+        my $room;
+        if ( $fieldNames{"room"} ) {
+            $room = $fields->[ $fieldNames{"room"} ];
 
-					#if the teacher is a new teacher, create a teacher object
-					$teacher = Teacher->new(
-						-firstname => $firstname,
-						-lastname  => $lastname
-					);
-					$Teachers->add($teacher);
-				}
-			}
-			else {
-				#if teacher id is specifiec, make sure the input is a number
-				unless ( looks_like_number($teachID) ) {
-					croak "Teacher ID needs to be a number";
-				}
-				unless (
-					$repeateTeacherName{ $firstname . $lastname }{$teachID} )
-				{
-		  #if the specific combination of name and id is not already in the hash
-		  #(not in the schedule) create a new teacher
-					$teacher = Teacher->new(
-						-firstname => $firstname,
-						-lastname  => $lastname
-					);
-					$Teachers->add($teacher);
-					$repeateTeacherName{ $firstname . $lastname }{$teachID} =
-					  $teacher;
-				}
-				else {
-		  #otherwise get the teacher associated with the name and id in the hash
-					$teacher =
-					  $repeateTeacherName{ $firstname . $lastname }{$teachID};
-				}
-			}
-			if ($block) {
-				$block->assign_teacher($teacher);
-			}
-			elsif ($section) {
-				$section->assign_teacher($teacher);
-			}
-			elsif ($course) {
-				$course->assign_teacher($teacher);
-			}
-		}
+            $room =~ s/\s*(.*?)\s*/$1/;
+            if ($room) {
 
-		# [13] room
-		my $room = $fields->[ $fieldNames{"room"} ];
+                my $tmpLab = $Labs->get_by_number($room);
+                my $lab;
+                if ($tmpLab) {
+                    $lab = $tmpLab;
+                }
+                else {
+                    $lab = Lab->new( -number => $room, -descr => "" );
+                    $Labs->add($lab);
+                }
 
-		$room =~ s/\s*(.*?)\s*/$1/;
-		if ($room) {
+                if ($block) {
+                    $block->assign_lab($lab);
+                }
+                elsif ($section) {
+                    $section->assign_lab($lab);
+                }
+                elsif ($course) {
+                    $course->assign_lab($lab);
+                }
+            }
 
-			my $tmpLab = $Labs->get_by_number($room);
-			my $lab;
-			if ($tmpLab) {
-				$lab = $tmpLab;
-			}
-			else {
-				$lab = Lab->new( -number => $room, -descr => "" );
-				$Labs->add($lab);
-			}
+        }
+    }
+    if ( not $csv->eof ) {
 
-			if ($block) {
-				$block->assign_lab($lab);
-			}
-			elsif ($section) {
-				$section->assign_lab($lab);
-			}
-			elsif ($course) {
-				$course->assign_lab($lab);
-			}
-		}
+        $csv->error_diag();
+        return;
+    }
+    close $data;
 
-		# [14 empty] Other used room
-		# [15 empty] Restriction
-		# [16 empty] Traval Fees
-		# [17 empty] Aproxiamte Material Fee
-
-	}
-	if ( not $csv->eof ) {
-
-		$csv->error_diag();
-		return;
-	}
-	close $data;
-
-	return $Schedule2;
+    return $Schedule2;
 }
 
 sub _military_time {
-	my $time = shift;
+    my $time = shift;
 
-	my $hours = 100 * ( int($time) );
+    my $hours = 100 * ( int($time) );
 
-	return $hours + 30 if ( int($time) - $time );
-	return $hours;
+    return $hours + 30 if ( int($time) - $time );
+    return $hours;
 
 }
 
 sub _to_hours {
-	my $time = shift;
+    my $time = shift;
 
-	unless ( looks_like_number($time) ) {
-		croak "Times needs to be a number eg. (13h30 -> 1330)";
-	}
+    unless ( looks_like_number($time) ) {
+        croak "Times needs to be a number eg. (13h30 -> 1330)";
+    }
 
-	my $hour = int( $time / 100 );
-	if ( $time % 100 ) {
-		$hour += .5;
-	}
-	return $hour;
+    my $hour = int( $time / 100 );
+    if ( $time % 100 ) {
+        $hour += .5;
+    }
+    return $hour;
 }
 
 1;

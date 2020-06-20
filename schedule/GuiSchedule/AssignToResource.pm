@@ -55,7 +55,7 @@ my %dayName = (
                 3 => "Wednesday",
                 4 => "Thursday",
                 5 => "Friday"
-              );
+);
 
 # ===================================================================
 # new
@@ -168,12 +168,12 @@ sub OpenDialog {
         $lblTitle = $db->Label(
                                 -text => "Assign block to Resource",
                                 -font => $bigFont
-                              ) if $type eq 'lab';
+        ) if $type eq 'lab';
 
         $lblTitle = $db->Label(
                                 -text => "Assign block to Teacher",
                                 -font => $bigFont
-                              ) if $type eq 'teacher';
+        ) if $type eq 'teacher';
 
         my $selectedBlockText =
             $dayName{$day} . " at "
@@ -184,17 +184,17 @@ sub OpenDialog {
                                         -text   => "Course Info (required)",
                                         -font   => $boldFont,
                                         -anchor => 'w'
-                                      );
+        );
         my $lblTeacherInfo = $db->Label(
                                          -text   => "Teacher (optional)",
                                          -font   => $boldFont,
                                          -anchor => 'w'
-                                       );
+        );
         my $lblLabInfo = $db->Label(
                                      -text   => "Resource (optional)",
                                      -font   => $boldFont,
                                      -anchor => 'w'
-                                   );
+        );
         my $lblCourse = $db->Label( -text => "Choose Course", -anchor => 'w' );
         my $lblTeacher =
           $db->Label( -text => "Choose Teacher", -anchor => 'w' );
@@ -259,10 +259,10 @@ sub OpenDialog {
                                        \%sectionName, \%blockName,
                                        \$curSection,  \$curBlock,
                                        \$OKAY,        \$BlockNewBtn
-                                     );
+                    );
                 },
                 \$SectionNewBtn
-                          ]
+            ]
         );
 
         my $courseDropEntry = $CourseJBE->Subwidget("entry");
@@ -279,15 +279,16 @@ sub OpenDialog {
             -browsecmd => [
                 sub {
                     my $btn = ${ +shift };
-                    $btn->configure( -state => 'normal' ),
-                      my %rHash = reverse %sectionName;
+                    $btn->configure( -state => 'normal' );
+                    my %rHash = reverse %sectionName;
                     my $id      = $rHash{$curSection};
                     $section = $course->get_section_by_id($id);
                     updateBlockList( \$BlockJBE, $section, \%blockName,
                                      \$curBlock, \$OKAY );
+                    setDefaultTeacher( $section, \$curTeach );
                 },
                 \$BlockNewBtn
-                          ]
+            ]
         );
 
         my $secDropEntry = $SectionJBE->Subwidget("entry");
@@ -305,14 +306,13 @@ sub OpenDialog {
                                  \$newSection, \%sectionName, \$SectionJBE,
                                  \$curSection, $OKAY,         \$BlockNewBtn,
                                  \$curBlock
-                               );
+                );
             }
         );
 
         # =====================================================
         # block
         # =====================================================
-
         $BlockJBE = $db->JBrowseEntry(
             -variable  => \$curBlock,
             -state     => 'readonly',
@@ -333,7 +333,7 @@ sub OpenDialog {
                                   -textvariable       => \$selectedBlockText,
                                   -state              => 'disabled',
                                   -disabledbackground => 'white'
-                                );
+        );
 
         $BlockNewBtn = $db->Button(
             -text    => "Create",
@@ -347,7 +347,6 @@ sub OpenDialog {
         # =============================================
         # teacher
         # ============================================
-
         $TeacherJBE = $db->JBrowseEntry(
             -variable  => \$curTeach,
             -state     => 'readonly',
@@ -421,12 +420,12 @@ sub OpenDialog {
                            "-", "-",
                            -padx   => 2,
                            -sticky => 'nsew'
-                         );
+        );
         $SectionJBE->grid(
                            $SectionEntry, "-", $SectionNewBtn,
                            -padx   => 2,
                            -sticky => 'nsew'
-                         );
+        );
 
         # block
         $lblBlock->grid(
@@ -434,12 +433,12 @@ sub OpenDialog {
                          "-", "-",
                          -padx   => 2,
                          -sticky => 'nsew'
-                       );
+        );
         $BlockJBE->grid(
                          $BlockDescr, "-", $BlockNewBtn,
                          -padx   => 2,
                          -sticky => 'nsew'
-                       );
+        );
 
         # teacher
         unless ( $type eq 'teacher' ) {
@@ -449,19 +448,19 @@ sub OpenDialog {
                                    "-", "-", "-",
                                    -padx   => 2,
                                    -sticky => 'nsew'
-                                 );
+            );
             $lblTeacher->grid(
                                $lblCreateTeacher,
                                "-", "-",
                                -padx   => 2,
                                -sticky => 'nsew'
-                             );
+            );
             $TeacherJBE->grid(
                                $TeacherFName, $TeacherLName,
                                $TeacherNewBtn,
                                -sticky => 'nsew',
                                -padx   => 2
-                             );
+            );
             $db->Label( -text => '' )
               ->grid( "-", "-", "-", -padx => 2, -sticky => 'nsew' );
         }
@@ -474,19 +473,19 @@ sub OpenDialog {
                                "-", "-", "-",
                                -padx   => 2,
                                -sticky => 'nsew'
-                             );
+            );
             $lblLab->grid(
                            $lblCreateLab,
                            "-", "-",
                            -padx   => 2,
                            -sticky => 'nsew'
-                         );
+            );
             $LabJBE->grid(
                            $LabNumber, $LabDscr,
                            $LabNewBtn,
                            -sticky => 'nsew',
                            -padx   => 2
-                         );
+            );
             $db->Label( -text => '' )
               ->grid( "-", "-", "-", -padx => 2, -sticky => 'nsew' );
         }
@@ -697,6 +696,23 @@ sub add_new_teacher {
 }
 
 # ============================================================================
+# set default teacher for a given section
+# ============================================================================
+sub setDefaultTeacher {
+    my $section    = shift;
+    my $curTeach   = shift;
+    
+    return if $type eq 'teacher';
+    
+    return unless $section;
+    my $default_teacher = $section->default_teacher();
+    return unless $default_teacher;
+
+    $$curTeach = "$default_teacher";
+    $teacher   = $default_teacher;
+}
+
+# ============================================================================
 # add_new_section
 # ============================================================================
 sub add_new_section {
@@ -746,7 +762,7 @@ sub add_new_section {
                                         -number => $course->get_new_number,
                                         -hours  => 0,
                                         -name   => $$name
-                                      );
+            );
             $$name = "";
             $course->add_section($sectionNew);
 
