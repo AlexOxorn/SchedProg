@@ -161,7 +161,7 @@ sub new {
 =head2 setup_popup_menu ($mw) {
  
 create the pop-up menu BEFORE drawing the blocks, so that it can be
-bound to each block (done in $self->draw_blocks)
+bound to each block (done in $self->redraw)
 
 =cut
 

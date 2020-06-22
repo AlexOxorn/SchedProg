@@ -6,6 +6,7 @@ package GuiBlocks;
 use FindBin;
 use lib "$FindBin::Bin/..";
 use PerlLib::Colours;
+use Export::DrawView;
 
 =head1 NAME
 
@@ -18,7 +19,7 @@ Version 1.00
 =head1 SYNOPSIS
 
 	use GuiSchedule::GuiBlocks;
-	use GuiSchedule::ViewV2;
+	use GuiSchedule::View;
 	my $mw = MainWindow->new;
 	my @blocks =  
 	my $View = View->new($mw, \@blocks);
@@ -75,151 +76,20 @@ sub new {
     my $view   = shift;
     my $block  = shift;
     my $coords = shift;
-
-    # set the colour and pixel width of edge
     my $colour = shift || '#abcdef';
-    my $scale  = shift;
-    my $edge   = shift || $Edge;
-    $Edge = $edge;
+    my $scale  = shift ;
 
     # get canvas from view to draw on
     my $canvas = $view->canvas;
-    $colour = Colour->string($colour);
 
-    # get needed block information
-    my $blockNum         = $block->section->course->number || " ";
-    my $blockSec         = " (" . $block->section->number . ")";
-    my $blockSectionName = $block->section->title;
-    my @teachers         = $block->teachers;
-    my $blockTeacher     = join( "\n", @teachers );
-    my @labs             = $block->labs;
-    my $blockLab         = join( ",", @labs );
-    my $blockDuration    = $block->duration;
-    my $blockStartTime   = $block->start_number;
-    my @streams          = $block->section->streams;
-    my $blockStreams     = join( ",", @streams );
-
-    # ===============================================================
-    # View window has been scaled down
-    # ===============================================================
-    if ( $scale <= 0.75 ) {
-
-        # -----------------------------------------------------------
-        # course
-        # -----------------------------------------------------------
-        # remove program number from course number (i.e. 420-506 becomes 506)
-        if ( $scale == 0.5 ) {
-            $blockNum =~ s/.*\-//g;
-        }
-
-        # -----------------------------------------------------------
-        # teachers
-        # -----------------------------------------------------------
-        $blockTeacher = "";
-
-        # do not add teachers if this is a teacher view
-        if ( $view->type ne "teacher" ) {
-            $blockTeacher = join(
-                ", ",
-                map {
-                        substr( $_->firstname, 0, 1 )
-                      . substr( $_->lastname, 0, 1 )
-                  } @teachers
-            );
-
-            # add ellipsis to end of teacher string as necessary
-            if ( $scale == 0.5 && @teachers >= 3 ) {
-                $blockTeacher = substr( $blockTeacher, 0, 7 ) . "...";
-            }
-            elsif ( @teachers >= 4 ) {
-                $blockTeacher = substr( $blockTeacher, 0, 11 ) . "...";
-            }
-
-        }
-
-        # -----------------------------------------------------------
-        # labs/resources
-        # -----------------------------------------------------------
-        $blockLab = "";
-        if ( $view->type ne "lab" ) {
-
-            $blockLab = join( ", ", map { $_->number } @labs );
-
-            # add ellipsis to end of lab string as necessary
-            if ( $scale == 0.5 && @labs >= 3 ) {
-                $blockLab = substr( $blockLab, 0, 7 ) . "...";
-            }
-            elsif ( @labs >= 4 ) {
-                $blockLab = substr( $blockLab, 0, 11 ) . "...";
-            }
-        }
-
-        # -----------------------------------------------------------
-        # streams
-        # -----------------------------------------------------------
-        $blockStreams = "";
-
-        # only add streams if no teachers or labs,
-        # or GuiBlock can fit all info (i.e. duration of 2 hours or more)
-        if ( $view->type ne "stream" || $blockDuration >= 2 ) {
-            $blockStreams = join( ", ", map { $_->number } @streams );
-
-            # add ellipsis to end of stream string as necessary
-            if ( $scale == 0.5 && @streams >= 3 ) {
-                $blockStreams = substr( $blockStreams, 0, 7 ) . "...";
-            }
-            elsif ( @streams >= 4 ) {
-                $blockStreams = substr( $blockStreams, 0, 11 ) . "...";
-            }
-
-        }
-
-    }
-
-    # ===============================================================
-    # define what to display
-    # ===============================================================
-
-    my $blockText = "$blockNum.$blockSec\n$blockSectionName\n";
-    $blockText .= "$blockTeacher\n"
-      if ( $view->type ne "teacher" && $blockTeacher );
-    $blockText .= "$blockLab\n" if ( $view->type ne "lab" && $blockLab );
-    $blockText .= "$blockStreams\n"
-      if ( $view->type ne "stream" && $blockStreams );
-    chomp($blockText);
-
-    # ===============================================================
     # draw the block
-    # ===============================================================
-    #create rectangle
-    my $rectangle =
-      $canvas->createRectangle(
-                                @$coords,
-                                -fill    => $colour,
-                                -outline => $colour
-                              );
+    my $gui_objs = DrawView->draw_block($canvas,$block,$coords,$view->type,$colour,$scale);
 
-    # shade edges of guiblock rectangle
-    my @lines;
-    my ( $x1, $y1, $x2, $y2 ) = @$coords;
-    my ( $light, $dark, $textcolour ) = _get_colour_shades( $colour, $edge );
-    foreach my $i ( 0 .. $edge - 1 ) {
-        push @lines,
-          $canvas->createLine( $x2 - $i, $y1 + $i, $x2 - $i, $y2 - $i, $x1 + $i,
-                               $y2 - $i, -fill => $dark->[$i] );
-        push @lines,
-          $canvas->createLine( $x2 - $i, $y1 + $i, $x1 + $i, $y1 + $i, $x1 + $i,
-                               $y2 - $i, -fill => $light->[$i] );
-    }
-
-    # set text
-    my $text = $canvas->createText(
-                                    ( $x1 + $x2 ) / 2, ( $y1 + $y2 ) / 2,
-                                    -text => $blockText,
-                                    -fill => $textcolour
-                                  );
-    my @coords = $canvas->coords($rectangle);
-
+    my @lines = @{$gui_objs->{-lines}};
+    my $text = $gui_objs->{-text};
+    my $rectangle = $gui_objs->{-rectangle};
+    my @coords = @{$gui_objs->{-coords}};
+    
     # group rectange and text to create guiblock,
     # so that they both move as one on UI
     my $group = $canvas->createGroup( [ 0, 0 ],
@@ -260,7 +130,7 @@ sub change_colour {
     my $cn    = $self->view->canvas;
     my $group = $self->group;
 
-    my ( $light, $dark, $textcolour ) = _get_colour_shades( $colour, $Edge );
+    my ( $light, $dark, $textcolour ) = DrawView::get_colour_shades( $colour );
 
     eval {
     my ( $rect, $text, @lines ) = $cn->itemcget( $group, -members );
@@ -277,37 +147,6 @@ sub change_colour {
     }
 }
 
-# =================================================================
-# get the shades of the colour
-# =================================================================
-
-=head2 _get_colour_shades ($colour, $edge)
-
-Get the shading of the GuiBlock
-
-=cut
-
-sub _get_colour_shades {
-    my $colour = shift;
-    my $edge   = shift;
-    my ( $h, $s, $l ) = Colour->hsl($colour);
-    my $light_intensity = $l > .7 ? ( 1 - $l ) * 75 : 30 * .75;
-    my $dark_intensity  = $l < .3 ? $l * 75         : 30 * .75;
-
-    my @light;
-    my @dark;
-    my $textcolour = "black";
-    unless ( Colour->isLight($colour) ) {
-        $textcolour = "white";
-    }
-    foreach my $i ( 0 .. $edge - 1 ) {
-        my $lfactor = ( 1 - ( $i / $edge ) ) * $light_intensity;
-        my $dfactor = ( 1 - ( $i / $edge ) ) * $dark_intensity;
-        push @light, Colour->lighten( $lfactor, $colour );
-        push @dark, Colour->darken( $dfactor, $colour );
-    }
-    return \@light, \@dark, $textcolour;
-}
 
 # =================================================================
 # getters/setters

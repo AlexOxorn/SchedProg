@@ -5,9 +5,10 @@ use warnings;
 package ViewBase;
 use FindBin;
 use lib "$FindBin::Bin/..";
-use List::Util qw( min max );
 use GuiSchedule::GuiBlocks;
 use Schedule::Conflict;
+use Export::DrawView;
+use List::Util qw( min max );
 use Tk;
 
 =head1 NAME
@@ -35,20 +36,8 @@ Base class for different types of schedule views
 # =================================================================
 our $Status_text = "";
 our $Max_id      = 0;
-our @days        = ( "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" );
-our %times = (
-               8  => "8am",
-               9  => "9am",
-               10 => "10am",
-               11 => "11am",
-               12 => "12pm",
-               13 => "1pm",
-               14 => "2pm",
-               15 => "3pm",
-               16 => "4pm",
-               17 => "5pm",
-               18 => "6pm"
-             );
+our @days        = @DrawView::days;
+our %times       = %DrawView::times;   
 our $EarliestTime = min( keys %times );
 our $LatestTime   = max( keys %times );
 
@@ -62,7 +51,7 @@ our $LatestTime   = max( keys %times );
 
 =head2 new ()
 
-creates a View object, draws the necessary grid and returns ViewBase.
+creates a View object, does NOT draw the view.
 
 B<Parameters>
 
@@ -129,8 +118,8 @@ sub new {
     $self->toplevel($tl);
     $self->xOffset(1);
     $self->yOffset(1);
-    $self->xScale(0);
-    $self->yScale(0);
+    $self->xOrigin(0);
+    $self->yOrigin(0);
     $self->wScale(100);
     $self->hScale(60);
     $self->currentScale(1);
@@ -222,15 +211,15 @@ sub resize_view {
     my $canWidth  = $widths[-1];
 
     # get current scaling sizes
-    my $xScale       = $self->xScale;
-    my $yScale       = $self->yScale;
+    my $xOrigin       = $self->xOrigin;
+    my $yOrigin       = $self->yOrigin;
     my $hScale       = $self->hScale;
     my $wScale       = $self->wScale;
     my $currentScale = $self->currentScale;
 
     # reset scales back to default value
-    $xScale    /= $currentScale;
-    $yScale    /= $currentScale;
+    $xOrigin    /= $currentScale;
+    $yOrigin    /= $currentScale;
     $wScale    /= $currentScale;
     $hScale    /= $currentScale;
     $tlHeight  /= $currentScale;
@@ -241,8 +230,8 @@ sub resize_view {
     $currentScale = $scale;
 
     # set scales to new size
-    $xScale    *= $scale;
-    $yScale    *= $scale;
+    $xOrigin    *= $scale;
+    $yOrigin    *= $scale;
     $wScale    *= $scale;
     $hScale    *= $scale;
     $tlHeight  *= $scale;
@@ -251,8 +240,8 @@ sub resize_view {
     $canWidth  *= $scale;
 
     # set the new scaling sizes
-    $self->xScale($xScale);
-    $self->yScale($yScale);
+    $self->xOrigin($xOrigin);
+    $self->yOrigin($yOrigin);
     $self->hScale($hScale);
     $self->wScale($wScale);
     $self->currentScale($currentScale);
@@ -384,14 +373,10 @@ sub draw_block {
     my $self   = shift;
     my $block  = shift;
     my $coords = $self->_get_pixel_coords($block);
-    my $colour = '';
-    $colour = "#abcdef" if $self->type eq 'teacher';
-    $colour = "#80FF80" if $self->type eq 'lab';
-    $colour = "#dddddd" unless $block->movable;
 
     my $scale = $self->currentScale;
 
-    my $guiblock = GuiBlocks->new( $self, $block, $coords, $colour, $scale );
+    my $guiblock = GuiBlocks->new( $self, $block, $coords, undef, $scale );
 
     # menu bound to individual gui-blocks
     $self->canvas->bind( $guiblock->group, '<3>',
@@ -412,71 +397,17 @@ Draws the Schedule timetable on the View canvas.
 
 sub draw_background {
     my $self         = shift;
-    my $canvas       = $self->canvas;
-    my $Xoffset      = $self->xOffset;
-    my $Yoffset      = $self->yOffset;
-    my $xScale       = $self->xScale;
-    my $yScale       = $self->yScale;
-    my $wScale       = $self->wScale;
-    my $hScale       = $self->hScale;
-    my $currentScale = $self->currentScale;
-
-    $EarliestTime = min( keys %times );
-    $LatestTime   = max( keys %times );
-
-    # draw hourly lines
-    my $xmax = $Xoffset + ( scalar @days );
-    foreach my $time ( keys %times ) {
-
-        # draw each hour line
-        my $ycoord = $time - $EarliestTime + $Yoffset;
-        $canvas->createLine(
-                             $Xoffset, $ycoord, $xmax, $ycoord
-                             ,
-                             -fill => "dark grey",
-                             -dash => "-"
-                           );
-
-        # hour text
-        $canvas->createText( $Xoffset / 2, $ycoord, -text => $times{$time} );
-
-        # for all inner times draw a dotted line for the half hour
-        if ( $time != $LatestTime ) {
-            $canvas->createLine(
-                                 $Xoffset, $ycoord + 0.5, $xmax, $ycoord + 0.5
-                                 ,
-                                 -fill => "grey",
-                                 -dash => "."
-                               );
-
-            # half-hour text TODO: decrease font size
-            $canvas->createText( $Xoffset / 2, $ycoord + 0.5, -text => ":30" );
-        }
-
-    }
-
-    # draw day lines
-    my $ymax = $LatestTime - $EarliestTime + $Yoffset;
-    for ( my $i = 0 ; $i <= scalar @days ; $i++ ) {
-        my $xcoord = $i + $Xoffset;
-        $canvas->createLine( $xcoord, 0, $xcoord, $ymax );
-
-        # day text
-        if ( $i < scalar @days ) {
-            if ( $currentScale <= 0.5 ) {
-                $canvas->createText( $xcoord + 0.5,
-                                     $Yoffset / 2,
-                                     -text => substr( $days[$i], 0, 1 ) );
-            }
-            else {
-                $canvas->createText( $xcoord + 0.5,
-                                     $Yoffset / 2,
-                                     -text => $days[$i] );
-            }
-        }
-    }
-
-    $canvas->scale( 'all', $xScale, $yScale, $wScale, $hScale );
+    DrawView->draw_background($self->canvas,
+    $self->xOffset,
+    $self->yOffset,
+    $self->xOrigin,
+    $self->yOrigin,
+    $self->wScale,
+    $self->hScale,
+    $self->currentScale,
+    );
+    
+    return;
 }
 
 # =================================================================
@@ -676,8 +607,11 @@ sub redraw {
 
     # redraw all guiblocks
     foreach my $b (@blocks) {
-        $b->start( $b->start );
+        
+        # this makes sure that synced blocks have the same start time
+        $b->start( $b->start );  
         $b->day( $b->day );
+        
         my $guiblock = $self->draw_block($b);
         $self->add_guiblock($guiblock);
     }
@@ -872,28 +806,28 @@ sub yOffset {
     return $self->{-yOffset};
 }
 
-=head2 xScale ( [Int] )
+=head2 xOrigin ( [Int] )
 
-Get/set the xScale of this View object.
+Get/set the xOrigin of this View object.
 
 =cut
 
-sub xScale {
+sub xOrigin {
     my $self = shift;
-    $self->{-xScale} = shift if @_;
-    return $self->{-xScale};
+    $self->{-xOrigin} = shift if @_;
+    return $self->{-xOrigin};
 }
 
-=head2 yScale ( [Int] )
+=head2 yOrigin ( [Int] )
 
-Get/set the yScale of this View object.
+Get/set the yOrigin of this View object.
 
 =cut
 
-sub yScale {
+sub yOrigin {
     my $self = shift;
-    $self->{-yScale} = shift if @_;
-    return $self->{-yScale};
+    $self->{-yOrigin} = shift if @_;
+    return $self->{-yOrigin};
 }
 
 =head2 wScale ( [Int] )
@@ -977,7 +911,7 @@ sub _get_pixel_coords {
     return [ $x, $y, $x2, $y2 ];    # return anonymous array
 }
 
-=head2 _set_pixel_coords ( GuiBlock, x, y )
+=head2 _set_block_coords ( GuiBlock, x, y )
 
 Converts the X and Y coordinates into times and sets the time to the Block.
 
@@ -988,44 +922,49 @@ sub _set_block_coords {
     my $guiblock = shift;
     my $x        = shift;
     my $y        = shift;
-    my $Xoffset  = $self->xOffset;
-    my $Yoffset  = $self->yOffset;
-    my $wScale   = $self->wScale;
-    my $hScale   = $self->hScale;
+    my $scl = $self->get_scale_info;
 
     return unless $guiblock;
 
-    my $day  = ( $x / $wScale ) - $Xoffset + 1;
-    my $time = ( $y / $hScale ) - $Yoffset + $EarliestTime;
+    my ($day, $time, $duration) = DrawView->coords_to_day_time_duration($x,$y,$y,$scl);
     $guiblock->block->day_number($day);
     $guiblock->block->start_number($time);
 }
 
-=head2 _set_pixel_coords ( x, y, y2)
+=head2 get_scale_info () 
 
-Converts the X and Y coordinates into times.
+Returns a hash with the following values:
+
+=over
+
+=item -xoff => x offset
+
+=item -yoff => y offset
+
+=item -xorg => x origin
+
+=item -yorg => y origin
+
+=item -xscl => x scale
+
+=item -yscl => y scale
+
+=item -scale => current scaling
+
+=back
 
 =cut
 
-sub get_block_coords {
-    my $self    = shift;
-    my $x       = shift;
-    my $y       = shift;
-    my $y2      = shift;
-    my $Xoffset = $self->xOffset;
-    my $Yoffset = $self->yOffset;
-    my $wScale  = $self->wScale;
-    my $hScale  = $self->hScale;
-
-    my $day      = ( $x / $wScale ) - $Xoffset + 1;
-    my $time     = ( $y / $hScale ) - $Yoffset + $EarliestTime;
-    my $duration = ( $y2 + 1 - $y ) / $hScale;
-
-    if (wantarray) {
-        return [ $day, $time, $duration ];
-    }
-    else {
-        ( $day, $time, $duration );
+sub get_scale_info {
+    my $self = shift;
+    
+    return {-xoff => $self->xOffset,
+        -yoff => $self->yOffset,
+        -xorg => $self->xOrigin,
+        -yorg => $self->yOrigin,
+        -xscl => $self->wScale,
+        -yscl => $self->hScale,
+        -scale => $self->currentScale,
     }
 }
 
@@ -1041,21 +980,14 @@ sub get_time_coords {
     my $start    = shift;
     my $duration = shift;
 
-    my $Xoffset = $self->xOffset;
-    my $Yoffset = $self->yOffset;
-    my $wScale  = $self->wScale;
-    my $hScale  = $self->hScale;
-
-    my $x = ( $Xoffset + ( $day - 1 ) ) * $wScale;
-    my $y = ( $Yoffset + ( $start - $EarliestTime ) ) * $hScale;
-    my $x2 = $wScale + $x - 1;
-    my $y2 = $duration * $hScale + $y - 1;
+    my $scl = $self->get_scale_info();
+    my @coords = DrawView->get_coords($day,$start,$duration,$scl);
 
     if (wantarray) {
-        return ( $x, $y, $x2, $y2 );
+        return @coords;
     }
     else {
-        [ $x, $y, $x2, $y2 ];
+        [ @coords ];
     }
 }
 

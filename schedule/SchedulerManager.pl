@@ -12,6 +12,7 @@ use lib "$FindBin::Bin/";
 use lib "$FindBin::Bin/Library";
 our $BinDir = "$FindBin::Bin/";
 use Schedule::Schedule;
+use Export::PDF;
 use GuiSchedule::View;
 use GuiSchedule::GuiSchedule;
 use GuiSchedule::DataEntry;
@@ -177,6 +178,10 @@ sub create_menu {
 
 }
 
+sub foo {
+    print "foo: @_\n";
+}
+
 # ==================================================================
 # define what goes in the menu and toolbar
 # ==================================================================
@@ -203,10 +208,22 @@ sub menu_info {
 			cb => \&import_schedule,
 			hn => 'Import Schedule from CSV'
 		},
-		print => {
-			cb => \&text_schedule,
-			hn => 'Create Text Form of Schedule',
-		},
+        print_teachers => {
+            cb => [\&export_views,'PDF','teacher'],
+            hn => 'Print to pdf of Teacher Schedules',
+        },
+        print_streams => {
+            cb => [\&export_views,'PDF','stream'],
+            hn => 'Print to pdf of Stream Schedules',
+        },
+        print_labs => {
+            cb => [\&export_views,'PDF','lab'],
+            hn => 'Print to pdf of Lab Schedules',
+        },
+        print_text => {
+            cb => [\&export_views,'PDF','text'],
+            hn => 'Text output of schedules (good for registrar)',
+        },
 		save => {
 			cb => \&save_schedule,
 			hn => "Save Schedule File",
@@ -254,8 +271,31 @@ sub menu_info {
 					-command     => \&exit_schedule
 				],
 
-			]
+			],
 		],
+        [
+            qw/cascade Print -tearoff 0 -menuitems/,
+            [
+                [
+                    "command", "Teacher Schedules",
+                    -command     => $b_props{print_teachers}{cb},
+                ],
+                [
+                    "command", "Lab Schedules",
+                    -command     => $b_props{print_labs}{cb},
+                ],
+                [
+                    "command", "Stream Schedules",
+                    -command     => $b_props{print_streams}{cb},
+                ],
+                'separator',
+                [
+                    "command", "Text Output",
+                    -command     => $b_props{print_text}{cb},
+                ],
+                
+            ],
+        ],
 	];
 
 	# ------------------------------------------------------------------------
@@ -625,9 +665,31 @@ sub open_schedule {
 }
 
 # ==================================================================
-# text_schedule
+# export_views
 # ==================================================================
-sub text_schedule {
+sub export_views {
+    my $export_type = shift;
+    my $type = shift;
+    return unless $Schedule;
+ 
+     if (lc($type) eq "teacher") {
+        foreach my $obj ($Schedule->all_teachers()) {
+            $export_type->print_view_for($Schedule,$obj);
+        }
+    }
+        
+    if (lc($type) eq "stream") {
+        foreach my $obj ($Schedule->all_streams()) {
+            $export_type->print_view_for($Schedule,$obj);
+        }
+    }
+        
+    if (lc($type) eq "lab") {
+        foreach my $obj ($Schedule->all_labs()) {
+            $export_type->print_view_for($Schedule,$obj);
+        }
+    }
+    
 
 	$mw->messageBox(
 		-title   => 'Create Text Schedule',
@@ -638,19 +700,6 @@ sub text_schedule {
 	return;
 }
 
-# ==================================================================
-# view_schedule
-# ==================================================================
-sub view_schedule {
-
-	$mw->messageBox(
-		-title   => 'View Schedule',
-		-message => "Not implemented yet, Sorry",
-		-type    => 'OK',
-		-icon    => 'info'
-	);
-	return;
-}
 
 # ==================================================================
 # exit_schedule
