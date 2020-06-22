@@ -527,7 +527,7 @@ sub redraw {
     $self->SUPER::redraw();
 
     # ---------------------------------------------------------------
-    # If this is a lab or teacher view, then add 'AssignBlocks' 
+    # If this is a lab or teacher view, then add 'AssignBlocks'
     # to the view, and bind as necessary
     # ---------------------------------------------------------------
     my $type = $self->type;
@@ -847,7 +847,10 @@ sub _end_move {
     my ( $curXpos, $curYpos ) = $cn->coords( $guiblock->rectangle );
 
     # get the guiblocks new coordinates (closest day/time)
-    my $coords = $self->_get_pixel_coords( $guiblock->block );
+    my $block = $guiblock->block;
+    my $coords =
+      $self->get_time_coords( $block->day_number, $block->start_number,
+                              $block->duration );
 
     # move the guiblock to new position
     $cn->move(
@@ -859,7 +862,6 @@ sub _end_move {
 
     # update all the views that have the block just moved to its new position
     my $guiSchedule = $self->guiSchedule;
-    my $block       = $guiblock->block;
     $guiSchedule->update_all_views($block);
 
     # calculate new conflicts and update other views to show these conflicts

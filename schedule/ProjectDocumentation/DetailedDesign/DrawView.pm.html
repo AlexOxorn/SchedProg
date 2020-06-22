@@ -1,0 +1,386 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#Scaling-Info-hash-pointer">Scaling Info (hash pointer)</a></li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#draw_background-canvas-scaling_info">draw_background ( $canvas, $scaling_info )</a></li>
+      <li><a href="#draw_block-canvas-block-scaling_info-type">draw_block ( $canvas, $block, $scaling_info, $type )</a></li>
+      <li><a href="#draw_block-x-y1-y2-scaling_info">draw_block ( $x, $y1, $y2, $scaling_info )</a></li>
+      <li><a href="#get_coords-day-start-duration-scaling_info">get_coords ( $day, $start, $duration, $scaling_info )</a></li>
+      <li><a href="#get_colour_shades-colour">get_colour_shades ($colour)</a></li>
+    </ul>
+  </li>
+  <li><a href="#Canvas-Requirements">Canvas Requirements</a>
+    <ul>
+      <li><a href="#Coordinates">Coordinates</a></li>
+      <li><a href="#CreatLine">CreatLine</a></li>
+      <li><a href="#createText">createText</a></li>
+      <li><a href="#createRectangle">createRectangle</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>DrawView - only code that draws the View stuff</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    use Schedule::Schedule;
+    use Tk;
+    use Export::PDF;
+    
+    my $mw          = MainWindow-&gt;new();
+    my $cn          = $mw-&gt;Canvas()-&gt;pack();
+    
+    # ----------------------------------------------------------
+    # create a pdf, as well as a Tk canvas
+    # ----------------------------------------------------------
+    my $pdf         = PDF-&gt;new();
+    my $page        = $pdf-&gt;page();
+
+    # what scale you want
+    my $scl = {
+             -xoff  =&gt; 1,       # before being scaled by xscl
+             -yoff  =&gt; 1,       # before being scaled by yscl
+             -xorg  =&gt; 0,       # start drawing at this position
+             -yorg  =&gt; 0,       # start drawing at this position
+             -xscl  =&gt; 100,     # stretch horizontally
+             -yscl  =&gt; 60,      # stretch vertically
+             -scale =&gt; 1,       # 1 = 100%.  Text may be modified if scale &lt; 1
+    };
+
+    $cn-&gt;draw_background($cn,$scl);
+    $pdf-&gt;draw_background($cn,$scl); 
+    
+    my $Schedule = Schedule-&gt;read(&#39;myschedule_file.yaml&#39;);
+    my $teacher  = $Schedule-&gt;teachers()-&gt;get_by_name(&quot;Sandy&quot;,&quot;Bultena&quot;);
+    
+    my @blocks   = $schedule-&gt;blocks_for_teacher($teacher);
+
+    foreach my $b (@blocks) {
+        DrawView-&gt;draw_block($cn,$block,$scl,&quot;teacher&quot;);
+        DrawView-&gt;draw_block($pdf,$block,$scl,&quot;teacher&quot;);
+    }
+    
+       </code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>This code creates drawings only. No binding of canvas objects, no changing positions or colours.</p>
+
+<h1 id="Scaling-Info-hash-pointer">Scaling Info (hash pointer)</h1>
+
+<ul>
+
+<li><p>weekly grid starts at this position (number will be scaled by scaling factors <i>i</i><code>org</code></p>
+
+<ul>
+
+<p><code>-xoff =&gt;</code> <i>int</i></p>
+
+<p><code>-yoff =&gt;</code> <i>int</i></p>
+
+</ul>
+
+</li>
+<li><p>the entire diagram starts at this position</p>
+
+<ul>
+
+<p><code>-xorg =&gt;</code> <i>int</i></p>
+
+<p><code>-yorg =&gt;</code> <i>int</i></p>
+
+</ul>
+
+</li>
+<li><p>how much to stretch the diagram horizontally and vertically (1 day has a width of 1 before stretching, and 1 hour has a height of 1 before stretching)</p>
+
+<ul>
+
+<p><code>-xscl =&gt;</code> <i>float</i></p>
+
+<p><code>-yscl =&gt;</code> <i>float</i></p>
+
+</ul>
+
+</li>
+</ul>
+
+<ul>
+
+<li><p>Overall scale... has no affect on the diagram but represents an indication of how scaled it is to its &quot;natural&quot; size. Affects what text is written into the block. (Less than .75 teachers will be indicated by initials only)</p>
+
+<ul>
+
+<p><code>-scale =&gt;</code> <i>float</i></p>
+
+</ul>
+
+</li>
+</ul>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="draw_background-canvas-scaling_info">draw_background ( $canvas, $scaling_info )</h2>
+
+<p>Draws the Schedule timetable on the specified canvas.</p>
+
+<p><b>Parameters</b></p>
+
+<ul>
+
+<li><p>Canvas to draw on</p>
+
+</li>
+<li><p>Scaling Info (hash pointer)</p>
+
+</li>
+</ul>
+
+<h2 id="draw_block-canvas-block-scaling_info-type">draw_block ( $canvas, $block, $scaling_info, $type )</h2>
+
+<p>Draws the Schedule timetable on the specified canvas.</p>
+
+<p><b>Parameters</b></p>
+
+<ul>
+
+<li><p>Canvas to draw on</p>
+
+</li>
+<li><p>Block object</p>
+
+</li>
+<li><p>Scaling Info (hash pointer)</p>
+
+</li>
+<li><p>type of view [teacher|block|stream] (affects what gets drawn on the block)</p>
+
+</li>
+</ul>
+
+<p><b>Returns</b></p>
+
+<ul>
+
+<li><p>hashref of</p>
+
+<dl>
+
+<dt id="lines-array-point-of-canvas-line-objects">-lines =&gt; array point of canvas line objects</dt>
+<dd>
+
+</dd>
+<dt id="text-text-printed-on-the-block">-text =&gt; text printed on the block,</dt>
+<dd>
+
+</dd>
+<dt id="coords-array-of-canvas-coordinates-for-block">-coords =&gt; array of canvas coordinates for block</dt>
+<dd>
+
+</dd>
+<dt id="rectangle-canvas-rectangle-object">-rectangle =&gt; canvas rectangle object</dt>
+<dd>
+
+</dd>
+</dl>
+
+</li>
+</ul>
+
+<h2 id="draw_block-x-y1-y2-scaling_info">draw_block ( $x, $y1, $y2, $scaling_info )</h2>
+
+<p>Determines the day, start time, and duration based on canvas coordinates</p>
+
+<p><b>Parameters</b></p>
+
+<ul>
+
+<li><p>x position (determines day)</p>
+
+</li>
+<li><p>y1,y2 position (determines start and duration)</p>
+
+</li>
+<li><p>Scaling Info (hash pointer)</p>
+
+</li>
+</ul>
+
+<p><b>Returns</b></p>
+
+<ul>
+
+<li><p>hashref of</p>
+
+<ul>
+
+<li><p>day of week (1 = Monday)</p>
+
+</li>
+<li><p>start time (24 hour clock)</p>
+
+</li>
+<li><p>duration (in hours)</p>
+
+</li>
+</ul>
+
+</li>
+</ul>
+
+<h2 id="get_coords-day-start-duration-scaling_info">get_coords ( $day, $start, $duration, $scaling_info )</h2>
+
+<p>Determines the day, start time, and duration based on canvas coordinates</p>
+
+<p><b>Parameters</b></p>
+
+<ul>
+
+<li><p>day of week (1 = Monday)</p>
+
+</li>
+<li><p>start time (24 hour clock)</p>
+
+</li>
+<li><p>duration (in hours)</p>
+
+</li>
+<li><p>Scaling Info (hash pointer)</p>
+
+</li>
+</ul>
+
+<p><b>Returns</b></p>
+
+<ul>
+
+<li><p>arrayref of canvas coordinates for the rectangle representing this time slot ($x1, $y1, $x2, $y2)</p>
+
+</li>
+</ul>
+
+<h2 id="get_colour_shades-colour">get_colour_shades ($colour)</h2>
+
+<p><b>Returns</b></p>
+
+<ul>
+
+<li><p>Array of colours lighter than $colour (gradient)</p>
+
+</li>
+<li><p>Array of colours darker than $colour (gradient)</p>
+
+</li>
+<li><p>Recommended colour for text if overlaid on $colour</p>
+
+</li>
+</ul>
+
+<h1 id="Canvas-Requirements">Canvas Requirements</h1>
+
+<p>This code draws on a generic canvas.</p>
+
+<p>The interface to this canvas follows a subset of the Tk-&gt;canvas methods. For a more detailed list of what the various options means, check the Tk manuals online.</p>
+
+<p>It must follow these rules:</p>
+
+<h2 id="Coordinates">Coordinates</h2>
+
+<p>The coordinate system of the canvas is the same as the Tk coordinate system, where the origin (0,0) is the top left corner, and &#39;y&#39; increases as it goes down the page.</p>
+
+<h2 id="CreatLine">CreatLine</h2>
+
+<p><b>Parameters</b></p>
+
+<ul>
+
+<li><p><code>x1,y1,x2,y2,</code> coordinates of the start and stop position of the line</p>
+
+</li>
+<li><p><code>-fill =&gt; &quot;colour&quot;,</code> the colour of the line (OPTIONAL... default is &quot;black&quot;),</p>
+
+</li>
+<li><p><code>-dash =&gt; &quot;dash string&quot;</code> the type of dash line (OPTIONAL ... default is no dash)</p>
+
+</li>
+</ul>
+
+<p><b>Returns</b></p>
+
+<p>A canvas CreateLine object</p>
+
+<h2 id="createText">createText</h2>
+
+<p><b>Parameters</b></p>
+
+<ul>
+
+<li><p><code>x,y</code> coordinates of the start position of the text (lower left corner unless other alignment options are used</p>
+
+</li>
+<li><p><code>-text =&gt; &quot;text string&quot;,</code> text string</p>
+
+</li>
+<li><p><code>-font =&gt; &quot;name of font&quot;,</code> fontname (OPTIONAL)</p>
+
+</li>
+<li><p><code>-fill =&gt; &quot;colour&quot;,</code> colour of the text (OPTIONAL ... default is &quot;black&quot;)</p>
+
+</li>
+</ul>
+
+<p><b>Returns</b></p>
+
+<p>A canvas CreateText object</p>
+
+<h2 id="createRectangle">createRectangle</h2>
+
+<p><b>Parameters</b></p>
+
+<ul>
+
+<li><p><code>x1,y1,x2,y2,</code> coordinates of two opposite corners of the rectangle</p>
+
+</li>
+<li><p><code>-fill =&gt; &quot;colour&quot;,</code> colour of the rectangle area (OPTIONAL ... default is no colour)</p>
+
+</li>
+<li><p><code>-outline =&gt; &quot;colour&quot;,</code> colour of the rectangle border (OPTIONAL ... default is no border)</p>
+
+</li>
+</ul>
+
+<p><b>Returns</b></p>
+
+<p>A canvas CreateRectangle object</p>
+
+
+</body>
+
+</html>
+
+

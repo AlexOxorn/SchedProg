@@ -75,7 +75,6 @@ sub new {
     my $this   = shift;
     my $view   = shift;
     my $block  = shift;
-    my $coords = shift;
     my $colour = shift || '#abcdef';
     my $scale  = shift ;
 
@@ -83,7 +82,7 @@ sub new {
     my $canvas = $view->canvas;
 
     # draw the block
-    my $gui_objs = DrawView->draw_block($canvas,$block,$coords,$view->type,$colour,$scale);
+    my $gui_objs = DrawView->draw_block($canvas,$block,$view->get_scale_info(),$view->type,$colour);
 
     my @lines = @{$gui_objs->{-lines}};
     my $text = $gui_objs->{-text};

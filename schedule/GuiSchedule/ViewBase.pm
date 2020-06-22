@@ -34,10 +34,10 @@ Base class for different types of schedule views
 # =================================================================
 # Class Variables
 # =================================================================
-our $Status_text = "";
-our $Max_id      = 0;
-our @days        = @DrawView::days;
-our %times       = %DrawView::times;   
+our $Status_text  = "";
+our $Max_id       = 0;
+our @days         = @DrawView::days;
+our %times        = %DrawView::times;
 our $EarliestTime = min( keys %times );
 our $LatestTime   = max( keys %times );
 
@@ -88,7 +88,7 @@ sub new {
     foreach my $c ( Conflict::TIME_TEACHER, Conflict::TIME,
                     Conflict::LUNCH, Conflict::MINIMUM_DAYS,
                     Conflict::AVAILABILITY
-                  )
+      )
     {
         my $bg = Colour->new( Conflict->Colours->{$c} );
         my $fg = Colour->new("white");
@@ -98,7 +98,7 @@ sub new {
                    -width      => 10,
                    -background => $bg->string,
                    -foreground => $fg->string
-                 )->pack( -side => 'left', -expand => 1, -fill => "x" );
+        )->pack( -side => 'left', -expand => 1, -fill => "x" );
     }
 
     # ---------------------------------------------------------------
@@ -108,7 +108,7 @@ sub new {
                           -height     => 700,
                           -width      => 700,
                           -background => "white"
-                        )->pack();
+    )->pack();
 
     # ---------------------------------------------------------------
     # create object
@@ -135,17 +135,17 @@ sub new {
                         -label     => "50%",
                         -underline => 0,
                         -command   => [ \&resize_view, $self, 0.50 ]
-                      );
+    );
     $viewMenu->command(
                         -label     => "75%",
                         -underline => 0,
                         -command   => [ \&resize_view, $self, 0.75 ]
-                      );
+    );
     $viewMenu->command(
                         -label     => "100%",
                         -underline => 0,
                         -command   => [ \&resize_view, $self, 1.00 ]
-                      );
+    );
     $self->main_menu($mainMenu);
 
     # ---------------------------------------------------------------
@@ -211,15 +211,15 @@ sub resize_view {
     my $canWidth  = $widths[-1];
 
     # get current scaling sizes
-    my $xOrigin       = $self->xOrigin;
-    my $yOrigin       = $self->yOrigin;
+    my $xOrigin      = $self->xOrigin;
+    my $yOrigin      = $self->yOrigin;
     my $hScale       = $self->hScale;
     my $wScale       = $self->wScale;
     my $currentScale = $self->currentScale;
 
     # reset scales back to default value
-    $xOrigin    /= $currentScale;
-    $yOrigin    /= $currentScale;
+    $xOrigin   /= $currentScale;
+    $yOrigin   /= $currentScale;
     $wScale    /= $currentScale;
     $hScale    /= $currentScale;
     $tlHeight  /= $currentScale;
@@ -230,8 +230,8 @@ sub resize_view {
     $currentScale = $scale;
 
     # set scales to new size
-    $xOrigin    *= $scale;
-    $yOrigin    *= $scale;
+    $xOrigin   *= $scale;
+    $yOrigin   *= $scale;
     $wScale    *= $scale;
     $hScale    *= $scale;
     $tlHeight  *= $scale;
@@ -311,13 +311,13 @@ sub create_status_bar {
       $self->toplevel->Frame(
                               -borderwidth => 0,
                               -relief      => 'flat',
-                            )->pack( -side => 'bottom', -expand => 0, -fill => 'x' );
+      )->pack( -side => 'bottom', -expand => 0, -fill => 'x' );
 
     $status_frame->Label(
                           -textvariable => \$Status_text,
                           -borderwidth  => 1,
                           -relief       => 'ridge',
-                        )->pack( -side => 'left', -expand => 1, -fill => 'x' );
+    )->pack( -side => 'left', -expand => 1, -fill => 'x' );
 
     return $status_frame;
 }
@@ -370,13 +370,12 @@ Binds a popup menu if one is defined
 =cut
 
 sub draw_block {
-    my $self   = shift;
-    my $block  = shift;
-    my $coords = $self->_get_pixel_coords($block);
+    my $self  = shift;
+    my $block = shift;
 
     my $scale = $self->currentScale;
 
-    my $guiblock = GuiBlocks->new( $self, $block, $coords, undef, $scale );
+    my $guiblock = GuiBlocks->new( $self, $block, undef, $scale );
 
     # menu bound to individual gui-blocks
     $self->canvas->bind( $guiblock->group, '<3>',
@@ -396,17 +395,8 @@ Draws the Schedule timetable on the View canvas.
 =cut
 
 sub draw_background {
-    my $self         = shift;
-    DrawView->draw_background($self->canvas,
-    $self->xOffset,
-    $self->yOffset,
-    $self->xOrigin,
-    $self->yOrigin,
-    $self->wScale,
-    $self->hScale,
-    $self->currentScale,
-    );
-    
+    my $self = shift;
+    DrawView->draw_background($self->canvas,$self->get_scale_info);
     return;
 }
 
@@ -472,7 +462,9 @@ sub update {
             if ( $guiblock->block->id == $block->id ) {
 
                 # get new coordinates of block
-                my $coords = $self->_get_pixel_coords($block);
+                my $coords = $self->get_time_coords(
+                          $block->day_number, $block->start_number,
+                          $block->duration );
 
                 # get current x/y of the guiblock
                 my ( $curXpos, $curYpos ) =
@@ -486,7 +478,7 @@ sub update {
                                                $guiblock->group,
                                                $coords->[0] - $curXpos,
                                                $coords->[1] - $curYpos
-                                             );
+                );
 
             }
         }
@@ -571,11 +563,11 @@ Redraws the View with new GuiBlocks and their positions.
 =cut
 
 sub redraw {
-    my $self               = shift;
-    my $obj = $self->obj;
-    my $schedule           = $self->schedule;
-    my $cn                 = $self->canvas;
-    my $currentScale       = $self->currentScale;
+    my $self         = shift;
+    my $obj          = $self->obj;
+    my $schedule     = $self->schedule;
+    my $cn           = $self->canvas;
+    my $currentScale = $self->currentScale;
     return unless $schedule;
 
     my @blocks;
@@ -607,18 +599,18 @@ sub redraw {
 
     # redraw all guiblocks
     foreach my $b (@blocks) {
-        
+
         # this makes sure that synced blocks have the same start time
-        $b->start( $b->start );  
+        $b->start( $b->start );
         $b->day( $b->day );
-        
+
         my $guiblock = $self->draw_block($b);
         $self->add_guiblock($guiblock);
     }
 
     $self->blocks( \@blocks );
     $schedule->calculate_conflicts;
-    $self->update_for_conflicts($self->type);
+    $self->update_for_conflicts( $self->type );
 
 }
 
@@ -893,24 +885,6 @@ sub _close_view {
     $toplevel->destroy;
 }
 
-=head2 _get_pixel_coords ( Block )
-
-Gets the coordinates in pixels for where the time of the Block 
-is placed on the View.
-
-=cut
-
-sub _get_pixel_coords {
-    my $self  = shift;
-    my $block = shift;
-    return unless $block;
-
-    my ( $x, $y, $x2, $y2 ) =
-      $self->get_time_coords( $block->day_number, $block->start_number,
-                              $block->duration );
-    return [ $x, $y, $x2, $y2 ];    # return anonymous array
-}
-
 =head2 _set_block_coords ( GuiBlock, x, y )
 
 Converts the X and Y coordinates into times and sets the time to the Block.
@@ -922,11 +896,12 @@ sub _set_block_coords {
     my $guiblock = shift;
     my $x        = shift;
     my $y        = shift;
-    my $scl = $self->get_scale_info;
+    my $scl      = $self->get_scale_info;
 
     return unless $guiblock;
 
-    my ($day, $time, $duration) = DrawView->coords_to_day_time_duration($x,$y,$y,$scl);
+    my ( $day, $time, $duration ) =
+      DrawView->coords_to_day_time_duration( $x, $y, $y, $scl );
     $guiblock->block->day_number($day);
     $guiblock->block->start_number($time);
 }
@@ -957,15 +932,16 @@ Returns a hash with the following values:
 
 sub get_scale_info {
     my $self = shift;
-    
-    return {-xoff => $self->xOffset,
-        -yoff => $self->yOffset,
-        -xorg => $self->xOrigin,
-        -yorg => $self->yOrigin,
-        -xscl => $self->wScale,
-        -yscl => $self->hScale,
-        -scale => $self->currentScale,
-    }
+
+    return {
+             -xoff  => $self->xOffset,
+             -yoff  => $self->yOffset,
+             -xorg  => $self->xOrigin,
+             -yorg  => $self->yOrigin,
+             -xscl  => $self->wScale,
+             -yscl  => $self->hScale,
+             -scale => $self->currentScale,
+    };
 }
 
 =head2 get_time_coords ( day, start, duration )
@@ -981,13 +957,13 @@ sub get_time_coords {
     my $duration = shift;
 
     my $scl = $self->get_scale_info();
-    my @coords = DrawView->get_coords($day,$start,$duration,$scl);
+    my @coords = DrawView->get_coords( $day, $start, $duration, $scl );
 
     if (wantarray) {
         return @coords;
     }
     else {
-        [ @coords ];
+        [@coords];
     }
 }
 
