@@ -45,12 +45,12 @@ Version 1.00
     $cn->draw_background($cn,$scl);
     $pdf->draw_background($cn,$scl); 
     
-    my $Schedule = Schedule->read('myschedule_file.yaml');
+    my $Schedule = Schedule->read_YAML('myschedule_file.yaml');
     my $teacher  = $Schedule->teachers()->get_by_name("Sandy","Bultena");
     
     my @blocks   = $schedule->blocks_for_teacher($teacher);
 
-    foreach my $b (@blocks) {
+    foreach my $block (@blocks) {
         DrawView->draw_block($cn,$block,$scl,"teacher");
         DrawView->draw_block($pdf,$block,$scl,"teacher");
     }
@@ -136,7 +136,12 @@ our %times = (
 );
 our $EarliestTime = min( keys %times );
 our $LatestTime   = max( keys %times );
+our $lime_green   = "#ccffcc";
+our $sky_blue     = "#b3e6ff";
+our $blue         = Colour->add( $sky_blue, $sky_blue );
+our $teal         = Colour->add( $sky_blue, $lime_green );
 
+my $colours = { lab => "#cdefab", teacher => "#abcdef", stream => $teal };
 
 # =================================================================
 # draw_background
@@ -192,7 +197,8 @@ sub draw_background {
         );
 
         # hour text
-        $canvas->createText( $xmin / 2, $yhour, -text => $times{$time} );
+        $canvas->createText( ( $xmin + $xorig ) / 2,
+                             $yhour, -text => $times{$time} );
 
         # for all inner times draw a dotted line for the half hour
         if ( $time != $LatestTime ) {
@@ -203,7 +209,8 @@ sub draw_background {
             );
 
             # half-hour text TODO: decrease font size
-            $canvas->createText( $xmin / 2, $yhalf, -text => ":30" );
+            $canvas->createText( ( $xmin + $xorig ) / 2,
+                                 $yhalf, -text => ":30" );
         }
 
     }
@@ -218,17 +225,21 @@ sub draw_background {
     foreach my $i ( 0 .. scalar(@days) ) {
         my ( $xday, $xdayend ) =
           _days_x_coords( $i + 1, $x_offset, $xorig, $h_stretch );
-        $canvas->createLine( $xday, 0, $xday, $ymax );
+        $canvas->createLine( $xday, $yorig, $xday, $ymax );
 
         # day text
         if ( $i < scalar @days ) {
             if ( $currentScale <= 0.5 ) {
                 $canvas->createText( ( $xday + $xdayend ) / 2,
-                                $ymin / 2, -text => substr( $days[$i], 0, 1 ) );
+                                     ( $ymin + $yorig ) / 2,
+                                     -text => substr( $days[$i], 0, 1 ) );
             }
             else {
-                $canvas->createText( ( $xday + $xdayend ) / 2,
-                                     $ymin / 2, -text => $days[$i] );
+                $canvas->createText(
+                                     ( $xday + $xdayend ) / 2,
+                                     ( $ymin + $yorig ) / 2,
+                                     -text => $days[$i]
+                );
             }
         }
     }
@@ -273,28 +284,29 @@ B<Returns>
 
 =item -rectangle => canvas rectangle object
 
+=item -colour => colour of block
+
 =back
 
 =back
 
 =cut
 
-
 sub draw_block {
-    my $class   = shift;
+    my $class  = shift;
     my $canvas = shift;
     my $block  = shift;
     my $scl    = shift;
     my $type   = shift;
-    my $scale = $scl->{-scale};
+    my $scale  = $scl->{-scale};
 
     return unless $block;
 
     # --------------------------------------------------------------------
     # set the colour and pixel width of edge
     # --------------------------------------------------------------------
-    my $colour = shift || '#abcdef';
-    my $edge   = shift || $Edge;
+    my $colour = shift || $colours->{$type} || $colours->{teacher};
+    my $edge = shift || $Edge;
     $Edge = $edge;
 
     $colour = Colour->string($colour);
@@ -316,22 +328,23 @@ sub draw_block {
     my $blockTeacher     = "";
     foreach my $t (@teachers) {
         my $name = "$t";
-        if (length($name) > 15) {
-            $blockTeacher .= join("\n",split " ",$name) . "\n";
-        } else {
+        if ( length($name) > 15 ) {
+            $blockTeacher .= join( "\n", split " ", $name ) . "\n";
+        }
+        else {
             $blockTeacher .= $t;
         }
     }
     chomp $blockTeacher;
-    my @labs             = $block->labs;
-    my $blockLab         = join( ",", @labs );
-    my $blockDuration    = $block->duration;
-    my $blockStartTime   = $block->start_number;
-    my @streams          = $block->section->streams;
-    my $blockStreams     = join( ",", @streams );
+    my @labs           = $block->labs;
+    my $blockLab       = join( ",", @labs );
+    my $blockDuration  = $block->duration;
+    my $blockStartTime = $block->start_number;
+    my @streams        = $block->section->streams;
+    my $blockStreams   = join( ",", @streams );
 
     # --------------------------------------------------------------------
-    # The diagram has been scaled down, 
+    # The diagram has been scaled down,
     # ... change what gets printed on the block
     # --------------------------------------------------------------------
     if ( $scale <= 0.75 ) {
@@ -423,7 +436,6 @@ sub draw_block {
     # --------------------------------------------------------------------
     # draw the block
     # --------------------------------------------------------------------
-
     #create rectangle
     my $rectangle =
       $canvas->createRectangle(
@@ -461,7 +473,8 @@ sub draw_block {
              -lines     => \@lines,
              -text      => $text,
              -coords    => $coords,
-             -rectangle => $rectangle
+             -rectangle => $rectangle,
+             -colour    => $colour,
       }
 
 }
@@ -470,7 +483,7 @@ sub draw_block {
 # coords_to_day_time_duration
 # =================================================================
 
-=head2 draw_block ( $x, $y1, $y2, $scaling_info )
+=head2 coords_to_day_time_duration ( $x, $y1, $y2, $scaling_info )
 
 Determines the day, start time, and duration based on canvas coordinates
 
@@ -513,9 +526,9 @@ sub coords_to_day_time_duration {
     my $y2    = shift;
     my $scl   = shift;
 
-    my $day = ( $x - $scl->{-xorg} ) / $scl->{-xscl} - $scl->{-xoff} + 1;
+    my $day = $x / $scl->{-xscl} - $scl->{-xoff} + 1 - $scl->{-xorg};
     my $time =
-      ( $y - $scl->{-yorg} ) / $scl->{-yscl} - $scl->{-yoff} + $EarliestTime;
+      $y / $scl->{-yscl} - $scl->{-yoff} + $EarliestTime - $scl->{-yorg};
     my $duration = ( $y2 + 1 - $y ) / $scl->{-yscl};
 
     return ( $day, $time, $duration );
@@ -593,10 +606,10 @@ B<Returns>
 sub get_colour_shades {
     my $colour = shift;
     my $edge   = $Edge;
-    
+
     # convert colour to hue, saturation, light
     my ( $h, $s, $l ) = Colour->hsl($colour);
-    
+
     # calculate the light/dark changes
     my $light_intensity = $l > .7 ? ( 1 - $l ) * 75 : 30 * .75;
     my $dark_intensity  = $l < .3 ? $l * 75         : 30 * .75;
@@ -606,19 +619,18 @@ sub get_colour_shades {
     unless ( Colour->isLight($colour) ) {
         $textcolour = "white";
     }
-    
-    
-    # create a light/dark gradient of colours 
+
+    # create a light/dark gradient of colours
     my @light;
     my @dark;
-    
+
     foreach my $i ( 0 .. $edge - 1 ) {
         my $lfactor = ( 1 - ( $i / $edge ) ) * $light_intensity;
         my $dfactor = ( 1 - ( $i / $edge ) ) * $dark_intensity;
         push @light, Colour->lighten( $lfactor, $colour );
         push @dark, Colour->darken( $dfactor, $colour );
     }
-    
+
     # return info
     return \@light, \@dark, $textcolour;
 }
@@ -640,7 +652,7 @@ sub _time_y_coords {
 }
 
 # =================================================================
-# using scale info, get the x limits for a specific day 
+# using scale info, get the x limits for a specific day
 # =================================================================
 sub _days_x_coords {
     my $day       = shift;
@@ -669,7 +681,7 @@ The coordinate system of the canvas is the same as the Tk coordinate system,
 where the origin (0,0) is the top left corner, and 'y' increases as it goes 
 down the page.
 
-=head2 CreatLine
+=head2 createLine
 
 B<Parameters>
 

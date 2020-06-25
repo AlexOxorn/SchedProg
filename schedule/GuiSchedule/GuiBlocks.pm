@@ -21,17 +21,15 @@ Version 1.00
 	use GuiSchedule::GuiBlocks;
 	use GuiSchedule::View;
 	my $mw = MainWindow->new;
-	my @blocks =  
-	my $View = View->new($mw, \@blocks);
-	
-    my $coords = [10, 15, 15, 15];
-    my $block = $blocks[0];
-    my $guiblock = GuiBlocks->new( $View, $block, $coords );
-    
+    my $Schedule = Schedule->read_YAML('myschedule_file.yaml');
+    my $teacher  = $Schedule->teachers()->get_by_name("Sandy","Bultena");
+    my $View = View->new($mw,$schedule,$teacher);
+
+    my $block = Block->new (-day=>"Wed",-start=>"9:30",-duration=>1.5);
+
+    my $guiblock = GuiBlocks->new( $View, $block );
     $guiBlocks->change_colour("red");
     
-    print "This is the GuiBlock for ".$guiBlocks->block."\n";
-
 =head1 DESCRIPTION
 
 Describes a GuiBlock
@@ -75,8 +73,8 @@ sub new {
     my $this   = shift;
     my $view   = shift;
     my $block  = shift;
-    my $colour = shift || '#abcdef';
-    my $scale  = shift ;
+    my $colour = shift;
+    my $scale  = shift;
 
     # get canvas from view to draw on
     my $canvas = $view->canvas;
@@ -88,6 +86,7 @@ sub new {
     my $text = $gui_objs->{-text};
     my $rectangle = $gui_objs->{-rectangle};
     my @coords = @{$gui_objs->{-coords}};
+    $colour = $gui_objs->{-colour};
     
     # group rectange and text to create guiblock,
     # so that they both move as one on UI

@@ -10,7 +10,7 @@ use Tk::TableEntry;
 
 =head1 NAME
 
-DataEntry - provides methods/objects for entering schedule data manually 
+DataEntry - provides methods/objects for entering teachers/labs/etc data  
 
 =head1 VERSION
 
@@ -25,12 +25,13 @@ Version 1.00
     
     my $Dirtyflag   = 0;
     my $mw          = MainWindow->new();
-    my $Schedule    = Schedule->read('myschedule_file.yaml');
+    my $Schedule = Schedule->read_YAML('myschedule_file.yaml');
     my $guiSchedule = GuiSchedule->new( $mw, \$Dirtyflag, \$Schedule );
     
     # create a data entry list
     # NOTE: requires $guiSchedule just so that it can update
     #       the views if data has changed (via the dirty flag)
+    
     my $de = DataEntry->new( $mw, $Schedule->teachers, 'Teacher',
                     $Schedule, \$Dirtyflag, $guiSchedule );
 

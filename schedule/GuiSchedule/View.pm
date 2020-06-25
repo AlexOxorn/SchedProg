@@ -31,9 +31,9 @@ Version 1.00
     use Tk;
     
     my $mw          = MainWindow->new();
-    my $Schedule    = Schedule->read('myschedule_file.yaml');
-
-    my $teacher = $Schedule->teachers()->get_by_name("Sandy","Bultena");
+    my $Schedule = Schedule->read_YAML('myschedule_file.yaml');
+    my $teacher  = $Schedule->teachers()->get_by_name("Sandy","Bultena");
+    
     my $View = View->new($mw,$schedule,$teacher);
     
     #... change the schedule... 

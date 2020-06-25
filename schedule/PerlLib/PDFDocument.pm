@@ -9,15 +9,18 @@ package PDFDocument;
 use PDF::API2;
 our $Width;
 our $Height;
+our $CR_SIZE = 1.15;
 
 use constant mm => 25.4 / 72;
 use constant in => 1 / 72;
 use constant pt => 1;
 
 my $home_dir = $ENV{HOME};
-my @font_dirs = ( "$home_dir/Library/Fonts", "/Library/Fonts/",
-                        "/System/Library/Fonts/","/usr/share/fonts/dejavu/" );
-PDF::API2::addFontDirs( @font_dirs );
+my @font_dirs = (
+                  "$home_dir/Library/Fonts", "/Library/Fonts/",
+                  "/System/Library/Fonts/",  "/usr/share/fonts/dejavu/"
+);
+PDF::API2::addFontDirs(@font_dirs);
 
 # ==================================================================
 # fonts - these fonts almost match what is used on the TK canvas
@@ -38,17 +41,18 @@ PDF::API2::addFontDirs( @font_dirs );
 # circle
 my %fonts = ();
 my %font_names = (
-                   menlo          => ["DejaVuSans.ttf","Arial Narrow.ttf"],
-                   dejavuMono     => ["DejaVuSansMono.ttf","Andale Mono.ttf","Courier New.ttf",],
-                   zapfino        => ["DejaVuSans.ttf","Arial Narrow.ttf"],
-                   arial          => ["DejaVuSans.ttf","Arial Narrow.ttf"],
-                   arial_slant    => ["DejaVuSans.ttf","Arial Narrow.ttf"],
-                   chalkduster    => ["DejaVuSans.ttf","Arial Narrow.ttf"],
-                   chalkboard     => ["DejaVuSans.ttf","Arial Narrow.ttf"],
-                   arial_rounded  => ["DejaVuSans.ttf","Arial Narrow.ttf"],
-                   apple_chancery => ["DejaVuSans.ttf","Arial Narrow.ttf"],
-                   arial_bold     => ["DejaVuSans.ttf","Arial Narrow.ttf"],
-                   dejavu         => ['DejaVuSans.ttf',"Arial Narrow.ttf"],
+              menlo => [ "DejaVuSans.ttf", "Arial Narrow.ttf" ],
+              dejavuMono =>
+                [ "DejaVuSansMono.ttf", "Andale Mono.ttf", "Courier New.ttf", ],
+              zapfino        => [ "DejaVuSans.ttf", "Arial Narrow.ttf" ],
+              arial          => [ "DejaVuSans.ttf", "Arial Narrow.ttf" ],
+              arial_slant    => [ "DejaVuSans.ttf", "Arial Narrow.ttf" ],
+              chalkduster    => [ "DejaVuSans.ttf", "Arial Narrow.ttf" ],
+              chalkboard     => [ "DejaVuSans.ttf", "Arial Narrow.ttf" ],
+              arial_rounded  => [ "DejaVuSans.ttf", "Arial Narrow.ttf" ],
+              apple_chancery => [ "DejaVuSans.ttf", "Arial Narrow.ttf" ],
+              arial_bold     => [ "DejaVuSans-Bold.ttf", "Arial Narrow Bold.ttf" ],
+              dejavu         => [ 'DejaVuSans.ttf', "Arial Narrow.ttf" ],
 );
 my %font_map = (
                  other_mono => { -font => "dejavuMono",     -size => 24 },
@@ -56,11 +60,13 @@ my %font_map = (
                  point      => { -font => "dejavuMono",     -size => 16 },
                  text       => { -font => "arial",          -size => 16 },
                  smalltext  => { -font => "arial",          -size => 12 },
+                 smallest   => { -font => "arial",          -size => 8 },
                  sidenote   => { -font => "arial_slant",    -size => 14 },
                  explain    => { -font => "arial",          -size => 18 },
                  cc_font    => { -font => "arial",          -size => 28 },
                  bold       => { -font => "arial_bold",     -size => 18 },
                  smallbold  => { -font => "arial_bold",     -size => 12 },
+                 smallestbold => { -font => "arial_bold",     -size => 8 },
                  subsript   => { -font => "dejavuMono",     -size => 14 },
                  intro      => { -font => "chalkduster",    -size => 48 },
                  math       => { -font => "dejavuMono",     -size => 21 },
@@ -69,6 +75,7 @@ my %font_map = (
                  title      => { -font => "arial_rounded",  -size => 30 },
                  fancy      => { -font => "apple_chancery", -size => 24 },
 );
+our $DEFAULT_FONT = "explain";
 
 # ==================================================================
 # new
@@ -94,10 +101,11 @@ sub new {
 # get_font
 # ==================================================================
 sub get_font {
+    no warnings;
     my $self      = shift;
-    my $name      = shift || "explain";
+    my $name      = shift || $DEFAULT_FONT;
     my $pdf       = $self->PDF_doc;
-    my $font_spec = $font_map{$name} || $font_map{"explain"};
+    my $font_spec = $font_map{$name} || $font_map{$DEFAULT_FONT};
     my $font_name = $font_spec->{-font};
     my $font_size = $font_spec->{-size};
 
@@ -110,13 +118,13 @@ sub get_font {
 
         # different computers have different fonts, so much look
         # for first match
-        foreach my $test_filename (@{$font_names{$font_name}}) {
+        foreach my $test_filename ( @{ $font_names{$font_name} } ) {
 
             # loop through each directory which may have fonts
             foreach my $font_dir (@font_dirs) {
 
                 # if we have a file that matches, we're good :)
-                if (-f "$font_dir/$test_filename") {
+                if ( -f "$font_dir/$test_filename" ) {
                     $font_file = $test_filename;
                     last;
                 }
@@ -138,6 +146,28 @@ sub get_font {
     # return required info
     return ( $font, $font_size );
 }
+
+# ==================================================================
+# get_line_height_from_font
+# ==================================================================
+sub get_line_height_from_font {
+    my $self      = shift;
+    my $font       = shift;
+    my @font_info = $self->get_font( $font );
+    my $lead = $CR_SIZE * $font_info[1];
+    return $lead;
+}
+
+# ==================================================================
+# get_font_size
+# ==================================================================
+sub get_font_size {
+    my $self      = shift;
+    my $font       = shift;
+    my @font_info = $self->get_font( $font );
+    return $font_info[1];
+}
+
 
 sub DESTROY {
     return;
@@ -164,10 +194,7 @@ sub filename {
     my $self = shift;
     if (@_) {
         my $name = shift;
-        if ( $name =~ /^(.*)_(\d)$/ ) {
-            $name = $1 . "_0" . $2;
-        }
-        $self->{-filename} = "./$name" . ".pdf";
+        $self->{-filename} = $name.".pdf";
     }
     return $self->{-filename} || "./PDFDocument" . $$ . ".pdf";
 }
@@ -251,15 +278,15 @@ sub image {
 # get the pdf content for text, includes getting font info, etc.
 # ==================================================================
 sub _get_text_content {
-    my $self = shift;
-    my $details = shift;
+    my $self      = shift;
+    my $details   = shift;
     my @font_info = $self->get_font( $details->{-options}{-font} );
 
     my $page        = $self->PDF_page;
     my $pdf_content = $page->text();
     $pdf_content->font(@font_info);
 
-    my $lead = $pdf_content->lead( 1.15 * $font_info[1] );
+    my $lead = $pdf_content->lead( $CR_SIZE * $font_info[1] );
     $details->{-options}{-lead} = $lead;
 
     return $pdf_content;
@@ -269,12 +296,18 @@ sub _get_text_content {
 # text
 # ==================================================================
 sub text {
-    my $self        = shift;
-    my $details     = shift;
+    my $self    = shift;
+    my $details = shift;
 
     my $original_width = $details->{-options}{-width} || 0;
-    my $width = $original_width;
-    my $text  = $details->{-options}{-text}  || "";
+    my $width          = $original_width;
+    my $text           = $details->{-options}{-text} || "";
+
+    my $flag = 0;
+    my $anchor = $details->{-options}{-anchor} || "center";
+    if ( $text =~ /\n/ && $anchor eq 'center' ) {
+        $self->_location_of_first_line_centered_paragraph( $text, $details );
+    }
 
     # break text into separate bits if there are carriage returns
     # NB: THIS IS VERY FRAGILE, AND NOT VERY GOOD!
@@ -291,33 +324,32 @@ sub text {
 
         # paragraph
         if ($width) {
-            $self->_write_paragraph( $para, $details);
+            $self->_write_paragraph( $para, $details );
         }
 
         # single line
         else {
-            $self->_write_line( $pdf_content,$para, $details );
+            $self->_write_line( $pdf_content, $para, $details );
         }
 
         # reset for next paragraph
         $details->{-options}{-width} = $original_width;
         $width = $original_width;
 
-
-
     }
 
+    # die "horrible death\n" if $flag;
 }
 
 # ==================================================================
 # paragraph
 # ==================================================================
 sub _write_paragraph {
-    my $self        = shift;
-    my $text        = shift;
-    my $details     = shift;
-    my $width       = $details->{-options}{-width};
-    my $margin      = $details->{-options}{-margins} || 15;
+    my $self    = shift;
+    my $text    = shift;
+    my $details = shift;
+    my $width   = $details->{-options}{-width};
+    my $margin  = $details->{-options}{-margins} || 15;
 
     # convert into lines
     my @lines;
@@ -328,15 +360,16 @@ sub _write_paragraph {
 
     # process one work at a time to create a line
     my $pdf_content;
-    while ($done || $try ) {
-        my $next  = "";
-        my $next2 = "";
+    while ( $done || $try ) {
+        my $next              = "";
+        my $next2             = "";
         my $no_trailing_space = "";
-        my $pdf_content = $self->_get_text_content($details);  # is this necessary here??????
+        my $pdf_content =
+          $self->_get_text_content($details);    # is this necessary here??????
         do {
 
             # "try" fit, so make it the new line
-            $line  = $try;
+            $line = $try;
 
             # get next word, and if that is a space, get the next,next word
             $next  = "";
@@ -351,14 +384,16 @@ sub _write_paragraph {
             $no_trailing_space =~ s/\s*$//;
 
             # if this new "try" line fits, keep going
-        } while ( $pdf_content->advancewidth($no_trailing_space) < $width+$margin && $try ne $line ) ;
+          } while (
+               $pdf_content->advancewidth($no_trailing_space) < $width + $margin
+               && $try ne $line );
 
         # write the line that fits
         $self->_write_line( $pdf_content, $line, $details ) if $line !~ /^\s*$/;
 
         # reset for next go-around
         $done = @words;
-        $try = substr($try,length($line));
+        $try = substr( $try, length($line) );
         $try =~ s/^\s*//;
     }
 
@@ -377,21 +412,21 @@ sub _write_line {
     my $type = "text";
     $type = $details->{-options}->{-type} || $text;
 
-    my @list        = Encode->encodings();
-    my $width = $details->{-options}{-width} || 0;
+    my @list   = Encode->encodings();
+    my $width  = $details->{-options}{-width} || 0;
     my $margin = $details->{-options}{-margins} || 15;
-    my $lead = $details->{-options}{-lead};
+    my $lead   = $details->{-options}{-lead};
 
     # location of text
-    my ( $x1, $y1 ) = _location_of_text($pdf_content,$details,$text);
+    my ( $x1, $y1 ) = _location_of_text( $pdf_content, $details, $text );
 
     # new page if necessary and required
-    if ($details->{-options}{-make_new_page}) {
-        if ($y1-$lead < $margin) {
-            $details->{-coords} = [ $x1, $Height-$margin ];
+    if ( $details->{-options}{-make_new_page} ) {
+        if ( $y1 - $lead < $margin ) {
+            $details->{-coords} = [ $x1, $Height - $margin ];
             $self->new_page();
             $pdf_content = $self->_get_text_content($details);
-            ( $x1, $y1 ) = _location_of_text($pdf_content,$details,$text);
+            ( $x1, $y1 ) = _location_of_text( $pdf_content, $details, $text );
         }
     }
 
@@ -413,22 +448,23 @@ sub _write_line {
     $text =~ s/\x{fb00}/ff/g;
 
     # if the type of text is code, then minimal syntax highlighting
-    if ($type eq 'code') {
+    if ( $type eq 'code' ) {
         $text =~ /^(.*?)(\#.*|\/\/.*)*$/;
-        my $code = $1 || "";
+        my $code    = $1 || "";
         my $comment = $2 || "";
-        if ($code =~ /^\s*(function\s|sub\s)/) {
-          $pdf_content->fillcolor("#de0909");
+        if ( $code =~ /^\s*(function\s|sub\s)/ ) {
+            $pdf_content->fillcolor("#de0909");
         }
         $pdf_content->text($code);
         my $comment_pos = $pdf_content->advancewidth($code);
-        $pdf_content->translate( $x1+$comment_pos, $y1 );
+        $pdf_content->translate( $x1 + $comment_pos, $y1 );
         $pdf_content->fillcolor("#006600");
         $pdf_content->text($comment);
         $pdf_content->fillcolor($colour);
 
     }
     else {
+
         # write the text
         $pdf_content->text($text);
     }
@@ -445,11 +481,11 @@ sub _write_line {
 # ==================================================================
 sub _location_of_text {
     my $pdf_content = shift;
-    my $details = shift;
-    my $text = shift;
+    my $details     = shift;
+    my $text        = shift;
 
     my ( $x1, $y1 ) = @{ $details->{-coords} }[ 0, 1 ];
-    my $width = $details->{-options}{-width} || 0;
+    my $width   = $details->{-options}{-width}   || 0;
     my $anchor  = $details->{-options}{-anchor}  || "center";
     my $justify = $details->{-options}{-justify} || "left";
 
@@ -472,11 +508,53 @@ sub _location_of_text {
 
     if ( $width && $justify =~ /^r/ ) {
         $x1 = $x1 + ( $width - $pdf_content->advancewidth($text) );
-
     }
+
     $pdf_content->translate( $x1, $y1 );
 
-    return ($x1,$y1);
+    return ( $x1, $y1 );
+}
+
+# ==================================================================
+# get location of paragraph
+# ==================================================================
+sub _location_of_first_line_centered_paragraph {
+    my $self    = shift;
+    my $text    = shift;
+    my $details = shift;
+
+    # set the 'anchor' and 'justify' options accordingly
+    my $width = $details->{-options}{-width} || 0;
+    
+    $details->{-options}{-anchor} = "n";
+    my $justify = $details->{-options}{-justify} || "left";
+    
+    if ( $justify eq "left" ) {
+        $details->{-options}{-anchor} = "nw";
+    }
+    elsif ( $details->{-options}{-justify} eq "right" ) {
+        $details->{-options}{-anchor} = "ne";
+    }
+
+    # we need a text context so that we can get the width of the text
+    my $pdf_content = $self->_get_text_content($details);
+    my $lead        = $details->{-options}{-lead};
+
+    my ( $x1, $y1 ) = @{ $details->{-coords} }[ 0, 1 ];
+
+    # bet the x position based on the maximum width of all the lines
+    my $max        = $width;
+    my $line_count = 0;
+    foreach my $t ( split "\n", $text ) {
+        $line_count++;
+        my $w = $pdf_content->advancewidth($t);
+        $max = $max > $w ? $max : $w;
+    }
+
+    $x1 = $x1 - $max / 2;
+    $y1 = $y1 + $line_count * $lead / 2;
+
+    @{ $details->{-coords} }[ 0, 1 ] = ( $x1, $y1 );
 }
 
 # ==================================================================
@@ -494,6 +572,12 @@ sub line {
     my @dashpattern;
     my $dash = $details->{-options}{-dash} || "";
     $pdf_content->linedash();
+    if ( $dash eq "." ) {
+        $dash = "1 5";
+    }
+    if ( $dash eq "-" ) {
+        $dash = "2 2";
+    }
     if ($dash) {
         @dashpattern = ( $dash =~ /(\d+)/g );
         $pdf_content->linedash(@dashpattern);
