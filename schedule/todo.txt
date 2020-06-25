@@ -5,6 +5,7 @@ Legend:
 X Done
 + Done with possibility of bug
 
+- When block is unmovable, the colour is supposed to change to grey.  It does not.
 
 
 X Drag Teach on course

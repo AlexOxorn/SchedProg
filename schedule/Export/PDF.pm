@@ -1,0 +1,752 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+package PDF;
+use FindBin;
+use lib "$FindBin::Bin/..";
+
+use PerlLib::PDFDocument;
+use Schedule::Schedule;
+use Export::DrawView;
+
+=head1 NAME
+
+PDF - creates a "View" pdf of a schedule object
+
+=head1 VERSION
+
+Version 1.00
+
+=head1 SYNOPSIS
+
+
+=head1 DESCRIPTION
+
+Draws a view onto a pdf
+
+=head1 Scaling Info (hash pointer)
+
+=over
+
+=item * weekly grid starts at this position (number will be scaled by 
+scaling factors I<i>C<org>
+
+=over
+
+C<< -xoff => >> I<int> 
+
+C<< -yoff => >> I<int> 
+
+=back 
+
+=item * the entire diagram starts at this position
+
+=over
+
+C<< -xorg => >> I<int> 
+
+C<< -yorg => >> I<int>
+
+=back 
+
+=item * how much to stretch the diagram horizontally and vertically 
+(1 day has a width of 1 before stretching, and 1 hour has a height of 1 before stretching)
+
+=over 
+
+C<< -xscl => >> I<float>
+
+C<< -yscl => >> I<float>
+
+=back
+
+=back
+
+=over
+
+=item * Overall scale... has no affect on the diagram but represents an indication
+of how scaled it is to its "natural" size.  Affects what text is written into
+the block.  (Less than .75 teachers will be indicated by initials only)
+
+=over
+
+C<< -scale => >> I<float> 
+
+=back
+
+=back
+
+=cut 
+
+my $Width  = 8.5 * 72;    # 8.5 inches, converted to points
+my $Height = 11 * 72;     # 11 inches, converted to points
+my $Scale = {
+            -xoff  => 1,          # before being scaled by xscl
+            -yoff  => 1,          # before being scaled by yscl
+            -xorg  => 0,          # start drawing at this position
+            -yorg  => 100,        # start drawing at this position
+            -xscl  => 84,         # stretch horizontally
+            -yscl  => 50,         # stretch vertically
+            -scale => 1,          # 1 = 100%.  Text may be modified if scale < 1
+};
+
+# fonts to use
+my $f_head1  = "explain";
+my $f_head2  = "smalltext";
+my $f_bold   = "smallestbold";
+my $f_normal = "smallest";
+
+# vertical distance between two lines
+my $base_head1;
+my $base_head2;
+my $base_bold;
+my $base_normal;
+
+# size of of em for this font
+my $em_head2;
+my $em_bold;
+my $em_normal;
+
+=head1 METHODS
+
+=cut
+
+# =====================================================================
+# create pdfs of report
+# =====================================================================
+
+=head2 newReport ($schedule, $filename);
+
+Creates a schedule report... useful for giving to registrar's office
+
+B<Parameters>
+
+=over
+
+=item * Schedule
+
+=item * Filename to save file as
+
+=back
+
+=cut
+
+our $Ymargin = 20;
+our $Xmargin = 60;
+
+sub newReport {
+    my $class    = shift;
+    my $schedule = shift;
+    my $filename = shift;
+    my $self     = {};
+    bless $self;
+
+    # ------------------------------------------------------------------------
+    # create a new pdf document, and new page
+    # ------------------------------------------------------------------------
+    my $pdf = PDFDocument->new( $Width, $Height );
+    $pdf->new_page();
+    $self->pdf($pdf);
+
+    # ------------------------------------------------------------------------
+    # get info about sizes
+    # ------------------------------------------------------------------------
+    $base_head1  = $pdf->get_line_height_from_font($f_head1);
+    $base_head2  = $pdf->get_line_height_from_font($f_head2);
+    $base_bold   = $pdf->get_line_height_from_font($f_bold);
+    $base_normal = $pdf->get_line_height_from_font($f_normal);
+
+    $em_head2  = $pdf->get_font_size($f_head2) / 12;
+    $em_bold   = $pdf->get_font_size($f_bold) / 12;
+    $em_normal = $pdf->get_font_size($f_normal) / 12;
+
+    my $lead = $pdf->get_line_height_from_font();
+
+    # ------------------------------------------------------------------------
+    # Write courses to pdf
+    # ------------------------------------------------------------------------
+    my $y = $Ymargin;
+    my $x = $Xmargin;
+
+    $self->createText(
+                       $x, $y,
+                       -text   => "Courses",
+                       -anchor => "nw",
+                       -font   => $base_head1
+    );
+    $y = $y + 2 * $base_head1;
+
+    foreach my $c ( $schedule->all_courses ) {
+        ( $x, $y ) = $self->write_course_pdf( $c, $x, $y );
+    }
+
+    # ------------------------------------------------------------------------
+    # Write teachers to pdf
+    # ------------------------------------------------------------------------
+    $pdf->new_page();
+    $y = $Ymargin;
+    $x = $Xmargin;
+
+    $self->createText(
+                       $x, $y,
+                       -text   => "Teachers",
+                       -anchor => "nw",
+                       -font   => $base_head1
+    );
+    $y = $y + 2 * $base_head1;
+
+    
+    foreach my $t ( sort { lc( $a->lastname ) cmp lc( $b->lastname ) }
+                    $schedule->all_teachers )
+    {
+        ( $x, $y ) = $self->write_teacher_pdf( $schedule, $t, $x, $y );
+    }
+
+    # ------------------------------------------------------------------------
+    # save the pdf
+    # ------------------------------------------------------------------------
+    $pdf->filename($filename);
+    $pdf->save();
+}
+
+# =====================================================================
+# write course to pdf... do not split between page
+# =====================================================================
+
+=head2 write_course_pdf ($course, $x, $y);
+
+Write course to pdf... do not split between page
+
+B<Parameters>
+
+=over
+
+=item * Course object
+
+=item * x,y coordinates for nw corner of text
+
+=back
+
+B<Returns>
+
+x,y coordinate of sw corner of content
+
+=cut
+
+sub write_course_pdf {
+    my $self   = shift;
+    my $pdf    = $self->pdf;
+    my $course = shift;
+    my $x      = shift;
+    my $y      = shift;
+    my $indent = 10;
+
+    # ------------------------------------------------------------------------
+    # need to calculate the height of the entire course text
+    # (no widows)
+    # ------------------------------------------------------------------------
+    my $height = 0;
+    my $text;
+
+    # header
+    my $header = $course->number . " " . $course->name;
+    $height = $base_head2;
+
+    # sections
+    foreach my $s ( sort { $a->number <=> $b->number } $course->sections ) {
+
+        # blank line, section name, teachers
+        $height = $base_bold * 2 + $height + $base_normal;
+
+        # blocks (1 line per block)
+        my @blocks = $s->blocks;
+        $height = $height + scalar(@blocks) * $base_normal;
+    }
+
+    if ( $y + $height > $Height - $Ymargin ) {
+        $pdf->new_page();
+        $y = $Ymargin;
+    }
+
+    # ------------------------------------------------------------------------
+    # write the various texts
+    # ------------------------------------------------------------------------
+    # header
+    $self->createText(
+                       $x, $y,
+                       -text   => $course->number . " " . $course->name,
+                       -anchor => "nw",
+                       -font   => $f_head2
+    );
+    $y = $y + 0.7 * $base_head2;
+
+    # sections
+    foreach my $s ( sort { $a->number <=> $b->number } $course->sections ) {
+        $y = $y + $base_bold;
+        $self->createText(
+                           $x, $y,
+                           -text   => "$s",
+                           -anchor => "nw",
+                           -font   => $f_bold
+        );
+        $y = $y + $base_bold;
+
+        my $plural   = "";
+        my @teachers = $s->teachers;
+        $plural = "s" if @teachers > 1;
+        my $text = "teacher$plural: " . join( ", ", map { "$_" } $s->teachers );
+        $self->createText(
+                           $x + $indent, $y,
+                           -text   => $text,
+                           -anchor => "nw",
+                           -font   => $f_normal
+        );
+        $y = $y + 1.5 * $base_normal;
+
+        # blocks
+        foreach my $block (
+            sort {
+                     $a->day_number <=> $b->day_number
+                  || $a->start_number <=> $b->start_number
+            } $s->blocks
+          )
+        {
+            $self->createText(
+                               $x + $indent, $y,
+                               -text   => $block->day,
+                               -anchor => "nw",
+                               -font   => $f_normal
+            );
+            $self->createText(
+                               $x + $indent + 70 * $em_normal, $y,
+                               -text   => $block->start,
+                               -anchor => "ne",
+                               -font   => $f_normal
+            );
+            $self->createText(
+                               $x + $indent + 135 * $em_normal, $y,
+                               -text   => $block->duration . " hours",
+                               -anchor => "ne",
+                               -font   => $f_normal
+            );
+            $self->createText(
+                        $x + $indent + 150 * $em_normal,
+                        $y,
+                        -text => "labs: "
+                          . join( ", ",
+                            map    { "$_" }
+                              sort { $a->number cmp $b->number } $block->labs ),
+                        -anchor => "nw",
+                        -font   => $f_normal
+            );
+            $y = $y + $base_normal;
+        }
+    }
+
+    return ( $x, $y + 20 );
+
+}
+
+# =====================================================================
+# write teacher to pdf... do not split between page
+# =====================================================================
+
+=head2 write_teacher_pdf ($teacher, $x, $y);
+
+Write teacher to pdf... do not split between page
+
+B<Parameters>
+
+=over
+
+=item * Teacher object
+
+=item * x,y coordinates for nw corner of text
+
+=back
+
+B<Returns>
+
+x,y coordinate of sw corner of content
+
+=cut
+
+sub write_teacher_pdf {
+    my $self     = shift;
+    my $pdf      = $self->pdf;
+    my $schedule = shift;
+    my $teacher  = shift;
+    my $x        = shift;
+    my $y        = shift;
+    my $indent   = 10;
+
+    # ------------------------------------------------------------------------
+    # need to calculate the height of the entire teacher text
+    # (no widows)
+    # ------------------------------------------------------------------------
+    my $height = 0;
+    my $text;
+
+    # courses
+    foreach my $course ( $schedule->courses_for_teacher($teacher) ) {
+        $height = $height + $base_head2;
+
+        # sections
+        foreach my $s ( grep { $_->has_teacher($teacher) } $course->sections ) {
+            $height = 2 * $base_bold;
+
+            # blocks
+            my @b = grep { $_->has_teacher($teacher) } $s->blocks;
+            $height = scalar(@b) * $base_normal;
+        }
+    }
+
+    if ( $y + $height > $Height - $Ymargin ) {
+        $pdf->new_page();
+        $y = $Ymargin;
+    }
+
+    # ------------------------------------------------------------------------
+    # write the various texts
+    # ------------------------------------------------------------------------
+
+    # header
+    $self->createText(
+                       $x, $y,
+                       -text   => "$teacher",
+                       -anchor => "nw",
+                       -font   => $f_head2
+    );
+    $y = $y + 0.7 * $base_head2;
+
+    # course
+    foreach my $course ( sort { lc( $a->number ) cmp lc( $b->number ) }
+                         $schedule->courses_for_teacher($teacher) )
+    {
+
+        my $text .= $course->number . " " . $course->name;
+            $y = $y + $base_bold;
+            $self->createText(
+                               $x, $y,
+                               -text   => "$text",
+                               -anchor => "nw",
+                               -font   => $f_bold
+            );
+            $y = $y + $base_bold;
+
+
+        # sections
+        foreach my $s (
+                        grep { $_->has_teacher($teacher) }
+                        sort { $a->number <=> $b->number } $course->sections
+          )
+        {
+            $self->createText(
+                               $x, $y,
+                               -text   => "$s",
+                               -anchor => "nw",
+                               -font   => $f_bold
+            );
+            $y = $y + $base_bold;
+
+            # blocks
+            foreach my $block (
+                sort {
+                         $a->day_number <=> $b->day_number
+                      || $a->start_number <=> $b->start_number
+                } $s->blocks
+              )
+            {
+                $self->createText(
+                                   $x + $indent, $y,
+                                   -text   => $block->day,
+                                   -anchor => "nw",
+                                   -font   => $f_normal
+                );
+                $self->createText(
+                                   $x + $indent + 70 * $em_normal, $y,
+                                   -text   => $block->start,
+                                   -anchor => "ne",
+                                   -font   => $f_normal
+                );
+                $self->createText(
+                                   $x + $indent + 135 * $em_normal, $y,
+                                   -text   => $block->duration . " hours",
+                                   -anchor => "ne",
+                                   -font   => $f_normal
+                );
+                $self->createText(
+                        $x + $indent + 150 * $em_normal,
+                        $y,
+                        -text => "labs: "
+                          . join( ", ",
+                            map    { "$_" }
+                              sort { $a->number cmp $b->number } $block->labs ),
+                        -anchor => "nw",
+                        -font   => $f_normal
+                );
+                $y = $y + $base_normal;
+            }
+        }
+    }
+
+    return ( $x, $y + 20 );
+
+}
+
+# =====================================================================
+# create pdfs of views
+# =====================================================================
+
+=head2 newView ($schedule, $schedule_obj, $filename);
+
+Creates a pdf for the Schedule for $schedule_obj
+
+B<Parameters>
+
+=over
+
+=item * Schedule
+
+=item * Schedule object (teacher/lab/stream)
+
+=item * Filename to save file as
+
+=back
+
+=cut
+
+sub newView {
+    my $class    = shift;
+    my $schedule = shift;
+    my $obj      = shift;
+    my $filename = shift;
+    my $self     = {};
+    bless $self;
+
+    # ------------------------------------------------------------------------
+    # create a new pdf document, and new page
+    # ------------------------------------------------------------------------
+    $PDFDocument::DEFAULT_FONT = "smallest";
+    my $pdf = PDFDocument->new( $Width, $Height );
+    $pdf->new_page();
+    $self->pdf($pdf);
+
+    # ------------------------------------------------------------------------
+    # write the header and the footer
+    # ------------------------------------------------------------------------
+    $self->createText(
+                       $Width / 2, $Scale->{-yorg} / 2,
+                       -text => "$obj",
+                       -font => "explain"
+    );
+    $self->createText(
+                       20, $Height - 20,
+                       -text   => $filename,
+                       -anchor => "sw"
+    );
+    $self->createText(
+                       $Width - 20, $Height - 20,
+                       -text   => scalar(localtime),
+                       -anchor => "se"
+    );
+
+    # ------------------------------------------------------------------------
+    # Draw the view
+    # ------------------------------------------------------------------------
+
+    # draw the background grid
+    DrawView->draw_background( $self, $Scale );
+
+    # get the blocks, which depends on which type of object we have
+    my @blocks = ();
+    if ( defined $obj ) {
+        if ( $obj->isa("Teacher") ) {
+            @blocks = $schedule->blocks_for_teacher($obj);
+        }
+        elsif ( $obj->isa("Lab") ) {
+            @blocks = $schedule->blocks_in_lab($obj);
+        }
+        else { @blocks = $schedule->blocks_for_stream($obj); }
+    }
+
+    # draw the blocks
+    foreach my $block (@blocks) {
+        DrawView->draw_block( $self, $block, $Scale, lc( ref($obj) ) );
+    }
+
+    # ------------------------------------------------------------------------
+    # save the pdf
+    # ------------------------------------------------------------------------
+    $pdf->filename($filename);
+    $pdf->save();
+}
+
+# =====================================================================
+# pdf getter setter
+# =====================================================================
+
+=head2 pdf ($PDFDocument_obj);
+
+Setter / getter for PDFDocument object
+
+=cut
+
+sub pdf {
+    my $self = shift;
+    $self->{-pdf} = shift if @_;
+    return $self->{-pdf};
+}
+
+# =====================================================================
+# createLine
+# =====================================================================
+
+=head2 createLine ( @coords, %options);
+
+Create a Line on the pdf page.
+
+B<Parameters>
+
+=over
+
+=item * coords - a list of x,y pairs specify the line
+
+=item * options ... these options are passed, as is, the PDFDocument::line()
+
+C<-fill> Colour of the line (default black)
+
+C<-dash> Dash patter of the line (default no dash)
+
+C<-width> width of the border of the line (default:1)
+
+=back
+
+=cut
+
+sub createLine {
+    my $self   = shift;
+    my @coords = ();
+    while ( @_ && $_[0] =~ /^\s*[-\d+\.]+\s*$/ ) {
+        push @coords, shift;
+    }
+    my %options = @_;
+
+    @coords = _convert_coords(@coords);
+    my $obj;
+
+    # call appropriate sub for this object
+    $self->pdf->line( { -coords => \@coords, -options => \%options } );
+
+}
+
+# =====================================================================
+# createText
+# =====================================================================
+
+=head2 createLine ( @coords, %options);
+
+Write Text on the pdf page.
+
+B<Parameters>
+
+=over
+
+=item * coords - a list of x,y pairs specify the position of the text
+
+=item * options ... these options are passed, as is, the PDFDocument::text()
+
+C<-anchor> where the coords are located relative to the text 
+(n, ne, nw, s, se, sw, B<center>) 
+
+C<-justify> if more than one line, the justification of the paragraph 
+(B<left>, right, center)
+
+C<-width> width of multiline text, (=0 means not multiline)
+
+C<-margin> page margins
+
+C<-fill> colour of text (default: black)
+
+C<-font> name of font, if named font cannot be found, then replaced with
+$PDFDocument::DEFAULT_FONT 
+
+=back
+
+=cut
+
+sub createText {
+    my $self    = shift;
+    my @coords  = ( shift, shift );
+    my %options = @_;
+
+    @coords = _convert_coords(@coords);
+    my $obj;
+
+    # call appropriate sub for this object
+    $self->pdf->text( { -coords => \@coords, -options => \%options } );
+}
+
+# =====================================================================
+# createRectangle
+# =====================================================================
+
+=head2 createRectangle ( @coords, %options);
+
+Draw Rectangle on pdf
+
+B<Parameters>
+
+=over
+
+=item * coords - two x,y pairs, indicating opposite sides of the rectangle
+
+=item * options ... these options are passed, as is, the PDFDocument::polygon()
+
+C<-fill> colour of internal area of polygon (default: none)
+
+C<-outline> colour of border of polygon (default: black)
+
+C<-width> width of the border of the rectangle (default:0)
+
+=back
+
+=cut
+
+sub createRectangle {
+    my $self    = shift;
+    my @c       = ( shift, shift, shift, shift );
+    my %options = @_;
+
+    @c = _convert_coords(@c);
+    my $obj;
+
+    my @coords = ( $c[0], $c[1], $c[0], $c[3], $c[2], $c[3], $c[2], $c[1] );
+
+    # call appropriate sub for this object
+    $self->pdf->polygon( { -coords => \@coords, -options => \%options } );
+}
+
+# =====================================================================
+# convert coords from TkCanvas to pdf
+# =====================================================================
+sub _convert_coords {
+    my @coords = @_;
+    my $i      = 0;
+    foreach my $c (@coords) {
+        if ( $i % 2 ) {
+            $c = $Height - $c;
+        }
+        $i++;
+    }
+    return @coords;
+}
+
+# =====================================================================
+# does nothing, just here to make it compatible with Tk::Canvas objects
+# =====================================================================
+sub createGroup {
+    return;
+}
+1;

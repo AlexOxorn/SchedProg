@@ -39,7 +39,7 @@ Version 1.00
     my $Dirtyflag           = 0;
     my $mw                  = MainWindow->new();
     my ( $Colours, $Fonts ) = InitGui->set($mw);    
-    my $Schedule            = Schedule->read('myschedule_file.yaml');
+    my $Schedule = Schedule->read_YAML('myschedule_file.yaml');
     my $guiSchedule         = GuiSchedule->new( $mw, \$Dirtyflag, \$Schedule );
     
     # create gui for editing courses

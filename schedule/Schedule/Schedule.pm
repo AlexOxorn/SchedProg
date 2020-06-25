@@ -9,6 +9,7 @@ use lib ("$FindBin::Bin/..");
 
 use Carp;
 use YAML;
+$YAML::LoadBlessed = 1;  # default changed in YAML 1.30
 
 use Schedule::Teachers;
 use Schedule::Courses;
@@ -1080,12 +1081,7 @@ sub teacher_details {
 
         # sections
         foreach my $s ( sort { $a->number <=> $b->number } $c->sections ) {
-            my @sTeacher = $s->teachers;
-            my $contains = 0;
-            foreach my $st (@sTeacher) {
-                $contains = 1 if refaddr($st) == refaddr($teacher);
-            }
-            if ($contains) {
+            if ($s->has_teacher($teacher)) {
                 $text .= "\n\t$s\n";
                 $text .= "\t" . "- " x 25 . "\n";
 
@@ -1097,12 +1093,7 @@ sub teacher_details {
                     } $s->blocks
                   )
                 {
-                    my @bTeacher = $b->teachers;
-                    my $contains = 0;
-                    foreach my $bt (@bTeacher) {
-                        $contains = 1 if refaddr($bt) == refaddr($teacher);
-                    }
-                    if ($contains) {
+                    if ($b->has_teacher($teacher)) {
                         $text .= "\t"
                           . $b->day . " "
                           . $b->start . ", "

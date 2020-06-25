@@ -108,10 +108,6 @@ foreach my $colour (@colourlist) {
     $colourlist{$name} = [$r,$g,$b];
 }
 
-sub colours_hash {
-    return \%colourlist;
-}
-
 # -------------------------------------------------------------------
 # created
 #--------------------------------------------------------------------
@@ -680,6 +676,67 @@ sub fade {
 
     # convert to colour string
     return $self->setcolour_hsl($h,$s,$l);
+}
+
+# =================================================================
+# add
+# =================================================================
+
+=head2 add($colour)
+
+adds one colour to another, assuming that the light is shining through
+the colours (as opposed to being a reflection, or the source light)
+
+White (clear) covered by black should return black
+Black (opaque) covered by white would return black
+
+50% grey covered by 50% grey, should return 75% grey
+
+=head3 Parameters
+
+=over
+
+=item * colour
+
+colour string or colour name, 
+
+=back
+
+=head3 Returns
+
+- new colour string
+
+=head3 Examples
+
+    my $y = $new_colour = Colour->add("#ffffff","#abcdef");
+    
+    $colour = Colour->new("#ffffff");
+    my $y = $colour->add("#abcdef");
+    
+=cut
+
+#--------------------------------------------------------------------
+sub add {
+    my $c1   = shift;
+    unless (ref ($c1)) {
+        my $c1string = shift;
+        $c1 = Colour->new ($c1string);
+    };
+    my $c2string   = shift;    
+    my $c2 = Colour->new( $c2string);
+
+    # get the rgb for these colours
+    my ($r1, $g1, $b1) = $c1->rgb();
+    my ($r2, $g2, $b2) = $c2->rgb();
+
+    # add
+    my $r = ($r1 * $r2);
+    my $g = ($g1 * $g2);
+    my $b = ($b1 * $b2);
+    
+    
+    # convert to colour string
+    return Colour->setcolour_rgb($r,$g,$b);
 }
 
 

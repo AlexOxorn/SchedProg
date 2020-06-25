@@ -740,8 +740,7 @@ sub print_description{
 	#	}
 	#}
 	
-	
-	if($self->name ne ""){
+	if($self->name ne "" && $self->name !~ /^Section\s*\d*$/){
 		return "Section " . $self->number . ": " . $self->name;
 	}else{
 		return "Section " . $self->number;
