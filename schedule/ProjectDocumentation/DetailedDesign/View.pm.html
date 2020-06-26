@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title></title>
-<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<link rel="stylesheet" href="perdoc.css" type="text/css" />
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
 </head>
@@ -57,9 +57,9 @@
     use Tk;
     
     my $mw          = MainWindow-&gt;new();
-    my $Schedule    = Schedule-&gt;read(&#39;myschedule_file.yaml&#39;);
-
-    my $teacher = $Schedule-&gt;teachers()-&gt;get_by_name(&quot;Sandy&quot;,&quot;Bultena&quot;);
+    my $Schedule = Schedule-&gt;read_YAML(&#39;myschedule_file.yaml&#39;);
+    my $teacher  = $Schedule-&gt;teachers()-&gt;get_by_name(&quot;Sandy&quot;,&quot;Bultena&quot;);
+    
     my $View = View-&gt;new($mw,$schedule,$teacher);
     
     #... change the schedule... 
@@ -91,7 +91,7 @@
 
 <h2 id="setup_popup_menu-mw">setup_popup_menu ($mw) {</h2>
 
-<p>create the pop-up menu BEFORE drawing the blocks, so that it can be bound to each block (done in $self-&gt;draw_blocks)</p>
+<p>create the pop-up menu BEFORE drawing the blocks, so that it can be bound to each block (done in $self-&gt;redraw)</p>
 
 <h2 id="setup_undo_redo-mw">setup_undo_redo ($mw) {</h2>
 

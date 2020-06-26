@@ -13,6 +13,7 @@ use lib "$FindBin::Bin/Library";
 our $BinDir = "$FindBin::Bin/";
 use Schedule::Schedule;
 use Export::PDF;
+use Export::Latex;
 use GuiSchedule::View;
 use GuiSchedule::GuiSchedule;
 use GuiSchedule::DataEntry;
@@ -183,7 +184,7 @@ sub menu_info {
     # ----------------------------------------------------------
     # button names
     # ----------------------------------------------------------
-    my @buttons = ( 'new', 'open', 'CSVimport', 'save', 'print' );
+    my @buttons = ( 'new', 'open', 'CSVimport', 'save', );
 
     # ----------------------------------------------------------
     # toolbar structure
@@ -201,20 +202,36 @@ sub menu_info {
                                    cb => \&import_schedule,
                                    hn => 'Import Schedule from CSV'
                     },
-                    print_teachers => {
+                    pdf_teachers => {
                         cb => [ \&print_views, 'PDF', 'teacher' ],
                         hn => 'Print to pdf of Teacher Schedules',
                     },
-                    print_streams => {
+                    pdf_streams => {
                         cb => [ \&print_views, 'PDF', 'stream' ],
                         hn => 'Print to pdf of Stream Schedules',
                     },
-                    print_labs => {
+                    pdf_labs => {
                                     cb => [ \&print_views, 'PDF', 'lab' ],
                                     hn => 'Print to pdf of Lab Schedules',
                     },
-                    print_text => {
+                    pdf_text => {
                         cb => [ \&print_views, 'PDF', 'text' ],
+                        hn => 'Text output of schedules (good for registrar)',
+                    },
+                    latex_teachers => {
+                        cb => [ \&print_views, 'Latex', 'teacher' ],
+                        hn => 'Print to pdf of Teacher Schedules',
+                    },
+                    latex_streams => {
+                        cb => [ \&print_views, 'Latex', 'stream' ],
+                        hn => 'Print to pdf of Stream Schedules',
+                    },
+                    latex_labs => {
+                                    cb => [ \&print_views, 'Latex', 'lab' ],
+                                    hn => 'Print to pdf of Lab Schedules',
+                    },
+                    latex_text => {
+                        cb => [ \&print_views, 'Latex', 'text' ],
                         hn => 'Text output of schedules (good for registrar)',
                     },
                     save => {
@@ -265,27 +282,52 @@ sub menu_info {
            qw/cascade Print -tearoff 0 /,
            -menuitems => [
                            [
-                             qw/cascade Print -tearoff 0/,
+                             qw/cascade PDF -tearoff 0/,
                              -menuitems => [
                                     [
                                       "command",
                                       "Teacher Schedules",
-                                      -command => $b_props{print_teachers}{cb},
+                                      -command => $b_props{pdf_teachers}{cb},
                                     ],
                                     [
                                       "command",
                                       "Lab Schedules",
-                                      -command => $b_props{print_labs}{cb},
+                                      -command => $b_props{pdf_labs}{cb},
                                     ],
                                     [
                                       "command",
                                       "Stream Schedules",
-                                      -command => $b_props{print_streams}{cb},
+                                      -command => $b_props{pdf_streams}{cb},
                                     ],
                                     'separator',
                                     [
                                       "command", "Text Output",
-                                      -command => $b_props{print_text}{cb},
+                                      -command => $b_props{pdf_text}{cb},
+                                    ],
+                             ],
+                           ],
+                           [
+                             qw/cascade Latex -tearoff 0/,
+                             -menuitems => [
+                                    [
+                                      "command",
+                                      "Teacher Schedules",
+                                      -command => $b_props{latex_teachers}{cb},
+                                    ],
+                                    [
+                                      "command",
+                                      "Lab Schedules",
+                                      -command => $b_props{latex_labs}{cb},
+                                    ],
+                                    [
+                                      "command",
+                                      "Stream Schedules",
+                                      -command => $b_props{latex_streams}{cb},
+                                    ],
+                                    'separator',
+                                    [
+                                      "command", "Text Output",
+                                      -command => $b_props{latex_text}{cb},
                                     ],
                              ],
                            ],
@@ -620,7 +662,8 @@ sub open_schedule {
     # get file to open
     unless ( $file && -e $file ) {
         $file = "";
-        $file = $mw->getOpenFile( -initialdir => $Current_directory );
+        $file = $mw->getOpenFile( -initialdir => $Current_directory,
+        -filetypes=>[["Schedules",".yaml"],["All Files","*"]] );
     }
 
     # if user has chosen file...
@@ -713,8 +756,8 @@ sub open_schedule {
             $wait->title("Printing");
             $wait->Label( -text => 'Please Wait while we process the files', )
               ->pack(-expand=>1,-fill=>'both');
-            $wait->overrideredirect(1);
-            $wait->geometry("300x450+10+10")
+            #$wait->overrideredirect(1);
+            $wait->geometry("300x450")
         }
         else { $wait->deiconify(); $wait->raise(); }
         $mw->update();
@@ -973,7 +1016,7 @@ sub write_ini {
                 $tbox->insert( 'end', 'No courses defined in this schedule' );
             }
             else {
-                foreach my $c ( $Schedule->all_courses ) {
+                foreach my $c ( sort {$a->number cmp $b->number} $Schedule->all_courses ) {
                     $tbox->insert( 'end', "$c" );
                 }
             }

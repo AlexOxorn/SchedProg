@@ -10,7 +10,7 @@ use List::Util qw( min max );
 
 =head1 NAME
 
-DrawView - only code that draws the View stuff
+DrawView - code that draws the View stuff only
 
 =head1 VERSION
 
@@ -22,16 +22,20 @@ Version 1.00
     use Tk;
     use Export::PDF;
     
-    my $mw          = MainWindow->new();
-    my $cn          = $mw->Canvas()->pack();
-    
+    my $Schedule = Schedule->read_YAML('myschedule_file.yaml');
+    my $teacher  = $Schedule->teachers()->get_by_name("Sandy","Bultena");
+    my @blocks   = $schedule->blocks_for_teacher($teacher);
+        
     # ----------------------------------------------------------
     # create a pdf, as well as a Tk canvas
     # ----------------------------------------------------------
     my $pdf         = PDF->new();
-    my $page        = $pdf->page();
+    my $mw          = MainWindow->new();
+    my $cn          = $mw->Canvas()->pack();
 
+    # ----------------------------------------------------------
     # what scale you want
+    # ----------------------------------------------------------
     my $scl = {
              -xoff  => 1,       # before being scaled by xscl
              -yoff  => 1,       # before being scaled by yscl
@@ -42,14 +46,15 @@ Version 1.00
              -scale => 1,       # 1 = 100%.  Text may be modified if scale < 1
     };
 
-    $cn->draw_background($cn,$scl);
-    $pdf->draw_background($cn,$scl); 
+    # ----------------------------------------------------------
+    # Draw the grid on both pdf and canvas
+    # ----------------------------------------------------------
+    DrawView->draw_background($cn,$scl);
+    DrawView->draw_background($pdf,$scl); 
     
-    my $Schedule = Schedule->read_YAML('myschedule_file.yaml');
-    my $teacher  = $Schedule->teachers()->get_by_name("Sandy","Bultena");
-    
-    my @blocks   = $schedule->blocks_for_teacher($teacher);
-
+    # ----------------------------------------------------------
+    # Draw the teacher blocks on both pdf and canvas
+    # ----------------------------------------------------------
     foreach my $block (@blocks) {
         DrawView->draw_block($cn,$block,$scl,"teacher");
         DrawView->draw_block($pdf,$block,$scl,"teacher");
@@ -247,6 +252,160 @@ sub draw_background {
 }
 
 # =================================================================
+# get_block_text
+# =================================================================
+
+=head2 draw_block ( $block, $scale, $type )
+
+Get the text for a specific type of block
+
+B<Parameters>
+
+=over
+
+=item * Block object
+
+=item * scale (1=100%)
+
+=item * type of view [teacher|block|stream] (affects what gets drawn on the block)
+
+=back
+
+B<Returns>
+
+block text
+
+=cut
+
+sub get_block_text {
+    my $class  = shift;
+    my $block = shift;
+    my $scale = shift || 1;
+    my $type = shift || "teacher";
+    
+    # --------------------------------------------------------------------
+    # get needed block information
+    # --------------------------------------------------------------------
+    my $blockNum         = $block->section->course->number || " ";
+    my $blockSec         = " (" . $block->section->number . ")";
+    my $blockSectionName = $block->section->title;
+    my @labs           = $block->labs;
+    my $blockLab       = join( ",", @labs );
+    my $blockDuration  = $block->duration;
+    my $blockStartTime = $block->start_number;
+    my @streams        = $block->section->streams;
+    my $blockStreams   = join( ",", @streams );
+
+    # if teacher name is two long, split into multipline lines
+    my @teachers         = $block->teachers;
+    my $blockTeacher     = "";
+    foreach my $t (@teachers) {
+        my $name = "$t";
+        if ( length($name) > 15 ) {
+            $blockTeacher .= join( "\n", split " ", $name ) . "\n";
+        }
+        else {
+            $blockTeacher .= "$t\n";
+        }
+    }
+    chomp $blockTeacher;
+    
+
+    # --------------------------------------------------------------------
+    # The diagram has been scaled down,
+    # ... change what gets printed on the block
+    # --------------------------------------------------------------------
+    if ( $scale <= 0.75 ) {
+
+        # -----------------------------------------------------------
+        # course (scale < .75)
+        # -----------------------------------------------------------
+        # remove program number from course number (i.e. 420-506 becomes 506)
+        if ( $scale == 0.5 ) {
+            $blockNum =~ s/.*\-//g;
+        }
+
+        # -----------------------------------------------------------
+        # teachers (scale < .75)
+        # -----------------------------------------------------------
+        $blockTeacher = "";
+
+        # do not add teachers if this is a teacher view
+        if ( $type ne "teacher" ) {
+            $blockTeacher = join(
+                ", ",
+                map {
+                        substr( $_->firstname, 0, 1 )
+                      . substr( $_->lastname, 0, 1 )
+                  } @teachers
+            );
+
+            # add ellipsis to end of teacher string as necessary
+            if ( $scale == 0.5 && @teachers >= 3 ) {
+                $blockTeacher = substr( $blockTeacher, 0, 7 ) . "...";
+            }
+            elsif ( @teachers >= 4 ) {
+                $blockTeacher = substr( $blockTeacher, 0, 11 ) . "...";
+            }
+
+        }
+
+        # -----------------------------------------------------------
+        # labs/resources (scale < .75)
+        # -----------------------------------------------------------
+        $blockLab = "";
+        if ( $type ne "lab" ) {
+
+            $blockLab = join( ", ", map { $_->number } @labs );
+
+            # add ellipsis to end of lab string as necessary
+            if ( $scale == 0.5 && @labs >= 3 ) {
+                $blockLab = substr( $blockLab, 0, 7 ) . "...";
+            }
+            elsif ( @labs >= 4 ) {
+                $blockLab = substr( $blockLab, 0, 11 ) . "...";
+            }
+        }
+
+        # -----------------------------------------------------------
+        # streams (scale < .75)
+        # -----------------------------------------------------------
+        $blockStreams = "";
+
+        # only add stream/text if no teachers or labs,
+        # or GuiBlock can fit all info (i.e. duration of 2 hours or more)
+        if ( $type ne "stream" || $blockDuration >= 2 ) {
+            $blockStreams = join( ", ", map { $_->number } @streams );
+
+            # add ellipsis to end of stream string as necessary
+            if ( $scale == 0.5 && @streams >= 3 ) {
+                $blockStreams = substr( $blockStreams, 0, 7 ) . "...";
+            }
+            elsif ( @streams >= 4 ) {
+                $blockStreams = substr( $blockStreams, 0, 11 ) . "...";
+            }
+
+        }
+
+    }
+
+    # --------------------------------------------------------------------
+    # define what to display
+    # --------------------------------------------------------------------
+
+    my $blockText = "$blockNum\n$blockSectionName\n";
+    $blockText .= "$blockTeacher\n"
+      if ( $type ne "teacher" && $blockTeacher );
+    $blockText .= "$blockLab\n" if ( $type ne "lab" && $blockLab );
+    $blockText .= "$blockStreams\n"
+      if ( $type ne "stream" && $blockStreams );
+    chomp($blockText);
+
+    
+    return $blockText;
+}
+
+# =================================================================
 # draw_block
 # =================================================================
 
@@ -321,117 +480,7 @@ sub draw_block {
     # --------------------------------------------------------------------
     # get needed block information
     # --------------------------------------------------------------------
-    my $blockNum         = $block->section->course->number || " ";
-    my $blockSec         = " (" . $block->section->number . ")";
-    my $blockSectionName = $block->section->title;
-    my @teachers         = $block->teachers;
-    my $blockTeacher     = "";
-    foreach my $t (@teachers) {
-        my $name = "$t";
-        if ( length($name) > 15 ) {
-            $blockTeacher .= join( "\n", split " ", $name ) . "\n";
-        }
-        else {
-            $blockTeacher .= $t;
-        }
-    }
-    chomp $blockTeacher;
-    my @labs           = $block->labs;
-    my $blockLab       = join( ",", @labs );
-    my $blockDuration  = $block->duration;
-    my $blockStartTime = $block->start_number;
-    my @streams        = $block->section->streams;
-    my $blockStreams   = join( ",", @streams );
-
-    # --------------------------------------------------------------------
-    # The diagram has been scaled down,
-    # ... change what gets printed on the block
-    # --------------------------------------------------------------------
-    if ( $scale <= 0.75 ) {
-
-        # -----------------------------------------------------------
-        # course
-        # -----------------------------------------------------------
-        # remove program number from course number (i.e. 420-506 becomes 506)
-        if ( $scale == 0.5 ) {
-            $blockNum =~ s/.*\-//g;
-        }
-
-        # -----------------------------------------------------------
-        # teachers
-        # -----------------------------------------------------------
-        $blockTeacher = "";
-
-        # do not add teachers if this is a teacher view
-        if ( $type ne "teacher" ) {
-            $blockTeacher = join(
-                ", ",
-                map {
-                        substr( $_->firstname, 0, 1 )
-                      . substr( $_->lastname, 0, 1 )
-                  } @teachers
-            );
-
-            # add ellipsis to end of teacher string as necessary
-            if ( $scale == 0.5 && @teachers >= 3 ) {
-                $blockTeacher = substr( $blockTeacher, 0, 7 ) . "...";
-            }
-            elsif ( @teachers >= 4 ) {
-                $blockTeacher = substr( $blockTeacher, 0, 11 ) . "...";
-            }
-
-        }
-
-        # -----------------------------------------------------------
-        # labs/resources
-        # -----------------------------------------------------------
-        $blockLab = "";
-        if ( $type ne "lab" ) {
-
-            $blockLab = join( ", ", map { $_->number } @labs );
-
-            # add ellipsis to end of lab string as necessary
-            if ( $scale == 0.5 && @labs >= 3 ) {
-                $blockLab = substr( $blockLab, 0, 7 ) . "...";
-            }
-            elsif ( @labs >= 4 ) {
-                $blockLab = substr( $blockLab, 0, 11 ) . "...";
-            }
-        }
-
-        # -----------------------------------------------------------
-        # streams
-        # -----------------------------------------------------------
-        $blockStreams = "";
-
-        # only add streams if no teachers or labs,
-        # or GuiBlock can fit all info (i.e. duration of 2 hours or more)
-        if ( $type ne "stream" || $blockDuration >= 2 ) {
-            $blockStreams = join( ", ", map { $_->number } @streams );
-
-            # add ellipsis to end of stream string as necessary
-            if ( $scale == 0.5 && @streams >= 3 ) {
-                $blockStreams = substr( $blockStreams, 0, 7 ) . "...";
-            }
-            elsif ( @streams >= 4 ) {
-                $blockStreams = substr( $blockStreams, 0, 11 ) . "...";
-            }
-
-        }
-
-    }
-
-    # --------------------------------------------------------------------
-    # define what to display
-    # --------------------------------------------------------------------
-
-    my $blockText = "$blockNum.$blockSec\n$blockSectionName\n";
-    $blockText .= "$blockTeacher\n"
-      if ( $type ne "teacher" && $blockTeacher );
-    $blockText .= "$blockLab\n" if ( $type ne "lab" && $blockLab );
-    $blockText .= "$blockStreams\n"
-      if ( $type ne "stream" && $blockStreams );
-    chomp($blockText);
+    my $blockText = DrawView->get_block_text($block,$scale,$type);
 
     # --------------------------------------------------------------------
     # draw the block
@@ -540,7 +589,8 @@ sub coords_to_day_time_duration {
 
 =head2 get_coords ( $day, $start, $duration, $scaling_info )
 
-Determines the day, start time, and duration based on canvas coordinates
+Determines the canvas coordinates based on 
+day, start time, and duration
 
 B<Parameters>
 
@@ -560,8 +610,10 @@ B<Returns>
 
 =over
 
-=item * arrayref of canvas coordinates for the rectangle representing this time 
-slot ($x1, $y1, $x2, $y2)
+=item * arrayref of canvas coordinates for the rectangle representing 
+this time slot 
+
+($x1, $y1, $x2, $y2)
 
 =back
 

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title></title>
-<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<link rel="stylesheet" href="perdoc.css" type="text/css" />
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
 </head>
@@ -21,8 +21,9 @@
   <li><a href="#METHODS">METHODS</a>
     <ul>
       <li><a href="#draw_background-canvas-scaling_info">draw_background ( $canvas, $scaling_info )</a></li>
+      <li><a href="#draw_block-block-scale-type">draw_block ( $block, $scale, $type )</a></li>
       <li><a href="#draw_block-canvas-block-scaling_info-type">draw_block ( $canvas, $block, $scaling_info, $type )</a></li>
-      <li><a href="#draw_block-x-y1-y2-scaling_info">draw_block ( $x, $y1, $y2, $scaling_info )</a></li>
+      <li><a href="#coords_to_day_time_duration-x-y1-y2-scaling_info">coords_to_day_time_duration ( $x, $y1, $y2, $scaling_info )</a></li>
       <li><a href="#get_coords-day-start-duration-scaling_info">get_coords ( $day, $start, $duration, $scaling_info )</a></li>
       <li><a href="#get_colour_shades-colour">get_colour_shades ($colour)</a></li>
     </ul>
@@ -30,7 +31,7 @@
   <li><a href="#Canvas-Requirements">Canvas Requirements</a>
     <ul>
       <li><a href="#Coordinates">Coordinates</a></li>
-      <li><a href="#CreatLine">CreatLine</a></li>
+      <li><a href="#createLine">createLine</a></li>
       <li><a href="#createText">createText</a></li>
       <li><a href="#createRectangle">createRectangle</a></li>
     </ul>
@@ -39,7 +40,7 @@
 
 <h1 id="NAME">NAME</h1>
 
-<p>DrawView - only code that draws the View stuff</p>
+<p>DrawView - code that draws the View stuff only</p>
 
 <h1 id="VERSION">VERSION</h1>
 
@@ -51,16 +52,20 @@
     use Tk;
     use Export::PDF;
     
-    my $mw          = MainWindow-&gt;new();
-    my $cn          = $mw-&gt;Canvas()-&gt;pack();
-    
+    my $Schedule = Schedule-&gt;read_YAML(&#39;myschedule_file.yaml&#39;);
+    my $teacher  = $Schedule-&gt;teachers()-&gt;get_by_name(&quot;Sandy&quot;,&quot;Bultena&quot;);
+    my @blocks   = $schedule-&gt;blocks_for_teacher($teacher);
+        
     # ----------------------------------------------------------
     # create a pdf, as well as a Tk canvas
     # ----------------------------------------------------------
     my $pdf         = PDF-&gt;new();
-    my $page        = $pdf-&gt;page();
+    my $mw          = MainWindow-&gt;new();
+    my $cn          = $mw-&gt;Canvas()-&gt;pack();
 
+    # ----------------------------------------------------------
     # what scale you want
+    # ----------------------------------------------------------
     my $scl = {
              -xoff  =&gt; 1,       # before being scaled by xscl
              -yoff  =&gt; 1,       # before being scaled by yscl
@@ -71,15 +76,16 @@
              -scale =&gt; 1,       # 1 = 100%.  Text may be modified if scale &lt; 1
     };
 
-    $cn-&gt;draw_background($cn,$scl);
-    $pdf-&gt;draw_background($cn,$scl); 
+    # ----------------------------------------------------------
+    # Draw the grid on both pdf and canvas
+    # ----------------------------------------------------------
+    DrawView-&gt;draw_background($cn,$scl);
+    DrawView-&gt;draw_background($pdf,$scl); 
     
-    my $Schedule = Schedule-&gt;read(&#39;myschedule_file.yaml&#39;);
-    my $teacher  = $Schedule-&gt;teachers()-&gt;get_by_name(&quot;Sandy&quot;,&quot;Bultena&quot;);
-    
-    my @blocks   = $schedule-&gt;blocks_for_teacher($teacher);
-
-    foreach my $b (@blocks) {
+    # ----------------------------------------------------------
+    # Draw the teacher blocks on both pdf and canvas
+    # ----------------------------------------------------------
+    foreach my $block (@blocks) {
         DrawView-&gt;draw_block($cn,$block,$scl,&quot;teacher&quot;);
         DrawView-&gt;draw_block($pdf,$block,$scl,&quot;teacher&quot;);
     }
@@ -160,6 +166,29 @@
 </li>
 </ul>
 
+<h2 id="draw_block-block-scale-type">draw_block ( $block, $scale, $type )</h2>
+
+<p>Get the text for a specific type of block</p>
+
+<p><b>Parameters</b></p>
+
+<ul>
+
+<li><p>Block object</p>
+
+</li>
+<li><p>scale (1=100%)</p>
+
+</li>
+<li><p>type of view [teacher|block|stream] (affects what gets drawn on the block)</p>
+
+</li>
+</ul>
+
+<p><b>Returns</b></p>
+
+<p>block text</p>
+
 <h2 id="draw_block-canvas-block-scaling_info-type">draw_block ( $canvas, $block, $scaling_info, $type )</h2>
 
 <p>Draws the Schedule timetable on the specified canvas.</p>
@@ -206,12 +235,16 @@
 <dd>
 
 </dd>
+<dt id="colour-colour-of-block">-colour =&gt; colour of block</dt>
+<dd>
+
+</dd>
 </dl>
 
 </li>
 </ul>
 
-<h2 id="draw_block-x-y1-y2-scaling_info">draw_block ( $x, $y1, $y2, $scaling_info )</h2>
+<h2 id="coords_to_day_time_duration-x-y1-y2-scaling_info">coords_to_day_time_duration ( $x, $y1, $y2, $scaling_info )</h2>
 
 <p>Determines the day, start time, and duration based on canvas coordinates</p>
 
@@ -254,7 +287,7 @@
 
 <h2 id="get_coords-day-start-duration-scaling_info">get_coords ( $day, $start, $duration, $scaling_info )</h2>
 
-<p>Determines the day, start time, and duration based on canvas coordinates</p>
+<p>Determines the canvas coordinates based on day, start time, and duration</p>
 
 <p><b>Parameters</b></p>
 
@@ -278,7 +311,9 @@
 
 <ul>
 
-<li><p>arrayref of canvas coordinates for the rectangle representing this time slot ($x1, $y1, $x2, $y2)</p>
+<li><p>arrayref of canvas coordinates for the rectangle representing this time slot</p>
+
+<p>($x1, $y1, $x2, $y2)</p>
 
 </li>
 </ul>
@@ -312,7 +347,7 @@
 
 <p>The coordinate system of the canvas is the same as the Tk coordinate system, where the origin (0,0) is the top left corner, and &#39;y&#39; increases as it goes down the page.</p>
 
-<h2 id="CreatLine">CreatLine</h2>
+<h2 id="createLine">createLine</h2>
 
 <p><b>Parameters</b></p>
 
