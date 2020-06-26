@@ -129,7 +129,8 @@ sub newView {
     # read the view template
     # ------------------------------------------------------------------------
     my $template;
-    open my $fh, "template.tex" or die "Cannot find the tex template";
+    open my $fh, "$FindBin::Bin/Export/template.tex" 
+            or die "Cannot find the tex template";
     {
         local undef $/;
         $template = <$fh>;
@@ -199,7 +200,7 @@ sub newView {
     # ------------------------------------------------------------------------
     open my $ofh, ">", $filename . ".tex"
       or die "Cannot open latex output file\n";
-    $template =~ s/([^\/])_/$1\\_/;
+    $template =~ s/([^\/])_/$1\\_/g;
     print $ofh $template;
     close $ofh;
 }
@@ -234,7 +235,8 @@ sub newReport {
     # read the report template
     # ------------------------------------------------------------------------
     my $template;
-    open my $fh, "template_report.tex" or die "Cannot find the tex template";
+    open my $fh, "$FindBin::Bin/Export/template_report.tex" 
+    or die "Cannot find the tex template";
     {
         local undef $/;
         $template = <$fh>;
@@ -268,7 +270,7 @@ sub newReport {
     # ------------------------------------------------------------------------
     open my $ofh, ">", $filename . "_courses.tex"
       or die "Cannot open latex output file\n";
-    $course_latex =~ s/([^\/])_/$1\\_/;
+    $course_latex =~ s/([^\/])_/$1\\_/g;
     print $ofh $course_latex;
     close $ofh;
 
@@ -292,7 +294,7 @@ sub newReport {
     # ------------------------------------------------------------------------
     open $ofh, ">", $filename . "_teachers.tex"
       or die "Cannot open latex output file\n";
-    $teacher_latex =~ s/([^\/])_/$1\\_/;
+    $teacher_latex =~ s/([^\/])_/$1\\_/g;
     print $ofh $teacher_latex;
     close $ofh;
 
