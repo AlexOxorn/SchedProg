@@ -179,6 +179,25 @@ sub start {
 }
 
 # =================================================================
+# end
+# =================================================================
+
+=head2 end ( [time] )
+
+Gets the end time in 24 hour clock
+
+=cut
+
+sub end {
+    my $self = shift;
+    my $start = $self->start_number;
+    my $end = $start + $self->duration;
+    my $hr = int( $end );
+    my $min = sprintf("%02i",int( ($end*60)%60));
+    return "$hr:$min";
+}
+
+# =================================================================
 # duration
 # =================================================================
 

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title></title>
-<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<link rel="stylesheet" href="perdoc.css" type="text/css" />
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
 </head>
@@ -21,7 +21,6 @@
     <ul>
       <li><a href="#new">new ()</a></li>
       <li><a href="#change_colour-colour">change_colour ($colour)</a></li>
-      <li><a href="#get_colour_shades-colour-edge">_get_colour_shades ($colour, $edge)</a></li>
       <li><a href="#id">id ()</a></li>
       <li><a href="#block-block">block ( [block] )</a></li>
       <li><a href="#view-view">view ( [view] )</a></li>
@@ -48,18 +47,17 @@
 <h1 id="SYNOPSIS">SYNOPSIS</h1>
 
 <pre><code>        use GuiSchedule::GuiBlocks;
-        use GuiSchedule::ViewV2;
+        use GuiSchedule::View;
         my $mw = MainWindow-&gt;new;
-        my @blocks =  
-        my $View = View-&gt;new($mw, \@blocks);
-        
-    my $coords = [10, 15, 15, 15];
-    my $block = $blocks[0];
-    my $guiblock = GuiBlocks-&gt;new( $View, $block, $coords );
-    
+    my $Schedule = Schedule-&gt;read_YAML(&#39;myschedule_file.yaml&#39;);
+    my $teacher  = $Schedule-&gt;teachers()-&gt;get_by_name(&quot;Sandy&quot;,&quot;Bultena&quot;);
+    my $View = View-&gt;new($mw,$schedule,$teacher);
+
+    my $block = Block-&gt;new (-day=&gt;&quot;Wed&quot;,-start=&gt;&quot;9:30&quot;,-duration=&gt;1.5);
+
+    my $guiblock = GuiBlocks-&gt;new( $View, $block );
     $guiBlocks-&gt;change_colour(&quot;red&quot;);
-    
-    print &quot;This is the GuiBlock for &quot;.$guiBlocks-&gt;block.&quot;\n&quot;;</code></pre>
+    </code></pre>
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
@@ -86,10 +84,6 @@
 <h2 id="change_colour-colour">change_colour ($colour)</h2>
 
 <p>Change the colour of the guiblock (including text and shading)</p>
-
-<h2 id="get_colour_shades-colour-edge">_get_colour_shades ($colour, $edge)</h2>
-
-<p>Get the shading of the GuiBlock</p>
 
 <h2 id="id">id ()</h2>
 

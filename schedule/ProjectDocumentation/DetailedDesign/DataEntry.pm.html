@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title></title>
-<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<link rel="stylesheet" href="perdoc.css" type="text/css" />
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
 </head>
@@ -28,7 +28,7 @@
 
 <h1 id="NAME">NAME</h1>
 
-<p>DataEntry - provides methods/objects for entering schedule data manually</p>
+<p>DataEntry - provides methods/objects for entering teachers/labs/etc data</p>
 
 <h1 id="VERSION">VERSION</h1>
 
@@ -43,12 +43,13 @@
     
     my $Dirtyflag   = 0;
     my $mw          = MainWindow-&gt;new();
-    my $Schedule    = Schedule-&gt;read(&#39;myschedule_file.yaml&#39;);
+    my $Schedule = Schedule-&gt;read_YAML(&#39;myschedule_file.yaml&#39;);
     my $guiSchedule = GuiSchedule-&gt;new( $mw, \$Dirtyflag, \$Schedule );
     
     # create a data entry list
     # NOTE: requires $guiSchedule just so that it can update
     #       the views if data has changed (via the dirty flag)
+    
     my $de = DataEntry-&gt;new( $mw, $Schedule-&gt;teachers, &#39;Teacher&#39;,
                     $Schedule, \$Dirtyflag, $guiSchedule );</code></pre>
 

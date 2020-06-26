@@ -1,0 +1,283 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<link rel="stylesheet" href="perdoc.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
+</head>
+
+<body>
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#VERSION">VERSION</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#COORDINATES">COORDINATES</a></li>
+  <li><a href="#PACKAGE-VARIABLES">PACKAGE VARIABLES</a>
+    <ul>
+      <li><a href="#Fonts">Fonts</a></li>
+      <li><a href="#Setting-size-of-View-drawn-with-newView">Setting size of View drawn with newView</a></li>
+    </ul>
+  </li>
+  <li><a href="#METHODS">METHODS</a>
+    <ul>
+      <li><a href="#new">new ();</a></li>
+      <li><a href="#newReport-schedule-filename">newReport ($schedule, $filename);</a></li>
+      <li><a href="#newView-schedule-schedule_obj-filename">newView ($schedule, $schedule_obj, $filename);</a></li>
+      <li><a href="#pdf-PDFDocument_obj">pdf ($PDFDocument_obj);</a></li>
+      <li><a href="#createLine-coords-options">createLine ( @coords, %options);</a></li>
+      <li><a href="#createLine-coords-options1">createLine ( @coords, %options);</a></li>
+      <li><a href="#createRectangle-coords-options">createRectangle ( @coords, %options);</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>PDF - creates PDF documents</p>
+
+<h1 id="VERSION">VERSION</h1>
+
+<p>Version 1.00</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code>    # ----------------------------------------------------------
+    # create a simple pdf
+    # ----------------------------------------------------------
+    my $pdf = PDF-&gt;new();
+    $pdf-&gt;createText( $Height/2, $Width/2, 
+                      -text    =&gt; &quot;hello World&quot;,
+                      -anchor  =&gt; &quot;center&quot;,
+                      -fill    =&gt; &quot;blue&quot;,
+                      -font    =&gt; &quot;title&quot;
+                    );
+    $pdf-&gt;filename(&quot;hello&quot;);
+    $pdf-&gt;save();
+
+    # ----------------------------------------------------------
+    # create a teacher view pdf
+    # ----------------------------------------------------------
+    
+    # adjust position of view on page
+    $PDF::Scale-&gt;{-xorg} = 60;
+    $PDF::Scale-&gt;{-yorg} = 100;
+    
+    # get schedule info
+    my $Schedule = Schedule-&gt;read_YAML(&#39;myschedule_file.yaml&#39;);
+    my $teacher  = $Schedule-&gt;teachers()-&gt;get_by_name(&quot;Sandy&quot;,&quot;Bultena&quot;);
+
+    # create the pdf
+    PDF-&gt;newView( $Schedule, $teacher, &quot;myViewPDF&quot; );
+    </code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Provides generic PDF routines for text, rectangles and lines.</p>
+
+<p>Provides specific methods for Views and Reports</p>
+
+<h1 id="COORDINATES">COORDINATES</h1>
+
+<p>The coordinates used in these methods are the same as what would be used in Tk::Canvas... in other words, (0,0) is located at the top right corner of page.</p>
+
+<h1 id="PACKAGE-VARIABLES">PACKAGE VARIABLES</h1>
+
+<h2 id="Fonts">Fonts</h2>
+
+<p>Note that Fonts are defined in PDFDocument (... please forgive the mess of PDFDocument fonts, it was designed for something else entirely).</p>
+
+<p>Fonts MUST be set before creating new PDF object.</p>
+
+<p><code>$PDF::f_head1</code> default: &quot;explain&quot;;</p>
+
+<p><code>$PDF::f_head2</code> default: &quot;smalltext&quot;;</p>
+
+<p><code>$PDF::f_bold</code> default: &quot;smallestbold&quot;;</p>
+
+<p><code>$PDF::f_normal</code> = default: &quot;smallest&quot;;</p>
+
+<h2 id="Setting-size-of-View-drawn-with-newView">Setting size of View drawn with newView</h2>
+
+<p><code>$PDF::Scale</code> (hash ref)</p>
+
+<p>default:</p>
+
+<ul>
+
+<li><p>weekly grid starts at this position (number will be scaled by scaling factors <i>i</i><code>org</code></p>
+
+<ul>
+
+<p><code>-xoff =&gt;</code> <i>int</i></p>
+
+<p><code>-yoff =&gt;</code> <i>int</i></p>
+
+</ul>
+
+</li>
+<li><p>the entire diagram starts at this position</p>
+
+<ul>
+
+<p><code>-xorg =&gt;</code> <i>int</i></p>
+
+<p><code>-yorg =&gt;</code> <i>int</i></p>
+
+</ul>
+
+</li>
+<li><p>how much to stretch the diagram horizontally and vertically (1 day has a width of 1 before stretching, and 1 hour has a height of 1 before stretching)</p>
+
+<ul>
+
+<p><code>-xscl =&gt;</code> <i>float</i></p>
+
+<p><code>-yscl =&gt;</code> <i>float</i></p>
+
+</ul>
+
+</li>
+</ul>
+
+<ul>
+
+<li><p>Overall scale... has no affect on the diagram but represents an indication of how scaled it is to its &quot;natural&quot; size. Affects what text is written into the block. (Less than .75 teachers will be indicated by initials only)</p>
+
+<ul>
+
+<p><code>-scale =&gt;</code> <i>float</i></p>
+
+</ul>
+
+</li>
+</ul>
+
+<h1 id="METHODS">METHODS</h1>
+
+<h2 id="new">new ();</h2>
+
+<p>Creates the PDF object to write to. Opens a page.</p>
+
+<h2 id="newReport-schedule-filename">newReport ($schedule, $filename);</h2>
+
+<p>Creates a schedule report... useful for giving to registrar&#39;s office</p>
+
+<p><b>Parameters</b></p>
+
+<ul>
+
+<li><p>Schedule</p>
+
+</li>
+<li><p>Filename to save file as</p>
+
+</li>
+</ul>
+
+<h2 id="newView-schedule-schedule_obj-filename">newView ($schedule, $schedule_obj, $filename);</h2>
+
+<p>Creates a pdf for the Schedule for $schedule_obj</p>
+
+<p><b>Parameters</b></p>
+
+<ul>
+
+<li><p>Schedule</p>
+
+</li>
+<li><p>Schedule object (teacher/lab/stream)</p>
+
+</li>
+<li><p>Filename to save file as</p>
+
+</li>
+</ul>
+
+<h2 id="pdf-PDFDocument_obj">pdf ($PDFDocument_obj);</h2>
+
+<p>Setter / getter for PDFDocument object</p>
+
+<h2 id="createLine-coords-options">createLine ( @coords, %options);</h2>
+
+<p>Create a Line on the pdf page.</p>
+
+<p><b>Parameters</b></p>
+
+<ul>
+
+<li><p>coords - a list of x,y pairs specify the line</p>
+
+</li>
+<li><p>options ... these options are passed, as is, the PDFDocument::line()</p>
+
+<p><code>-fill</code> Colour of the line (default black)</p>
+
+<p><code>-dash</code> Dash patter of the line (default no dash)</p>
+
+<p><code>-width</code> width of the border of the line (default:1)</p>
+
+</li>
+</ul>
+
+<h2 id="createLine-coords-options1">createLine ( @coords, %options);</h2>
+
+<p>Write Text on the pdf page.</p>
+
+<p><b>Parameters</b></p>
+
+<ul>
+
+<li><p>coords - a list of x,y pairs specify the position of the text</p>
+
+</li>
+<li><p>options ... these options are passed, as is, the PDFDocument::text()</p>
+
+<p><code>-anchor</code> where the coords are located relative to the text (n, ne, nw, s, se, sw, <b>center</b>)</p>
+
+<p><code>-justify</code> if more than one line, the justification of the paragraph (<b>left</b>, right, center)</p>
+
+<p><code>-width</code> width of multiline text, (=0 means not multiline)</p>
+
+<p><code>-margin</code> page margins</p>
+
+<p><code>-fill</code> colour of text (default: black)</p>
+
+<p><code>-font</code> name of font, if named font cannot be found, then replaced with $PDFDocument::DEFAULT_FONT</p>
+
+</li>
+</ul>
+
+<h2 id="createRectangle-coords-options">createRectangle ( @coords, %options);</h2>
+
+<p>Draw Rectangle on pdf</p>
+
+<p><b>Parameters</b></p>
+
+<ul>
+
+<li><p>coords - two x,y pairs, indicating opposite sides of the rectangle</p>
+
+</li>
+<li><p>options ... these options are passed, as is, the PDFDocument::polygon()</p>
+
+<p><code>-fill</code> colour of internal area of polygon (default: none)</p>
+
+<p><code>-outline</code> colour of border of polygon (default: black)</p>
+
+<p><code>-width</code> width of the border of the rectangle (default:0)</p>
+
+</li>
+</ul>
+
+
+</body>
+
+</html>
+
+

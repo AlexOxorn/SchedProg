@@ -135,7 +135,7 @@ sub get_font {
         }
 
         # cannot find font, die (TODO: something other than dieing?
-        die "Cannot find font $font_name\n" unless $font_file;
+        die "Cannot find font <$font_name>\n" unless $font_file;
 
         # create the pdf font, and save for later
         $fonts{$font_name} = $pdf->ttfont($font_file);

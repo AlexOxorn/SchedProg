@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title></title>
-<link rel="stylesheet" href="perldoc.css" type="text/css" />
+<link rel="stylesheet" href="perdoc.css" type="text/css" />
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <link rev="made" href="mailto:_networkd@osx361.sd.apple.com" />
 </head>
@@ -50,16 +50,15 @@
       <li><a href="#conflict_status-Conflict">conflict_status ( [Conflict] )</a></li>
       <li><a href="#xOffset-Int">xOffset ( [Int] )</a></li>
       <li><a href="#yOffset-Int">yOffset ( [Int] )</a></li>
-      <li><a href="#xScale-Int">xScale ( [Int] )</a></li>
-      <li><a href="#yScale-Int">yScale ( [Int] )</a></li>
+      <li><a href="#xOrigin-Int">xOrigin ( [Int] )</a></li>
+      <li><a href="#yOrigin-Int">yOrigin ( [Int] )</a></li>
       <li><a href="#wScale-Int">wScale ( [Int] )</a></li>
       <li><a href="#hScale-Int">hScale ( [Int] )</a></li>
       <li><a href="#currentScale-Int">currentScale ( [Int] )</a></li>
       <li><a href="#guiBlocks">guiBlocks ( )</a></li>
       <li><a href="#close_view">_close_view ( )</a></li>
-      <li><a href="#get_pixel_coords-Block">_get_pixel_coords ( Block )</a></li>
-      <li><a href="#set_pixel_coords-GuiBlock-x-y">_set_pixel_coords ( GuiBlock, x, y )</a></li>
-      <li><a href="#set_pixel_coords-x-y-y2">_set_pixel_coords ( x, y, y2)</a></li>
+      <li><a href="#set_block_coords-GuiBlock-x-y">_set_block_coords ( GuiBlock, x, y )</a></li>
+      <li><a href="#get_scale_info">get_scale_info ()</a></li>
       <li><a href="#get_time_coords-day-start-duration">get_time_coords ( day, start, duration )</a></li>
     </ul>
   </li>
@@ -87,7 +86,7 @@
 
 <h2 id="new">new ()</h2>
 
-<p>creates a View object, draws the necessary grid and returns ViewBase.</p>
+<p>creates a View object, does NOT draw the view.</p>
 
 <p><b>Parameters</b></p>
 
@@ -217,13 +216,13 @@
 
 <p>Get/set the yOffset of this View object.</p>
 
-<h2 id="xScale-Int">xScale ( [Int] )</h2>
+<h2 id="xOrigin-Int">xOrigin ( [Int] )</h2>
 
-<p>Get/set the xScale of this View object.</p>
+<p>Get/set the xOrigin of this View object.</p>
 
-<h2 id="yScale-Int">yScale ( [Int] )</h2>
+<h2 id="yOrigin-Int">yOrigin ( [Int] )</h2>
 
-<p>Get/set the yScale of this View object.</p>
+<p>Get/set the yOrigin of this View object.</p>
 
 <h2 id="wScale-Int">wScale ( [Int] )</h2>
 
@@ -245,17 +244,45 @@
 
 <p>Close the current View.</p>
 
-<h2 id="get_pixel_coords-Block">_get_pixel_coords ( Block )</h2>
-
-<p>Gets the coordinates in pixels for where the time of the Block is placed on the View.</p>
-
-<h2 id="set_pixel_coords-GuiBlock-x-y">_set_pixel_coords ( GuiBlock, x, y )</h2>
+<h2 id="set_block_coords-GuiBlock-x-y">_set_block_coords ( GuiBlock, x, y )</h2>
 
 <p>Converts the X and Y coordinates into times and sets the time to the Block.</p>
 
-<h2 id="set_pixel_coords-x-y-y2">_set_pixel_coords ( x, y, y2)</h2>
+<h2 id="get_scale_info">get_scale_info ()</h2>
 
-<p>Converts the X and Y coordinates into times.</p>
+<p>Returns a hash with the following values:</p>
+
+<dl>
+
+<dt id="xoff-x-offset">-xoff =&gt; x offset</dt>
+<dd>
+
+</dd>
+<dt id="yoff-y-offset">-yoff =&gt; y offset</dt>
+<dd>
+
+</dd>
+<dt id="xorg-x-origin">-xorg =&gt; x origin</dt>
+<dd>
+
+</dd>
+<dt id="yorg-y-origin">-yorg =&gt; y origin</dt>
+<dd>
+
+</dd>
+<dt id="xscl-x-scale">-xscl =&gt; x scale</dt>
+<dd>
+
+</dd>
+<dt id="yscl-y-scale">-yscl =&gt; y scale</dt>
+<dd>
+
+</dd>
+<dt id="scale-current-scaling">-scale =&gt; current scaling</dt>
+<dd>
+
+</dd>
+</dl>
 
 <h2 id="get_time_coords-day-start-duration">get_time_coords ( day, start, duration )</h2>
 
