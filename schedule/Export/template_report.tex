@@ -1,0 +1,25 @@
+\documentclass{article}
+
+\setlength{\parindent}{0pt}.
+
+% ===================================================
+% https://alexwlchan.net/2017/10/latex-underlines/
+\usepackage{contour}
+\usepackage{ulem}
+
+\renewcommand{\ULdepth}{1.8pt}
+\contourlength{0.8pt}
+
+\newcommand{\myuline}[1]{%
+  \uline{\phantom{#1}}%
+  \llap{\contour{white}{#1}}%
+}
+% ===================================================
+
+\begin{document}
+
+\section*{!!!TYPE!!!}
+
+!!!CONTENT!!!
+
+\end{document}
