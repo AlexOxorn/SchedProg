@@ -206,12 +206,10 @@ sub new {
     $base_bold   = $pdf->get_line_height_from_font($f_bold);
     $base_normal = $pdf->get_line_height_from_font($f_normal);
 
-    # turns out this is incorrect calculation, but no need to change,
-    # because all I really wanted was a size that was relative to the
-    # font size.
-    $em_head2  = $pdf->get_font_size($f_head2) / 12;
-    $em_bold   = $pdf->get_font_size($f_bold) / 12;
-    $em_normal = $pdf->get_font_size($f_normal) / 12;
+    # pixels per "em"
+    $em_head2  = $pdf->get_font_size($f_head2) / 12.0 * 16;
+    $em_bold   = $pdf->get_font_size($f_bold) / 12.0 * 16;
+    $em_normal = $pdf->get_font_size($f_normal) / 12.0 * 16;
 
     $PDFDocument::DEFAULT_FONT = $base_normal;
 
@@ -250,23 +248,6 @@ sub newReport {
     my $pdf = PDFDocument->new( $Width, $Height );
     $pdf->new_page();
     $self->pdf($pdf);
-
-    # ------------------------------------------------------------------------
-    # get info about fonts based on their sizes
-    # ------------------------------------------------------------------------
-    $base_head1  = $pdf->get_line_height_from_font($f_head1);
-    $base_head2  = $pdf->get_line_height_from_font($f_head2);
-    $base_bold   = $pdf->get_line_height_from_font($f_bold);
-    $base_normal = $pdf->get_line_height_from_font($f_normal);
-
-    # turns out this is incorrect calculation, but no need to change,
-    # because all I really wanted was a size that was relative to the
-    # font size.
-    $em_head2  = $pdf->get_font_size($f_head2) / 12;
-    $em_bold   = $pdf->get_font_size($f_bold) / 12;
-    $em_normal = $pdf->get_font_size($f_normal) / 12;
-
-    my $lead = $pdf->get_line_height_from_font($f_normal);
 
     # ------------------------------------------------------------------------
     # Write courses to pdf
@@ -663,7 +644,7 @@ sub _write_course_pdf {
             } $s->blocks
           )
         {
-            my ( $x, $y ) = $self->_write_block( $x, $y, $block );
+            ( $x, $y ) = $self->_write_block( $x, $y, $block );
         }
     }
 
@@ -686,20 +667,23 @@ sub _write_block {
                        -anchor => "nw",
                        -font   => $f_normal
     );
+    
     $self->createText(
-                       $x + $Indent + 70 * $em_normal, $y,
+                       $x + $Indent + 7 * $em_normal, $y,
                        -text   => $block->start . "-" . $block->end,
                        -anchor => "ne",
                        -font   => $f_normal
     );
+
     $self->createText(
-                       $x + $Indent + 205 * $em_normal, $y,
+                       $x + $Indent + 12 * $em_normal, $y,
                        -text   => $block->duration . " hours",
                        -anchor => "ne",
                        -font   => $f_normal
     );
+
     $self->createText(
-                  $x + $Indent + 210 * $em_normal,
+                  $x + $Indent + 13 * $em_normal,
                   $y,
                   -text => "labs: "
                     . join( ", ",
@@ -708,6 +692,7 @@ sub _write_block {
                   -anchor => "nw",
                   -font   => $f_normal
     );
+
     $y = $y + $base_normal;
     return ( $x, $y );
 }
@@ -801,7 +786,7 @@ sub _write_teacher_pdf {
                 } $s->blocks
               )
             {
-                my ( $x, $y ) = $self->_write_block( $x, $y, $block );
+                ( $x, $y ) = $self->_write_block( $x, $y, $block );
             }
         }
     }

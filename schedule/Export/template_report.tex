@@ -1,6 +1,13 @@
 \documentclass{article}
 
-\setlength{\parindent}{0pt}.
+\oddsidemargin -10mm
+\evensidemargin -10mm
+
+\pdfpagewidth=8.5in		%-- Letter
+\pdfpageheight=11in		%-- Letter
+\textwidth=7in		%-- Letter
+\textheight=9.5in		%-- Letter
+
 
 % ===================================================
 % https://alexwlchan.net/2017/10/latex-underlines/
@@ -16,7 +23,12 @@
 }
 % ===================================================
 
+\pagestyle{myheadings}
+\markright{ !!!DATE!!! \hfill !!!FILENAME!!! \hfill }
+
 \begin{document}
+
+\setlength{\parindent}{0pt}
 
 \section*{!!!TYPE!!!}
 
