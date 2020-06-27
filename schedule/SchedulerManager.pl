@@ -202,6 +202,10 @@ sub menu_info {
                                    cb => \&import_schedule,
                                    hn => 'Import Schedule from CSV'
                     },
+                    CSVexport => {
+                                   cb => \&generate_csv,
+                                   hn => 'Save entire schedule as a CSV'
+                    },
                     pdf_teachers => {
                         cb => [ \&print_views, 'PDF', 'teacher' ],
                         hn => 'Print to pdf of Teacher Schedules',
@@ -211,8 +215,8 @@ sub menu_info {
                         hn => 'Print to pdf of Stream Schedules',
                     },
                     pdf_labs => {
-                                    cb => [ \&print_views, 'PDF', 'lab' ],
-                                    hn => 'Print to pdf of Lab Schedules',
+                                  cb => [ \&print_views, 'PDF', 'lab' ],
+                                  hn => 'Print to pdf of Lab Schedules',
                     },
                     pdf_text => {
                         cb => [ \&print_views, 'PDF', 'text' ],
@@ -268,7 +272,8 @@ sub menu_info {
                  -accelerator => "Ctrl-s",
                  -command     => $b_props{save}{cb}
               ],
-              [ "command", "Save As", -command => \&save_as_schedule ],
+              [ "command", "Save As",     -command => \&save_as_schedule ],
+              [ "command", "Save As CSV", -command => $b_props{CSVexport}{cb} ],
               'separator',
               [
                  "command", "~Exit",
@@ -284,26 +289,26 @@ sub menu_info {
                            [
                              qw/cascade PDF -tearoff 0/,
                              -menuitems => [
-                                    [
-                                      "command",
-                                      "Teacher Schedules",
-                                      -command => $b_props{pdf_teachers}{cb},
-                                    ],
-                                    [
-                                      "command",
-                                      "Lab Schedules",
-                                      -command => $b_props{pdf_labs}{cb},
-                                    ],
-                                    [
-                                      "command",
-                                      "Stream Schedules",
-                                      -command => $b_props{pdf_streams}{cb},
-                                    ],
-                                    'separator',
-                                    [
-                                      "command", "Text Output",
-                                      -command => $b_props{pdf_text}{cb},
-                                    ],
+                                      [
+                                        "command",
+                                        "Teacher Schedules",
+                                        -command => $b_props{pdf_teachers}{cb},
+                                      ],
+                                      [
+                                        "command",
+                                        "Lab Schedules",
+                                        -command => $b_props{pdf_labs}{cb},
+                                      ],
+                                      [
+                                        "command",
+                                        "Stream Schedules",
+                                        -command => $b_props{pdf_streams}{cb},
+                                      ],
+                                      'separator',
+                                      [
+                                        "command", "Text Output",
+                                        -command => $b_props{pdf_text}{cb},
+                                      ],
                              ],
                            ],
                            [
@@ -329,6 +334,16 @@ sub menu_info {
                                       "command", "Text Output",
                                       -command => $b_props{latex_text}{cb},
                                     ],
+                             ],
+                           ],
+                           [
+                             qw/cascade CSV -tearoff 0/,
+                             -menuitems => [
+                                         [
+                                           "command",
+                                           "Save schedule as CSV",
+                                           -command => $b_props{CSVexport}{cb},
+                                         ],
                              ],
                            ],
            ],
@@ -510,8 +525,8 @@ sub create_standard_page {
     );
     $Pages{'export'} = $Notebook->add(
                                        'export',
-                                       -label    => 'Export',
-                                       -raisecmd => \&draw_print_schedule
+                                       -label    => 'Excel',
+                                       -raisecmd => \&draw_export_schedule
     );
 
 }
@@ -585,10 +600,10 @@ sub new_schedule {
 
     undef $Current_schedule_file;
 
-    # if we are in standard view, update the overview page
+    # if we are in standard view, update the view page
     if ($Notebook) {
-        $Notebook->raise('overview');
-        draw_overview();
+        $Notebook->raise('views');
+        draw_view_choices();
     }
     $Dirtyflag = 0;
 }
@@ -621,7 +636,11 @@ sub _save_schedule {
     # get file to save to
     my $file;
     if ( $save_as || !$Current_schedule_file ) {
-        $file = $mw->getSaveFile( -initialdir => $Current_directory );
+        $file = $mw->getSaveFile(
+                       -initialdir => $Current_directory,
+                       -filetypes =>
+                         [ [ "Schedule Files", ".yaml" ], [ "All Files", "*" ] ]
+        );
         return unless $file;
     }
     else {
@@ -662,8 +681,10 @@ sub open_schedule {
     # get file to open
     unless ( $file && -e $file ) {
         $file = "";
-        $file = $mw->getOpenFile( -initialdir => $Current_directory,
-        -filetypes=>[["Schedules",".yaml"],["All Files","*"]] );
+        $file = $mw->getOpenFile(
+                -initialdir => $Current_directory,
+                -filetypes => [ [ "Schedules", ".yaml" ], [ "All Files", "*" ] ]
+        );
     }
 
     # if user has chosen file...
@@ -691,8 +712,8 @@ sub open_schedule {
 
     # update the overview page
     if ($Notebook) {
-        $Notebook->raise('overview');
-        draw_overview();
+        $Notebook->raise('views');
+        draw_view_choices();
     }
     else {
         $Front_page_frame->packForget();
@@ -755,9 +776,10 @@ sub open_schedule {
             $wait = $mw->Toplevel();
             $wait->title("Printing");
             $wait->Label( -text => 'Please Wait while we process the files', )
-              ->pack(-expand=>1,-fill=>'both');
+              ->pack( -expand => 1, -fill => 'both' );
+
             #$wait->overrideredirect(1);
-            $wait->geometry("300x450")
+            $wait->geometry("300x450");
         }
         else { $wait->deiconify(); $wait->raise(); }
         $mw->update();
@@ -836,7 +858,11 @@ sub import_schedule {
     # get file to open
     unless ( $file && -e $file ) {
         $file = "";
-        $file = $mw->getOpenFile( -initialdir => $Current_directory );
+        $file = $mw->getOpenFile(
+                       -initialdir => $Current_directory,
+                       -filetypes =>
+                         [ [ 'Comma Separated Value', '.csv' ], [ 'All', '*' ] ]
+        );
     }
 
     # if user has chosen file...
@@ -863,16 +889,16 @@ sub import_schedule {
         write_ini();
     }
 
-    # update the overview page
+    # update the view page
     if ($Notebook) {
-        $Notebook->raise('overview');
-        draw_overview();
+        $Notebook->raise('views');
+        draw_view_choices();
     }
     else {
         $Front_page_frame->packForget();
         create_standard_page();
     }
-    $Dirtyflag = 0;
+    $Dirtyflag = 1;
     return;
 }
 
@@ -1016,7 +1042,9 @@ sub write_ini {
                 $tbox->insert( 'end', 'No courses defined in this schedule' );
             }
             else {
-                foreach my $c ( sort {$a->number cmp $b->number} $Schedule->all_courses ) {
+                foreach my $c ( sort { $a->number cmp $b->number }
+                                $Schedule->all_courses )
+                {
                     $tbox->insert( 'end', "$c" );
                 }
             }
@@ -1179,6 +1207,7 @@ sub write_ini {
 
         $frame = $f->Frame->pack( -expand => 1, -fill => 'both' );
 
+=comment
         my $exportList =
           $frame->Scrolled(
                             'Listbox',
@@ -1186,8 +1215,7 @@ sub write_ini {
                             -height     => scalar(@exportFormats)
           )->pack( -side => 'top', -fill => 'x' )->Subwidget('listbox');
 
-        @exportFormats =
-          ( "Excel (*.xlsx)", "Comma Separated Value (*.csv)", "PDF (*.pdf)" );
+        @exportFormats = ( "Excel (*.xlsx)", "Comma Separated Value (*.csv)" );
         $currentExport = -1;
 
         foreach my $exportFormat (@exportFormats) {
@@ -1197,27 +1225,32 @@ sub write_ini {
         change_format($exportList);
 
         $exportList->bind( "<<ListboxSelect>>", [ \&change_format ] );
+=cut
+
+        change_format();
     }
 
     sub change_format {
-        my $exportList = shift;
+
+        #my $exportList = shift;
 
         $exportFrame->destroy if $exportFrameDirty;
 
-        my $selection = $exportList->curselection->[0];
+        #my $selection = $exportList->curselection->[0];
 
         # not sure why this is here... because other developers
         # DON"T COMMENT... gonna ignore it for now
-        return if ( $selection == $currentExport );
+        # return if ( $selection == $currentExport );
 
-        # $currentExport = $selection;
+        #$currentExport = $selection;
 
-        if ( $currentExport == 0 ) {
-            draw_excel_export();
-        }
-        elsif ( $currentExport == 1 ) {
-            draw_csv_export();
-        }
+        #if ( $currentExport == 0 ) {
+        draw_excel_export();
+
+        #}
+        #elsif ( $currentExport == 1 ) {
+        #    draw_csv_export();
+        #}
     }
 
     # -----------------------------------------------------------------
@@ -1376,13 +1409,26 @@ sub write_ini {
         }
 
         $excel->export();
+
+        $mw->messageBox(
+                         -message => "File $file was created",
+                         -title   => "Export",
+                         -type    => 'OK',
+                         -icon    => 'info'
+        );
     }
 
     sub generate_csv {
 
-        # get the schedule reference
-        my $schedule = ${ $guiSchedule->schedule_ptr };
-
+        unless ($Schedule) {
+            $mw->messageBox(
+                             -title   => 'Save Schedule',
+                             -message => 'There is no schedule to save!',
+                             -type    => 'OK',
+                             -icon    => 'error'
+            );
+            return;
+        }
         my $file = $mw->getSaveFile(
                        -initialdir => $Current_directory,
                        -filetypes =>
@@ -1393,8 +1439,14 @@ sub write_ini {
         # if the user didn't provide the .csv extension
         $file .= ".csv" if ( $file !~ /\.csv$/ );
 
-        my $csv = CSV->new( -output_file => $file, -schedule => $schedule );
+        my $csv = CSV->new( -output_file => $file, -schedule => $Schedule );
         $csv->export();
+        $mw->messageBox(
+                         -message => "File $file was created",
+                         -title   => "Export",
+                         -type    => 'OK',
+                         -icon    => 'info'
+        );
     }
 }
 
