@@ -140,14 +140,13 @@ sub newView {
     # ------------------------------------------------------------------------
     # write the object info
     # ------------------------------------------------------------------------
-    my ($root_filename,undef) = split /[. ]/, $filename;
     my @parts = split "/", $filename;
     $template =~ s/!!!NAME!!!/$obj/g;
-    $template =~ s/!!!FILENAME!!!/$root_filename/g;
+    $template =~ s/!!!FILENAME!!!/$filename/g;
     my $time = scalar(localtime);
     $template =~ s/!!!DATE!!!/$time/g;
     my $email = " ";
-    my $phone = " ";
+    my $info = " ";
 
     # ------------------------------------------------------------------------
     # add the blocks to the template
@@ -158,15 +157,18 @@ sub newView {
         if ( $obj->isa("Teacher") ) {
             @blocks = $schedule->blocks_for_teacher($obj);
             $email = $obj->firstname . "." . $obj->lastname . "\@johnabbott.qc.ca";
-            $phone = "phone number";
+            $info = "phone number";
         }
         elsif ( $obj->isa("Lab") ) {
             @blocks = $schedule->blocks_in_lab($obj);
+            $info = "CompSci Laboratory";
         }
-        else { @blocks = $schedule->blocks_for_stream($obj); }
+        else { @blocks = $schedule->blocks_for_stream($obj); 
+            $info = "CompSci Stream";
+        }
     }
     $template =~ s/!!!EMAIL!!!/$email/;
-    $template =~ s/!!!PHONE!!!/$phone/;
+    $template =~ s/!!!INFO!!!/$info/;
 
     my @weekdays =
       (qw(sunday monday tuesday wednesday thursday friday saturday));
@@ -182,6 +184,7 @@ sub newView {
 
         my $btext = DrawView->get_block_text( $block, undef, lc( ref($obj) ) );
         $btext =~ s/\n/ \\\\ /g;
+        $btext =~ s/\\\\\s*\\\\/\\\\/g;
         my $tmp =
             "\\node[course={"
           . $block->duration()
@@ -255,6 +258,9 @@ sub newReport {
     # Write courses to latex
     # ------------------------------------------------------------------------
     $course_latex =~ s/!!!TYPE!!!/Courses/;
+    $course_latex =~ s/!!!FILENAME!!!/${filename}_courses.tex/;
+    $course_latex =~ s/!!!DATE!!!/scalar(localtime)/e;
+    
     my @course_texts;
 
     foreach my $c ( sort { $a->number cmp $b->number } $schedule->all_courses )
@@ -278,6 +284,8 @@ sub newReport {
     # Write teachers to latex
     # ------------------------------------------------------------------------
     $teacher_latex =~ s/!!!TYPE!!!/Teachers/;
+    $teacher_latex =~ s/!!!FILENAME!!!/${filename}_teachers.tex/;
+    $teacher_latex =~ s/!!!DATE!!!/scalar(localtime)/e;
 
     my @teacher_texts;
 
@@ -392,6 +400,14 @@ sub _write_teacher_pdf {
     $header =~ s/!!!TITLE!!!/$teacher->firstname." ".$teacher->lastname/e;
     $latex .= $header;
 
+    # tex gets cranky if there is nothing for the teacher
+    my @courses = $schedule->courses_for_teacher($teacher);
+    unless (@courses) {
+            my $block_text = $blocks_start_template;
+            $latex .= $block_text . $block_end_template;
+    
+    }
+    
     # course
     foreach my $course ( sort { lc( $a->number ) cmp lc( $b->number ) }
                          $schedule->courses_for_teacher($teacher) )

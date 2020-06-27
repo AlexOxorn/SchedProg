@@ -160,8 +160,8 @@ sub export {
     foreach my $course ( sort { $a->number cmp $b->number }
                          $self->schedule->courses->list )
     {
-        foreach my $section ( $course->sections ) {
-            foreach my $block ( $section->blocks ) {
+        foreach my $section ( sort {$a->number <=> $b->number} $course->sections ) {
+            foreach my $block ( sort {$a->id <=> $b->id} $section->blocks ) {
 
                 my $start = _military_time( $block->start_number );
                 my $end =
@@ -211,7 +211,6 @@ sub export {
     }
 
     open my $fh, ">", $self->output_file or croak $!;
-    print "opened file for writing\n";
     my $csv = Text::CSV->new();
     foreach my $flatBlock (@flatBlocks) {
         $csv->print( $fh, $flatBlock );
@@ -235,7 +234,6 @@ sub import_csv {
                              "Teacher First Name",
                              "Teacher Last Name",
     );
-    print "in this import_csv\n";
 
     my $Schedule2 = Schedule->new();
     my $Courses   = $Schedule2->courses;
@@ -386,7 +384,6 @@ sub import_csv {
         my $block;
 
         if ( $section && $day && $startTime && $duration ) {
-            print "attemting to make a block\n";
             my $blockNumber = $section->get_new_number;
 
             $block = Block->new(
@@ -462,13 +459,11 @@ sub import_csv {
                 }
             }
             
-            print "We have a teacher assigned\n";
             if ($block) {
                 $block->assign_teacher($teacher);
             }
             elsif ($section) {
                 $section->assign_teacher($teacher);
-                print "Assigning teacher $teacher to this section $section\n";
             }
             elsif ($course) {
                 $course->assign_teacher($teacher);

@@ -192,7 +192,7 @@ sub end {
     my $self = shift;
     my $start = $self->start_number;
     my $end = $start + $self->duration;
-    my $hr = int( $end );
+    my $hr = sprintf("%2i",int( $end ));
     my $min = sprintf("%02i",int( ($end*60)%60));
     return "$hr:$min";
 }
