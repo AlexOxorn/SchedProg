@@ -27,38 +27,38 @@ Required information is: teacher name
 =cut
 
 my @props = (
-	"pes",             # student # * contact hours
-	"prep_hours",      # hours / week for prep.  One prep per course
-	"hours",           # contact hours per week
-	"students",        # total number of students seen in one week
-	"ntu_students",    # total number of students in courses over 3 hrs/wk
-	"release",         # fraction of full load for release
-	"dirty_flag",      # data has changed, need to recalculate
+    "pes",             # student # * contact hours
+    "prep_hours",      # hours / week for prep.  One prep per course
+    "hours",           # contact hours per week
+    "students",        # total number of students seen in one week
+    "ntu_students",    # total number of students in courses over 3 hrs/wk
+    "release",         # fraction of full load for release
+    "dirty_flag",      # data has changed, need to recalculate
 );
 
 my @consts = (
-	qw(
-	  teacher
-	  )
+    qw(
+      teacher
+      )
 );
 
 # create the setters / getters
 foreach my $prop (@props) {
-	no strict;
-	*$key = sub {
-		my $self = shift;
-		$self->{ -$key } = shift if @_;
-		return $self->{ -$key };
-	  }
+    no strict;
+    *$key = sub {
+        my $self = shift;
+        $self->{ -$key } = shift if @_;
+        return $self->{ -$key };
+      }
 }
 
 # create getters
 foreach my $const (@consts) {
-	no strict;
-	*$key = sub {
-		my $self = shift;
-		return $self->{ -$key };
-	  }
+    no strict;
+    *$key = sub {
+        my $self = shift;
+        return $self->{ -$key };
+      }
 }
 
 # ============================================================================
@@ -76,14 +76,14 @@ B<Parameters>
 =cut
 
 sub new {
-	my $class   = shift;
-	my $self    = bless {}, $class;
-	my $teacher = shift;
+    my $class   = shift;
+    my $self    = bless {}, $class;
+    my $teacher = shift;
 
-	$self->_reset();
+    $self->_reset();
 
-	# set constants
-	$self->{teacher} = $teacher;
+    # set constants
+    $self->{teacher} = $teacher;
 }
 
 # ============================================================================
@@ -91,7 +91,6 @@ sub new {
 # ============================================================================
 
 =head2 calculate (schedule)
-
 Calculate and return CI for fall and winter, from info in the schedule
 
 	# FOR THE MOMENT... WE ARE ONLY GOING TO CALCULATE ONE SEMESTER
@@ -100,40 +99,40 @@ Calculate and return CI for fall and winter, from info in the schedule
 =cut
 
 sub calculate {
-	my $self     = shift;
-	my $schedule = shift;
-	my @CI       = ();
-	my $teacher  = $self->teacher;
-	my @courses  = $schedule->courses_for_teacher($teacher);
+    my $self     = shift;
+    my $schedule = shift;
+    my @CI       = ();
+    my $teacher  = $self->teacher;
+    my @courses  = $schedule->courses_for_teacher($teacher);
 
-	$self->_reset();
-	$self->_set_release( $teacher->release );
+    $self->_reset();
+    $self->_set_release( $teacher->release );
 
-	# per course
-	foreach my $course (@courses) {
-		my $max_prep_hours = 0;
+    # per course
+    foreach my $course (@courses) {
+        my $max_prep_hours = 0;
 
-		# per section
-		foreach my $section ( $course->sections_for_teacher($teacher) ) {
+        # per section
+        foreach my $section ( $course->sections_for_teacher($teacher) ) {
 
-			my $hours    = $section->hours_for_teacher($teacher);
-			my $students = $section->students;
+            my $hours    = $section->hours_for_teacher($teacher);
+            my $students = $section->students;
 
-			$max_prep_hours =
-			  $max_prep_hours > $hours ? $max_prep_hours : $hours;
+            $max_prep_hours =
+              $max_prep_hours > $hours ? $max_prep_hours : $hours;
 
-			$self->_add_pes( $hours, $students );
-			$self->_add_hours($hours);
+            $self->_add_pes( $hours, $students );
+            $self->_add_hours($hours);
 
-		}
+        }
 
-		# prep is per course, not per section
-		$self->_add_prep($max_prep_hours);
+        # prep is per course, not per section
+        $self->_add_prep($max_prep_hours);
 
-	}
+    }
 
-	# return
-	return $self->_total;
+    # return
+    return $self->_total;
 }
 
 # ************** PRIVATE *****************************************************
@@ -144,11 +143,11 @@ sub calculate {
 # Set all the appropriate properties to their initial values
 # ----------------------------------------------------------------------------
 sub _reset {
-	my $self = shift;
+    my $self = shift;
 
-	foreach my $prop (@props) {
-		$self->$prop(0);
-	}
+    foreach my $prop (@props) {
+        $self->$prop(0);
+    }
 
 }
 
@@ -159,9 +158,9 @@ sub _reset {
 # semester in question
 # ----------------------------------------------------------------------------
 sub _set_release {
-	my $self = shift;
-	my $release = shift || 0;
-	$self->release($release);
+    my $self = shift;
+    my $release = shift || 0;
+    $self->release($release);
 }
 
 # ============================================================================
@@ -170,10 +169,10 @@ sub _set_release {
 # how many hours of courses do you need to prep (1 prep per section)
 # ----------------------------------------------------------------------------
 sub _add_prep {
-	my $self  = shift;
-	my $hours = shift;
-	$self->prep_hours( $self->prep_hours + $hours );
-	$self->num_preps( $self->num_preps + 1 );
+    my $self  = shift;
+    my $hours = shift;
+    $self->prep_hours( $self->prep_hours + $hours );
+    $self->num_preps( $self->num_preps + 1 );
 }
 
 # ============================================================================
@@ -182,9 +181,9 @@ sub _add_prep {
 # how many hours are you teaching per week
 # ----------------------------------------------------------------------------
 sub _add_hours {
-	my $self  = shift;
-	my $hours = shift;
-	$self->hours( $self->hours + $hours );
+    my $self  = shift;
+    my $hours = shift;
+    $self->hours( $self->hours + $hours );
 }
 
 # ============================================================================
@@ -193,20 +192,20 @@ sub _add_hours {
 # CI factor based on number of students * contact hours
 # ----------------------------------------------------------------------------
 sub _add_pes {
-	my $self     = shift;
-	my $hours    = shift;
-	my $students = shift;
-	$self->pes( $self->pes + $hours * $students );
-	$self->students( $self->students + $students );
+    my $self     = shift;
+    my $hours    = shift;
+    my $students = shift;
+    $self->pes( $self->pes + $hours * $students );
+    $self->students( $self->students + $students );
 
-	# bonus PES (calculated later) only for course over 3 hrs/week
-	# The CI calculator from the union imposes this rule,
-	# but it appears that Clara does not
-	
-	# if ($hours >= 3) {
-	$self->ntu_students( $self->ntu_students + $students );
+    # bonus PES (calculated later) only for course over 3 hrs/week
+    # The CI calculator from the union imposes this rule,
+    # but it appears that Clara does not
 
-	# }
+    # if ($hours >= 3) {
+    $self->ntu_students( $self->ntu_students + $students );
+
+    # }
 }
 
 # ============================================================================
@@ -215,63 +214,63 @@ sub _add_pes {
 # calculate the total CI
 # ----------------------------------------------------------------------------
 sub _total {
-	my $self = shift;
+    my $self = shift;
 
-	# ------------------------------------------------------------------------
-	# PES (based on # of students and contact hours)
-	# ------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # PES (based on # of students and contact hours)
+    # ------------------------------------------------------------------------
 
-	my $CI_student = $self->pes * $PES_FACTOR;
+    my $CI_student = $self->pes * $PES_FACTOR;
 
-	# bonus if pes is over 415
-	my $surplus = $self->pes - $PES_BONUS_LIMIT;
-	my $bonus = $surplus > 0 ? $surplus * $PES_BONUS_FACTOR : 0;
-	$CI_student += $bonus;
+    # bonus if pes is over 415
+    my $surplus = $self->pes - $PES_BONUS_LIMIT;
+    my $bonus = $surplus > 0 ? $surplus * $PES_BONUS_FACTOR : 0;
+    $CI_student += $bonus;
 
-	# another bonus if total number of students is over student_bonus_limit
-	# (only for courses over 3 hours)
-	$bonus =
-	    $self->ntu_students > 75
-	  ? $self->ntu_students * $STUDENT_BONUS_FACTOR
-	  : 0;
-	$CI_student += $bonus;
+    # another bonus if total number of students is over student_bonus_limit
+    # (only for courses over 3 hours)
+    $bonus =
+        $self->ntu_students > 75
+      ? $self->ntu_students * $STUDENT_BONUS_FACTOR
+      : 0;
+    $CI_student += $bonus;
 
-	# and yet another bonus if number of students is over Crazy student limit
-	if ( $self->ntu_students > $STUDENT_CRAZY_BONUS_LIMIT ) {
-		$bonus = ( $self->ntu_students - $STUDENT_CRAZY_BONUS_LIMIT ) *
-		  $STUDENT_CRAZY_BONUS_FACTOR;
-		$CI_student += $bonus;
-	}
+    # and yet another bonus if number of students is over Crazy student limit
+    if ( $self->ntu_students > $STUDENT_CRAZY_BONUS_LIMIT ) {
+        $bonus = ( $self->ntu_students - $STUDENT_CRAZY_BONUS_LIMIT ) *
+          $STUDENT_CRAZY_BONUS_FACTOR;
+        $CI_student += $bonus;
+    }
 
-	# ------------------------------------------------------------------------
-	# Preps (based on # of prep hours PER course)
-	# ------------------------------------------------------------------------
-	my $CI_preps = $self->prep_hours * $PREP_FACTOR;
+    # ------------------------------------------------------------------------
+    # Preps (based on # of prep hours PER course)
+    # ------------------------------------------------------------------------
+    my $CI_preps = $self->prep_hours * $PREP_FACTOR;
 
-	# bonus if number of preps is the PREP_BONUS_LIMIT
-	if ( $self->num_preps == $PREP_BONUS_LIMIT ) {
-		$CI_preps += $self->prep_hours * $PREP_BONUS_FACTOR;
-	}
+    # bonus if number of preps is the PREP_BONUS_LIMIT
+    if ( $self->num_preps == $PREP_BONUS_LIMIT ) {
+        $CI_preps += $self->prep_hours * $PREP_BONUS_FACTOR;
+    }
 
-	# more bonus if over the limit
-	elsif ( $self->num_preps > $PREP_BONUS_LIMIT ) {
-		$CI_preps += $self->prep_hours * $PREP_CRAZY_BONUS_FACTOR;
-	}
+    # more bonus if over the limit
+    elsif ( $self->num_preps > $PREP_BONUS_LIMIT ) {
+        $CI_preps += $self->prep_hours * $PREP_CRAZY_BONUS_FACTOR;
+    }
 
-	# ------------------------------------------------------------------------
-	# Hours (based on contact hours per week)
-	# ------------------------------------------------------------------------
-	my $CI_hours = $self->hours * $HOURS_FACTOR;
+    # ------------------------------------------------------------------------
+    # Hours (based on contact hours per week)
+    # ------------------------------------------------------------------------
+    my $CI_hours = $self->hours * $HOURS_FACTOR;
 
-	# ------------------------------------------------------------------------
-	# Release
-	# ------------------------------------------------------------------------
-	my $CI_release = $self->release * $CI_FTE_PER_SEMESTER;
+    # ------------------------------------------------------------------------
+    # Release
+    # ------------------------------------------------------------------------
+    my $CI_release = $self->release * $CI_FTE_PER_SEMESTER;
 
-	# ------------------------------------------------------------------------
-	# all done
-	# ------------------------------------------------------------------------
-	return $CI_release + $CI_hours + $CI_preps + $CI_student;
+    # ------------------------------------------------------------------------
+    # all done
+    # ------------------------------------------------------------------------
+    return $CI_release + $CI_hours + $CI_preps + $CI_student;
 }
 
 =head1 AUTHOR
