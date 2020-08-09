@@ -67,6 +67,9 @@ sub _show_tree_menu {
     if ( $obj->isa('Course') ) {
         my @sections = $obj->sections;
 
+        # --------------------------------------------------------------------
+        # Adding and Setting Stuff
+        # --------------------------------------------------------------------
         $tree_menu->cascade( -label => "Add Teacher" );
         $tree_menu->cascade( -label => "Set Stream" );
         $tree_menu->command(
@@ -75,9 +78,31 @@ sub _show_tree_menu {
         );
         $tree_menu->command(
                 -label   => "Edit Course",
-                -command => [ \&_edit_course2, $tree_menu, $tree, $obj, $input ]
+                -command => [ \&_edit_course_dialog, $tree_menu, $tree, $obj, $input ]
         );
         $tree_menu->separator;
+
+        # --------------------------------------------------------------------
+        # allocation and scheduling properties
+        # --------------------------------------------------------------------
+        if ($obj->needs_allocation) {
+            $tree_menu->command(
+                    -label   => "unset 'needs_allocation'",
+                    -command => sub{$obj->needs_allocation(0);set_dirty();},
+            );          
+        }
+        else {
+            $tree_menu->command(
+                    -label   => "set 'needs_allocation'",
+                    -command => sub{$obj->needs_allocation(1);set_dirty();},
+            );          
+        }
+        
+        $tree_menu->separator;
+
+        # --------------------------------------------------------------------
+        # Removing Stuff
+        # --------------------------------------------------------------------
         $tree_menu->cascade( -label => "Remove Teacher" );
         $tree_menu->cascade( -label => "Remove Stream" );
         $tree_menu->command(
@@ -203,7 +228,7 @@ sub _show_tree_menu {
         );
         $tree_menu->command(
                -label   => "Edit Section",
-               -command => [ \&_edit_section2, $tree_menu, $tree, $obj, $input ]
+               -command => [ \&_edit_section_dialog, $tree_menu, $tree, $obj, $input ]
         );
         $tree_menu->separator;
         $tree_menu->cascade( -label => "Remove Teacher" );
@@ -327,7 +352,7 @@ sub _show_tree_menu {
         $tree_menu->cascade( -label => "Set Resource" );
         $tree_menu->command(
                  -label   => "Edit Block",
-                 -command => [ \&_edit_block2, $tree_menu, $tree, $obj, $input ]
+                 -command => [ \&_edit_block_dialog, $tree_menu, $tree, $obj, $input ]
         );
         $tree_menu->separator;
         $tree_menu->cascade( -label => "Remove Teacher" );
@@ -748,7 +773,7 @@ sub _show_stream_menu {
     $stream_menu->post( $x, $y );    # Show the popup menu
 }
 
-sub _edit_course2 {
+sub _edit_course_dialog {
     my $frame = shift;
     my $tree  = shift;
     my $obj   = shift;
@@ -876,8 +901,27 @@ sub _edit_course2 {
       ->grid( $edit_dialog->Entry( -textvariable => \$desc, ),
               '-', '-', -sticky => "nsew" );
 
+    #-----------------------------------------
+    # allocation and scheduling
+    #-----------------------------------------
+    my $allocation = $obj->needs_allocation;
+    my $row = 3;
+    my $alloc_cb = $top->Checkbutton(
+        -text=>"Needs Allocation? ",
+        -variable => \$allocation,
+        -indicatoron => 1,
+        -selectcolor => 'blue',       
+        -command => sub {$obj->needs_allocation($allocation);set_dirty()},
+    )->grid(-column => 1,-sticky=>'nsew', -row=>$row);
+    
+    $row++;
+
+    #-----------------------------------------
+    # blank space
+    #-----------------------------------------
     $courseMessage =
-      $top->Label( -text => "" )->grid( -columnspan => 4, -sticky => "nsew" );
+      $top->Label( -text => "" )->grid( -columnspan => 4, -row=>$row, -sticky => "nsew" );
+    $row++;
 
     #-----------------------------------------
     # Section Add/Remove/Edit
@@ -887,7 +931,7 @@ sub _edit_course2 {
                                    -state    => 'readonly',
                                    -choices  => \%sectionName,
                                    -width    => 12
-                                 )->grid( -row => 3, -column => 1, -ipadx => $pad, -sticky => "nsew" );
+                                 )->grid( -row => $row, -column => 1, -ipadx => $pad, -sticky => "nsew" );
     my $secDropEntry = $secDrop->Subwidget("entry");
     $secDropEntry->configure( -disabledbackground => "white" );
     $secDropEntry->configure( -disabledforeground => "black" );
@@ -900,7 +944,7 @@ sub _edit_course2 {
             $obj->add_section($section);
             refresh_course( $tree, $obj, $path, 1 );
 
-            my $answer = _edit_section2( $top, $tree, $section,
+            my $answer = _edit_section_dialog( $top, $tree, $section,
                                          $path . "/Section" . $section->id );
 
             $sectionName{ $section->id } = "$section" if $answer != 2;
@@ -916,7 +960,8 @@ sub _edit_course2 {
             $secDrop->update;
             $sectionMessage->update;
         }
-    )->grid( -row => 3, -column => 3, -sticky => "nsew" );
+    )->grid( -row => $row, -column => 3, -sticky => "nsew" );
+
 
     $secAdd2 = $top->Button(
         -text    => "Add Section(s)",
@@ -949,11 +994,11 @@ sub _edit_course2 {
                 $sectionMessage->update;
             }
         }
-    )->grid( -row => 3, -column => 2, -sticky => "nsew" );
+    )->grid( -row => $row, -column => 2, -sticky => "nsew" );
 
     $secText =
       $top->Label( -text => "Sections:", -anchor => 'w' )
-      ->grid( -row => 3, -column => 0, -sticky => "nsew" );
+      ->grid( -row => $row, -column => 0, -sticky => "nsew" );
 
     $secRem = $top->Button(
         -text    => "Remove Section",
@@ -984,7 +1029,7 @@ sub _edit_course2 {
                 my $id      = $rHash{$curSec};
                 my $section = $obj->get_section_by_id($id);
 
-                my $answer = _edit_section2( $top, $tree, $section,
+                my $answer = _edit_section_dialog( $top, $tree, $section,
                                             $path . "/Section" . $section->id );
 
                 if ($answer) {
@@ -1050,11 +1095,14 @@ sub _edit_course2 {
         }
     );
 
+    $row++;
     $sectionMessage =
       $top->Label( -text => "" )
-      ->grid( '-', $secRem, $secEdit, -sticky => "nsew" );
+      ->grid( '-', $secRem, $secEdit, -sticky => "nsew",-row=>$row );
 
-    $top->Label( -text => "" )->grid( -columnspan => 4, -sticky => "nsew" );
+    # blank line
+    $row++;
+    $top->Label( -text => "" )->grid( -columnspan => $row, -sticky => "nsew" );
 
     #--------------------------------------------------------
     # Teacher Add/Remove
@@ -1236,7 +1284,7 @@ sub _edit_course2 {
         my $answer2 = $sure->Show();
         $answer2 = 'NO' unless $answer2;
 
-        return _edit_course2( $frame, $tree, $obj, $path )
+        return _edit_course_dialog( $frame, $tree, $obj, $path )
           if ( $answer2 eq 'NO' );
 
         $Schedule->remove_course($obj);
@@ -1257,7 +1305,7 @@ sub _edit_course2 {
 
 }
 
-sub _edit_section2 {
+sub _edit_section_dialog {
     my $frame = shift;
     my $tree  = shift;
     my $obj   = shift;
@@ -1436,7 +1484,7 @@ sub _edit_section2 {
                 my %rHash     = reverse %blockName;
                 my $id        = $rHash{$curBlock};
                 my $blockEdit = $obj->block($id);
-                my $answer    = _edit_block2( $top, $tree, $blockEdit,
+                my $answer    = _edit_block_dialog( $top, $tree, $blockEdit,
                                            $path . "/Block" . $blockEdit->id );
                 if ($answer) {
                     $blockMessage->configure( -text => "Block Changed" )
@@ -1658,7 +1706,7 @@ sub _edit_section2 {
 
         my $answer2 = $sure->Show();
 
-        return _edit_section2( $frame, $tree, $obj, $path )
+        return _edit_section_dialog( $frame, $tree, $obj, $path )
           if ( $answer2 eq 'NO' );
 
         $objPar->remove_section($obj);
@@ -1680,7 +1728,7 @@ sub _edit_section2 {
     }
 }
 
-sub _edit_block2 {
+sub _edit_block_dialog {
     my $frame = shift;
     my $tree  = shift;
     my $obj   = shift;
@@ -1973,7 +2021,7 @@ sub _edit_block2 {
 
         my $answer2 = $sure->Show();
 
-        return _edit_block2( $frame, $tree, $obj, $path )
+        return _edit_block_dialog( $frame, $tree, $obj, $path )
           if ( $answer2 eq 'NO' );
 
         $objPar->remove_block($obj);

@@ -360,7 +360,7 @@ sub delete_obj {
 sub set_dirty {
     my $self = shift;
     ${ $self->{-dirty} } = 1;
-    $guiSchedule->redraw_all_views;
+    $guiSchedule->redraw_all_views if $guiSchedule;
 }
 
 # =================================================================

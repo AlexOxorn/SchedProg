@@ -124,6 +124,28 @@ sub name {
 }
 
 # =================================================================
+# needs allocation
+# =================================================================
+
+=head2 needs_allocation ( [true | false] )
+
+Does this course need to be allocated (i.e. have a teacher assigned)
+
+For example, Math and Human Relations do not need to be 
+allocated to one of our teachers
+
+... defaults to true
+
+=cut
+
+sub needs_allocation {
+	my $self = shift;
+    $self->{-allocation} = shift if @_;
+    $self->{-allocation} = 1 unless defined $self->{-allocation};
+    return $self->{-allocation};
+}
+
+# =================================================================
 # semester
 # =================================================================
 

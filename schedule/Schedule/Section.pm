@@ -13,6 +13,12 @@ use overload
 	fallback=> 1,
 	'""' => \&print_description;
 
+# CHANGE LOG ... changes made so that we can use this for allocation
+# 1) Added property "num_students"
+# 2) Can add a teacher directly to the section, even if this section
+#    does not have any blocks (consider 'stage')
+
+
 =head1 NAME
 
 Section - describes a distinct course/section 
@@ -244,6 +250,22 @@ sub course {
 }
 
 # =================================================================
+# num_students
+# =================================================================
+
+=head2 num_students ( [number of students] )
+
+Gets and sets the number of students for this section
+
+=cut
+
+sub num_students {
+    my $self = shift;
+    $self->{-num_students} = shift if @_;
+    return $self->{-num_students};
+}
+
+# =================================================================
 # get_bloc_by_id
 # =================================================================
 
@@ -380,18 +402,24 @@ sub labs {
 
 Assign a teacher to all blocks in this section
 
+Update: even if the section does not have blocks, we still need
+to assign a teacher (example... stage is not scheduled, but
+we still need to assign a teacher for allocation purposes)
+
 Returns section object
 
 =cut
 
 sub assign_teacher {
     my $self = shift;
+    $self->{-teachers} = {} unless $self->{-teachers};
 
     if (@_) {
         my $teacher = shift;
         foreach my $block ( $self->blocks ) {
             $block->assign_teacher($teacher);
         }
+        $self->{-teachers}->{$teacher->id} = $teacher;
     }
 
     return $self;
@@ -416,7 +444,12 @@ sub remove_teacher {
     foreach my $block ( $self->blocks ) {
         $block->remove_teacher($teacher);
     }
-
+    
+    $self->{-teachers} = {} unless $self->{-teachers};
+    if ( exists $self->{-teachers}{ $teacher->id } ) {
+        delete $self->{-teachers}{ $teacher->id };
+    }
+    
     return $self;
 
 }
@@ -461,6 +494,10 @@ sub teachers {
         foreach my $teacher ( $block->teachers ) {
             $teachers{$teacher} = $teacher;
         }
+    }
+    
+    foreach my $teacher (values %{$self->{-teachers}}) {
+        $teachers{$teacher} = $teacher;
     }
 
     if (wantarray) {
