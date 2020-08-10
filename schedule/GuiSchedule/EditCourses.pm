@@ -812,7 +812,6 @@ sub _return {
 }
 
 sub _double_click {
-    print "double click\n";
 	my $frame = shift;
 	my $ttree = shift;
 	my $tree  = $$ttree;

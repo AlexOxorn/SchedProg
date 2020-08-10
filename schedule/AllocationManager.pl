@@ -16,6 +16,7 @@ use Export::PDF;
 use Export::Latex;
 use GuiSchedule::DataEntry;
 use GuiSchedule::EditCourses;
+use GuiSchedule::NumStudents;
 use PerlLib::Colours;
 
 use Tk;
@@ -389,7 +390,7 @@ sub create_front_page {
 }
 
 # ==================================================================
-# create standard page
+# front_page_done (time to make standard page)
 # ==================================================================
 sub front_page_done {
     my $flag = 1;
@@ -416,17 +417,37 @@ sub create_standard_page {
     # create notebook
     $Notebook =
       $Main_page_frame->NoteBook()->pack( -expand => 1, -fill => 'both' );
+    
+    # student numbers
+    $Pages{"student_numbers"} = $Notebook->add(
+        "student_numbers",
+        -label => "Student Numbers",
+        -raisecmd => sub {draw_student_numbers()}
+    );
 
+    # one page for each semester
     foreach my $semester (@semesters) {
         my $label =
           uc( substr( $semester, 0, 1 ) ) . ( substr( $semester, 1 ) );
-        $Pages{"courses_$semester"} = $Notebook->add(
+        $Pages{$semester} = $Notebook->add(
+        "$semester",
+        -label => $label,
+        -raisecmd => sub{draw_edit_courses($semester); draw_edit_teachers($semester); })        
+    }
+
+    # Semester Courses and Teachers
+    foreach my $semester (@semesters) {
+        my $semester_notebook = $Pages{$semester}->NoteBook()->pack( -expand => 1, -fill => 'both' );
+        
+        my $label =
+          uc( substr( $semester, 0, 1 ) ) . ( substr( $semester, 1 ) );
+        $Pages{"courses_$semester"} = $semester_notebook->add(
             "courses_$semester",
             -label    => "$label Courses",
             -raisecmd => sub {draw_edit_courses($semester);}
         );
 
-        $Pages{"teachers_$semester"} = $Notebook->add(
+        $Pages{"teachers_$semester"} = $semester_notebook->add(
             "teachers_$semester",
             -label    => "$label Teachers",
             -raisecmd => sub { draw_edit_teachers($semester) }
@@ -452,13 +473,14 @@ sub create_status_bar {
         -relief      => 'flat',
     )->pack( -side => 'bottom', -expand => 0, -fill => 'x' );
 
+    my $file_frame = $status_frame->Frame()->pack(-side=>'left', -expand => 1, -fill=>'x');
     # current files
     foreach my $semester (@semesters) {
-        $status_frame->Label(
+        $file_frame->Label(
             -textvariable => \$Current_schedule_file{$semester},
             -borderwidth  => 1,
             -relief       => 'ridge',
-        )->pack( -side => 'left', -expand => 1, -fill => 'x' );
+        )->pack( -side => 'top', -expand => 1, -fill => 'x' );
     }
 
     # 'dirty' label
@@ -468,7 +490,7 @@ sub create_status_bar {
         -relief       => 'ridge',
         -width        => 15,
         -fg           => $red,
-    )->pack( -side => 'right', -fill => 'x' );
+    )->pack( -side => 'right', -fill => 'both' );
 
     return $status_frame;
 }
@@ -716,8 +738,8 @@ sub write_ini {
 # draw_edit_teachers
 # ==================================================================
 
-my %de = ();
 {
+    my %de = ();
 
     sub draw_edit_teachers {
         my $semester = shift;
@@ -727,10 +749,29 @@ my %de = ();
             $de{$semester}->refresh( $Schedules{$semester}->teachers );
         }
         else {
-        my $f = $Pages{"teachers_$semester"};
+            my $f = $Pages{"teachers_$semester"};
             $de{$semester} =
               DataEntry->new( $f, $Schedules{$semester}->teachers,
                 $Schedules{$semester}, \$Dirtyflag, undef );
+        }
+    }
+}
+
+# ==================================================================
+# draw_student_numbers
+# ==================================================================
+
+{
+    my $de;
+
+    sub draw_student_numbers {
+        
+        if ( $de ) {
+            $de->refresh( \%Schedules );
+        }
+        else {
+            my $f = $Pages{"student_numbers"};
+            $de = NumStudents->new( $f, \%Schedules,\$Dirtyflag );
         }
     }
 }
@@ -740,7 +781,7 @@ my %de = ();
 # ==================================================================
 {
     my %de = ();
-    {
+    
 
         sub draw_edit_courses {
 
@@ -755,6 +796,6 @@ my %de = ();
               unless $de{$semester};
 
         }
-    }
+    
 }
 
