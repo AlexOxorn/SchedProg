@@ -118,10 +118,10 @@ sub new {
 		$sl->destroy;
 	}
 	my $right_panel =
-	  $frame->Frame( -bg => 'pink' )
+	  $frame->Frame(  )
 	  ->grid( -row => 0, -column => 1, -sticky => 'nsew' );
 	my $left_panel =
-	  $frame->Frame( -bg => 'blue' )
+	  $frame->Frame(  )
 	  ->grid( -row => 0, -column => 0, -sticky => 'nsew' );
 
 	# calculate min_width of left panel based on screen size
@@ -181,7 +181,6 @@ sub new {
 
 	refresh_schedule($tree);
 	$tree->autosetmode();
-
 }
 
 # ===================================================================

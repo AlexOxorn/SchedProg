@@ -12,12 +12,11 @@ use lib "$FindBin::Bin/";
 use lib "$FindBin::Bin/Library";
 our $BinDir = "$FindBin::Bin/";
 use Schedule::Schedule;
-use Export::PDF;
-use Export::Latex;
-use GuiSchedule::DataEntry;
 use GuiSchedule::EditCourses;
 use GuiSchedule::NumStudents;
+use GuiSchedule::EditAllocation;
 use PerlLib::Colours;
+use GuiSchedule::DataEntry;
 
 use Tk;
 use Tk::InitGui;
@@ -383,10 +382,10 @@ sub create_front_page {
         )->pack( -side => 'top', -fill => 'y', -expand => 0 );
 
     }
-        $option_frame->Frame( -bg => $Colours->{DataBackground} )->pack(
-            -expand => 1,
-            -fill   => 'both',
-        );
+    $option_frame->Frame( -bg => $Colours->{DataBackground} )->pack(
+        -expand => 1,
+        -fill   => 'both',
+    );
 }
 
 # ==================================================================
@@ -417,12 +416,19 @@ sub create_standard_page {
     # create notebook
     $Notebook =
       $Main_page_frame->NoteBook()->pack( -expand => 1, -fill => 'both' );
-    
+
+    # Allocation
+    $Pages{"allocation"} = $Notebook->add(
+        "allocation",
+        -label    => "Allocation",
+        -raisecmd => sub { draw_allocation() }
+    );
+
     # student numbers
     $Pages{"student_numbers"} = $Notebook->add(
         "student_numbers",
-        -label => "Student Numbers",
-        -raisecmd => sub {draw_student_numbers()}
+        -label    => "Student Numbers",
+        -raisecmd => sub { draw_student_numbers() }
     );
 
     # one page for each semester
@@ -430,21 +436,26 @@ sub create_standard_page {
         my $label =
           uc( substr( $semester, 0, 1 ) ) . ( substr( $semester, 1 ) );
         $Pages{$semester} = $Notebook->add(
-        "$semester",
-        -label => $label,
-        -raisecmd => sub{draw_edit_courses($semester); draw_edit_teachers($semester); })        
+            "$semester",
+            -label    => $label,
+            -raisecmd => sub {
+                draw_edit_courses($semester);
+                draw_edit_teachers($semester);
+            }
+        );
     }
 
     # Semester Courses and Teachers
     foreach my $semester (@semesters) {
-        my $semester_notebook = $Pages{$semester}->NoteBook()->pack( -expand => 1, -fill => 'both' );
-        
+        my $semester_notebook =
+          $Pages{$semester}->NoteBook()->pack( -expand => 1, -fill => 'both' );
+
         my $label =
           uc( substr( $semester, 0, 1 ) ) . ( substr( $semester, 1 ) );
         $Pages{"courses_$semester"} = $semester_notebook->add(
             "courses_$semester",
             -label    => "$label Courses",
-            -raisecmd => sub {draw_edit_courses($semester);}
+            -raisecmd => sub { draw_edit_courses($semester); }
         );
 
         $Pages{"teachers_$semester"} = $semester_notebook->add(
@@ -473,7 +484,9 @@ sub create_status_bar {
         -relief      => 'flat',
     )->pack( -side => 'bottom', -expand => 0, -fill => 'x' );
 
-    my $file_frame = $status_frame->Frame()->pack(-side=>'left', -expand => 1, -fill=>'x');
+    my $file_frame = $status_frame->Frame()
+      ->pack( -side => 'left', -expand => 1, -fill => 'x' );
+
     # current files
     foreach my $semester (@semesters) {
         $file_frame->Label(
@@ -744,7 +757,7 @@ sub write_ini {
     sub draw_edit_teachers {
         my $semester = shift;
         die("draw_edit_courses did not specify a semester\n") unless $semester;
-        
+
         if ( $de{$semester} ) {
             $de{$semester}->refresh( $Schedules{$semester}->teachers );
         }
@@ -765,13 +778,13 @@ sub write_ini {
     my $de;
 
     sub draw_student_numbers {
-        
-        if ( $de ) {
+
+        if ($de) {
             $de->refresh( \%Schedules );
         }
         else {
             my $f = $Pages{"student_numbers"};
-            $de = NumStudents->new( $f, \%Schedules,\$Dirtyflag );
+            $de = NumStudents->new( $f, \%Schedules, \$Dirtyflag );
         }
     }
 }
@@ -779,23 +792,34 @@ sub write_ini {
 # ==================================================================
 # draw_edit_courses
 # ==================================================================
-{
-    my %de = ();
-    
+sub draw_edit_courses {
 
-        sub draw_edit_courses {
+    my $semester = shift;
+    die("draw_edit_courses did not specify a semester\n")
+      unless $semester;
+    my $f = $Pages{"courses_$semester"};
 
-            my $semester = shift;
-            die("draw_edit_courses did not specify a semester\n")
-              unless $semester;
-            my $f = $Pages{"courses_$semester"};
+    EditCourses->new( $f, $Schedules{$semester}, \$Dirtyflag,
+        $Colours, $Fonts, undef );
 
-            $de{$semester} =
-              EditCourses->new( $f, $Schedules{$semester}, \$Dirtyflag,
-                $Colours, $Fonts, undef )
-              unless $de{$semester};
-
-        }
-    
 }
 
+# ==================================================================
+# draw_allocation
+# ==================================================================
+{
+    my $de;
+
+    sub draw_allocation {
+        my $f = $Pages{"allocation"};
+        unless ($de) {
+        $de = EditAllocation->new(
+            $f,       \%Schedules, \$Dirtyflag,
+            $Colours, $Fonts,     undef
+        ) }
+        else {
+            $de->refresh();
+        }
+    }
+
+}

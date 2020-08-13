@@ -51,9 +51,6 @@ sub new {
     my $schedule_ref = shift;
     $Dirty_ptr = shift;
     %Schedules = (%$schedule_ref);
-    print "frame is $frame\n";
-    print "schedules are ", \%Schedules, "\n";
-    print "keys to schedule are: ", join( ", ", keys %Schedules ), "\n";
 
     $self->{-frame} = $frame;
     $self->refresh($schedule_ref);
