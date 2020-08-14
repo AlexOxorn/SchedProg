@@ -38,6 +38,8 @@ Dialog for entering student numbers foreach section
 # =================================================================
 our $Dirty_ptr;
 our %Schedules;
+our $Colours;
+our $Fonts;
 
 # =================================================================
 # new
@@ -47,6 +49,11 @@ sub new {
     my $self         = bless {};
     my $frame        = shift;
     my $schedule_ref = shift;
+    $Dirty_ptr = shift;
+    $Colours         = shift;
+    $Fonts           = shift;
+    	print "Fonts: ",join(", ",keys %$Fonts),"\n";
+    
     $Dirty_ptr = shift;
     %Schedules = (%$schedule_ref);
 
@@ -116,7 +123,7 @@ sub refresh {
 
             # make new frame
             $panes->{$semester} =
-              $self->{-frame}->Frame();
+              $self->{-frame}->Frame(-bg=>'black');
         }
 
         my $schedule = $Schedules{$semester};
@@ -133,14 +140,14 @@ sub refresh {
     my $row = 0;
     foreach my $semester ($self->semesters) {
         if ($panes->{$semester}) {
-            $panes->{$semester}->grid( -row => $row, -sticky=>'nw' );
+            $panes->{$semester}->grid( -row => $row, -sticky=>'nwe' );
             $self->{-frame}->gridRowconfigure($row,-weight=>0);
             $row++;
         }
     }
             $self->{-frame}->gridRowconfigure($row,-weight=>1);
-    $self->{-frame}->gridColumnconfigure(1,-weight=>1);
-    $self->{-frame}->gridColumnconfigure(0,-weight=>0);
+   # $self->{-frame}->gridColumnconfigure(1,-weight=>1);
+    $self->{-frame}->gridColumnconfigure(0,-weight=>1);
 
 }
 
@@ -213,7 +220,7 @@ sub allocation_grid {
     unless ( $self->gui_grid($semester) && !$self->has_grid_size_changed($semester, $rows, $col_numbers) ) {
         print "drawing new grid\n";
         my $grid =
-          AllocationGrid->new( $frame, $rows, $col_numbers, );
+          AllocationGrid->new( $frame, $rows, $col_numbers, $Colours, $Fonts);
         $self->gui_grid($semester,$grid);
     }
     $self->num_rows($semester,$rows);
