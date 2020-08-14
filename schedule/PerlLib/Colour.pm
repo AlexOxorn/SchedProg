@@ -9,36 +9,36 @@ Colour - manipulates colour objects
 
 =head1 VERSION
 
-Version 1.00
+Version 2.00
 
 =head1 SYNOPSIS
 
     use PerlLib::Colour;
-
+    
     # -----------------------------------------------------
     # object methods
     # -----------------------------------------------------
     my $c = new Colour "mistyrose3";
     my ($red, $green, $blue) = $c->rgb();
     my ($hue, $saturation, $light) = $c->hsl();
-
+    
     $c->darken(20)  # darken the colour by 20%
     $c->lighten(20) # lighten the colour by 20%
-
+    
     $c->setcolour_rgb(1,0,0);   # red
     $c->setcolour_hsl(0,1,0.5); # red
-
+    
     print $c->string(),"\n";    # "#FF0000";
-
+    
     # -----------------------------------------------------
     # class methods
     # -----------------------------------------------------
     my ($red, $green, $blue) = Colour->rgb("mistyrose3");
     my ($hue, $saturation, $light) = $c->hsl("mistyrose3");
-
+    
     my $colourstring = Colour->darken(20, "mistyrose3");
     my $othercolour  = Colour->lighten(20,"mistyrose3");
-
+    
     print Colour->string("mistyrose3"),"\n";    # "#CDB7B5"
     print Colour->setcolour_hsl(0,1,0.5),"\n";  # "#FF0000";
 
@@ -222,7 +222,6 @@ Name or colour hash string.
 
 If using the object method, the pre-existing
 colour of the object will be used
-
 If using the class method, the default colour
 is black
 
@@ -299,6 +298,7 @@ sub hsl {
     my ($r,$g,$b) = $self->rgb();
     return _rgb2hsl($r,$g,$b);
 }
+
 
 # =================================================================
 # setcolour_rgb
@@ -424,11 +424,11 @@ colour string or colour name
 
     # start with red
     $c = Colour->new('red');
-
+ 
     $string = $c->string();         # '#FF0000'
     ($h,$s,$l) = $c->hsl();         # 0.0, 1.0, 0.5
     ($r,$g,$b) = $c->rgb();         # 1.0, 0.0, 0.0
-
+ 
     # darken this colour by 10%
 
     $string = $c->darken();         # '#CC0000'
@@ -490,7 +490,6 @@ How much to lighten the colour by, on a scale of 1 to 100
 (default is 10)
 
 =item * colour (optional)
-
 colour string or colour name
 
 =back
@@ -504,12 +503,12 @@ colour string or colour name
 - usage is the same as darken
 
 Note:
-
     # both are equivalent
     $c->lighten(20);
     $c->darken(-20);
 
 =cut
+
 
 #--------------------------------------------------------------------
 sub lighten {
@@ -530,6 +529,7 @@ sub lighten {
     $self->setcolour_hsl($h,$s,$l);
     return $self->string();
 }
+
 
 # =================================================================
 # isLight
@@ -570,6 +570,7 @@ sub isLight {
     return 0;
 
 }
+
 
 # =================================================================
 # luminosity
@@ -647,7 +648,6 @@ If using the class method, the default colour
 is black
 
 =back
-
 
 =head3 Returns
 
@@ -867,9 +867,7 @@ sub _rgb2hsl {
 1;
 
 =head1 AUTHOR
-
 Sandy Bultena
-
 =cut
 
 __DATA__
@@ -1625,4 +1623,15 @@ __DATA__
 255 255 255		white
   0 205 205		cyan3
   0   0   0		black
-
+© 2020 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Help
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About

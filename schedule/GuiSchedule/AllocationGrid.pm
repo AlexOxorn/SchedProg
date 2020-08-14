@@ -22,6 +22,7 @@ our $Colours;
 my $header_colour1  = "#abcdef";
 my $header_colour2  = Colour->lighten( 5, $header_colour1 );
 my $very_light_grey = "#eeeeee";
+my $row_col_indicator_colour = Colour->lighten( 5, "#cdefab" );;
 
 # width of the data entry (fixed for now... maybe make it configurable
 # at a later date)
@@ -81,17 +82,17 @@ sub new {
     # ------------------------------------------------------------------------
     # some instance data we need to keep
     # ------------------------------------------------------------------------
-    my %data_entry_widgets;
-    my %data_widgets_rowcol;
-    my @sub_header_widgets;
-    my @header_widgets;
-    my @row_widgets;
+ #   my %data_entry_widgets;
+ #   my %data_widgets_rowcol;
+ #   my @sub_header_widgets;
+  #  my @header_widgets;
+#    my @row_widgets;
 
-    $self->header_widgets( \@header_widgets );
-    $self->sub_header_widgets( \@sub_header_widgets );
-    $self->row_header_widgets( \@row_widgets );
-    $self->entry_widgets( \%data_entry_widgets );
-    $self->widgets_row_col( \%data_widgets_rowcol );
+ #   $self->header_widgets( \@header_widgets );
+  #  $self->sub_header_widgets( \@sub_header_widgets );
+ #   $self->row_header_widgets( \@row_widgets );
+ #   $self->entry_widgets( \%data_entry_widgets );
+ #   $self->widgets_row_col( \%data_widgets_rowcol );
 
     # ------------------------------------------------------------------------
     # get rid of anything that is currently on this frame
@@ -105,13 +106,13 @@ sub new {
     # blank | header | blank
     # teacher | data | totals
     # ------------------------------------------------------------------------
-    my $pane = $frame->Frame( -bg => 'pink' );
+    my $pane = $frame->Frame( );
     $pane->pack( -side => 'top', -expand => 1, -fill => 'both' );
 
-    my $header_frame = $pane->Pane( -bg => "blue",   -sticky => 'nsew' );
-    my $row_frame    = $pane->Pane( -bg => 'pink',   -sticky => 'nsew' );
-    my $data_frame   = $pane->Pane( -bg => 'yellow', -sticky => 'nsew' );
-    my $totals_frame = $pane->Pane( -bg => 'green',  -sticky => 'nsew' );
+    my $header_frame = $pane->Pane(    -sticky => 'nsew' );
+    my $row_frame    = $pane->Pane(    -sticky => 'nsew' );
+    my $data_frame   = $pane->Pane(  -sticky => 'nsew' );
+    my $totals_frame = $pane->Pane(   -sticky => 'nsew' );
     $self->header_frame($header_frame);
     $self->data_frame($data_frame);
     $self->row_frame($row_frame);
@@ -167,6 +168,8 @@ sub new {
     $self->make_header_columns($col_merge);
     $self->make_row_titles($rows);
     $self->make_data_grid( $rows, $col_merge, $data_entry_callback );
+    
+    use Data::Dumper; print Dumper $self->column_colours;
 
     return $self;
 
@@ -184,12 +187,13 @@ sub make_header_columns {
 
         # frame to hold the merged header, and the sub-headings
         my $mini_frame =
-          $self->header_frame->Frame( -bg => 'black' )->pack( -side => 'left' );
+          $self->header_frame->Frame(  )->pack( -side => 'left' );
 
         # widget
         my $me = $mini_frame->Entry(
             -width   => $width,
             -relief  => 'flat',
+            -borderwidth=>1,
             -bg      => $header_colour1,
             -justify => 'center',
             -font    => $Fonts->{small},
@@ -218,7 +222,7 @@ sub make_header_columns {
 
             # frame within the mini-frame so we can stack 'left'
             my $hf2 =
-              $mini_frame->Frame( -bg => 'blue' )->pack( -side => 'left' );
+              $mini_frame->Frame( )->pack( -side => 'left' );
 
             # widget
             my $se = $hf2->Entry(
@@ -228,6 +232,7 @@ sub make_header_columns {
                 -bg        => $header_colour1,
                 -takefocus => 0,
                 -font      => $Fonts->{small},
+                -borderwidth=>1,
 
             )->pack( -side => 'left' );
 
@@ -265,6 +270,7 @@ sub make_row_titles {
             -width     => 12,
             -font      => $Fonts->{small},
             -font      => $Fonts->{small},
+            -borderwidth=>1,
 
         )->pack( -side => 'top' );
 
@@ -311,6 +317,7 @@ sub make_data_grid {
                     -validatecommand => [ $callback, $row, $col ],
                     -invalidcommand => sub { $df1->bell },
                     -font           => $Fonts->{small},
+                    -borderwidth=>1,
                 )->pack( -side => 'left' );
 
                 # save row/column with dataentry, and vice-versa
@@ -318,9 +325,10 @@ sub make_data_grid {
                 $self->widgets_row_col->{$de} = [ $row, $col ];
 
                 # set colour in column to make it easier to read
-                unless ( $header % 2 ) {
-                    $de->configure( -bg => $very_light_grey );
-                }
+                my $colour = $de->cget(-bg);
+                $colour = $very_light_grey unless $header%2;
+                $self->column_colours->[$col] = $colour;
+                $de->configure(-bg=>$colour);
 
                 # set bindings for navigation
                 $de->bind( "<Tab>",           [ \&_move, $self, 'nextCell' ] );
@@ -330,6 +338,9 @@ sub make_data_grid {
                 $de->bind( "<Key-uparrow>",   [ \&_move,  $self, 'prevRow' ] );
                 $de->bind( "<Key-Down>",      [ \&_move,  $self, 'nextRow' ] );
                 $de->bind( "<Key-downarrow>", [ \&_move,  $self, 'nextRow' ] );
+                
+                $de->bind( "<FocusIn>", [\&indicate,$self,$row_col_indicator_colour]);
+                $de->bind( "<FocusOut>", [\&indicate,$self]);
                 $de->bindtags( [ ( $de->bindtags )[ 1, 0, 2, 3 ] ] );
 
                 $col++;
@@ -398,6 +409,9 @@ sub _move {
     $w->selectionClear();
     my ($row,$col) = $self->get_row_col($w);
     
+    my $old_row = $row;
+    my $old_col = $col;
+    
     $row = int_clamp(++$row,$self->num_rows) if $where eq 'nextRow';
     $row = int_clamp(--$row,$self->num_rows) if $where eq 'prevRow';
     $col = int_clamp(++$col,$self->num_cols) if $where eq 'nextCell';
@@ -405,9 +419,46 @@ sub _move {
     
     my $e = $self->get_widget( $row, $col );
     $self->set_focus($e);
+    
+    if ($row ne $old_row) {
+        #$self->indicate_row($old_row,$row);
+    }
+    if ($col ne $old_col) {
+        #$self->indicate_col;
+    }
     $w->break();    
 }
 
+sub set_focus {
+    my $self = shift;
+    my $e    = shift;
+    if ($e) {
+        $self->header_frame->see($e);
+        $self->data_frame->see($e);
+        $e->focus();
+    }
+}
+
+sub indicate {
+    my $w = shift;
+    my $self = shift;
+    my $which = shift || "white";
+    $w->selectionClear();
+    my ($row,$col) = $self->get_row_col($w);
+
+    my $col_colour = Colour->add($which, $self->column_colours->[$col]);
+    foreach my $row (0 .. $self->num_rows - 1) {
+        my $e = $self->get_widget($row,$col);
+        $e->configure(-bg=>$col_colour);        
+    }
+
+    foreach my $col (0 .. $self->num_cols - 1) {
+        my $e = $self->get_widget($row,$col);
+        $col_colour = Colour->add($which, $self->column_colours->[$col]);
+        $e->configure(-bg=>$col_colour);        
+    }
+}
+    
 sub int_clamp {
     my $num = shift;
     my $max = shift;
@@ -453,6 +504,13 @@ foreach my $widget (qw(header sub_header row_header)) {
 # other getters and setters
 # ----------------------------------------------------------------------------
 
+sub column_colours {
+    my $self = shift;
+    $self->{-col_colours} = [] unless $self->{-col_colours};
+    $self->{-col_colours} = shift if @_;
+    return $self->{-col_colours};
+}
+
 sub entry_widgets {
     my $self = shift;
     $self->{-widgets} = {} unless $self->{-widgets};
@@ -465,6 +523,28 @@ sub widgets_row_col {
     $self->{-widgets_row_col} = shift if @_;
     $self->{-widgets_row_col} = {} unless $self->{-widgets_row_col};
     return $self->{-widgets_row_col};
+}
+
+sub widgets_row {
+    my $self = shift;
+    my $row = shift;
+    my $widgets = $self->entry_widgets;
+    my @widgets;
+    foreach my $col (0 .. $self->num_cols - 1) {
+        push @widgets, $widgets->{$row}{$col}
+    }
+    return \@widgets;
+}
+
+sub widgets_col {
+    my $self = shift;
+    my $col = shift;
+    my $widgets = $self->entry_widgets;
+    my @widgets;
+    foreach my $row (0 .. $self->num_rows - 1) {
+        push @widgets, $widgets->{$row}{$col}
+    }
+    return \@widgets;
 }
 
 sub get_widget {
