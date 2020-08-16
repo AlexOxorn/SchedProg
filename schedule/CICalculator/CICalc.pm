@@ -3,7 +3,11 @@ use strict;
 use warnings;
 
 package CICalc;
-use CIConstants;
+use FindBin;
+use Carp;
+use lib "$FindBin::Bin/..";
+
+use CICalculator::CIConstants;
 
 =head1 NAME
 
@@ -28,6 +32,7 @@ Required information is: teacher name
 
 my @props = (
     "pes",             # student # * contact hours
+    "num_preps",       # number of preps 
     "prep_hours",      # hours / week for prep.  One prep per course
     "hours",           # contact hours per week
     "students",        # total number of students seen in one week
@@ -45,19 +50,19 @@ my @consts = (
 # create the setters / getters
 foreach my $prop (@props) {
     no strict;
-    *$key = sub {
+    *$prop = sub {
         my $self = shift;
-        $self->{ -$key } = shift if @_;
-        return $self->{ -$key };
+        $self->{ -$prop } = shift if @_;
+        return $self->{ -$prop };
       }
 }
 
 # create getters
 foreach my $const (@consts) {
     no strict;
-    *$key = sub {
+    *$const = sub {
         my $self = shift;
-        return $self->{ -$key };
+        return $self->{ -$const };
       }
 }
 
@@ -83,7 +88,9 @@ sub new {
     $self->_reset();
 
     # set constants
-    $self->{teacher} = $teacher;
+    $self->{-teacher} = $teacher;
+    
+    return $self;
 }
 
 # ============================================================================
@@ -115,8 +122,8 @@ sub calculate {
         # per section
         foreach my $section ( $course->sections_for_teacher($teacher) ) {
 
-            my $hours    = $section->hours_for_teacher($teacher);
-            my $students = $section->students;
+            my $hours    = $section->get_teacher_allocation($teacher);
+            my $students = $section->num_students;
 
             $max_prep_hours =
               $max_prep_hours > $hours ? $max_prep_hours : $hours;
@@ -132,7 +139,8 @@ sub calculate {
     }
 
     # return
-    return $self->_total;
+    print "CI for $teacher is ",$self->_total,"\n";
+    return sprintf("%7.1f",$self->_total);
 }
 
 # ************** PRIVATE *****************************************************

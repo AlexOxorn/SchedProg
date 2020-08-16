@@ -31,7 +31,7 @@ my $data_change_colour       = Colour->new("mistyrose")->string;
 
 # width of the data entry (fixed for now... maybe make it configurable
 # at a later date)
-my $width = 4;
+my $width = 5;
 
 # generic properties for entry widgets
 my %entry_props;
@@ -89,12 +89,9 @@ sub new {
     my @col_merge           = @$col_merge;
     my $data_entry_callback = shift || sub { return 1; };
     my $process_data_entry  = shift;
-    $process_data_entry->("hello");
 
     my $self = bless {}, $class;
     $self->process_data_change($process_data_entry);
-    $self->process_data_change->("goodbye");
-    $self->update_data("x","y");
 
     # ------------------------------------------------------------------------
     # entry widget properties
@@ -231,6 +228,10 @@ sub make_header_columns {
             -disabledbackground => $header_colour1,
             -state              => 'disabled',
         )->pack( -side => 'top', -expand => 0, -fill => 'both' );
+        
+        # balloon
+        my $balloon = $mini_frame->Balloon();
+        push @{$self->balloon_widgets}, $balloon;
 
         # change colour every second merged header
         if ( $header % 2 ) {
@@ -307,6 +308,7 @@ sub make_total_grid {
             # widget
             my $me = $mini_frame->Entry(
                 %entry_props,
+                -width              => $width + 1,
                 -state              => 'disabled',
                 -disabledbackground => $totals_header_colour,
             )->pack( -side => 'top', -expand => 0, -fill => 'both' );
@@ -323,6 +325,7 @@ sub make_total_grid {
                 # widget
                 my $se = $hf2->Entry(
                     %entry_props,
+                    -width              => $width + 1,
                     -disabledbackground => $totals_header_colour,
                     -state              => 'disabled',
 
@@ -352,6 +355,7 @@ sub make_total_grid {
                 # data entry box
                 my $de = $df1->Entry(
                     %entry_props,
+                    -width              => $width + 1,
                     -state              => 'disabled',
                     -disabledbackground => $totals_colour,
                 )->pack( -side => 'left' );
@@ -395,7 +399,7 @@ sub make_data_grid {
                     -validate        => 'key',
                     -validatecommand => sub {
                         $de->configure( -bg => $data_change_colour );
-                        return $data_entry_callback->(@_);
+                        return $data_entry_callback->($row,$sub_section,@_);
                     },
                     -invalidcommand => sub { $df1->bell },
                 )->pack( -side => 'left' );
@@ -411,6 +415,10 @@ sub make_data_grid {
                 $de->configure( -bg => $colour );
 
                 # set bindings for navigation
+                #$de->bind( "<Key-Left>",       [ \&_move, $self, 'prevCell' ] );
+                #$de->bind( "<Key-leftarrow>",  [ \&_move, $self, 'prevCell' ] );
+                #$de->bind( "<Key-Right>",      [ \&_move, $self, 'nextCell' ] );
+                #$de->bind( "<Key-rightarrow>", [ \&_move, $self, 'nextCell' ] );
                 $de->bind( "<Tab>",           [ \&_move, $self, 'nextCell' ] );
                 $de->bind( "<Key-Return>",    [ \&_move, $self, 'nextRow' ] );
                 $de->bind( "<Shift-Tab>",     [ \&_move, $self, 'prevCell' ] );
@@ -419,9 +427,15 @@ sub make_data_grid {
                 $de->bind( "<Key-Down>",      [ \&_move, $self, 'nextRow' ] );
                 $de->bind( "<Key-downarrow>", [ \&_move, $self, 'nextRow' ] );
 
-                $de->bind( "<FocusIn>",
-                    [ \&focus_changed, $self, 'focusIn',$row_col_indicator_colour ] );
-                $de->bind( "<FocusOut>", [ \&focus_changed, $self, 'focusOut'] );
+                $de->bind(
+                    "<FocusIn>",
+                    [
+                        \&focus_changed, $self,
+                        'focusIn',       $row_col_indicator_colour
+                    ]
+                );
+                $de->bind( "<FocusOut>",
+                    [ \&focus_changed, $self, 'focusOut' ] );
                 $de->bindtags( [ ( $de->bindtags )[ 1, 0, 2, 3 ] ] );
 
                 $col++;
@@ -438,6 +452,7 @@ sub make_data_grid {
 sub populate {
     my $self               = shift;
     my $header_text        = shift;
+    my $balloon_text       = shift;
     my $sub_header_text    = shift;
     my $row_header_text    = shift;
     my $data_vars          = shift;
@@ -485,8 +500,10 @@ sub populate {
     # the header data
     my $i              = 0;
     my $header_widgets = $self->header_widgets;
+    my $balloon_widgets = $self->balloon_widgets;
     while ( my $var = shift @$header_text ) {
         $header_widgets->[$i]->configure( -textvariable => \$var );
+        $balloon_widgets->[$i]->attach($header_widgets->[$i],-msg=>$balloon_text->[$i]);
         $i++;
     }
 
@@ -553,21 +570,29 @@ sub set_focus {
 # focus has changed - indicate what row/col we are on, callback process change
 # ----------------------------------------------------------------------------
 sub focus_changed {
-    my $w       = shift;
-    my $self    = shift;
-    my $inout   = shift;
-    my $colour  = shift;
+    my $w      = shift;
+    my $self   = shift;
+    my $inout  = shift;
+    my $colour = shift;
     
+    # update selection
+    if ($inout eq 'focusIn') {
+        $w->selectionRange( 0, 'end' );
+    }
+    else {
+        $w->selectionClear();
+    }
+
     # set data colour and totals colour
     my $dcolour = $colour || $bg_colour;
     my $tcolour = $colour;
 
     # are we processing a 'data change?'
-    my $original_colour = $w->cget(-bg);
-    my $data_changed = $original_colour eq $data_change_colour && $inout eq 'focusOut';
+    my $original_colour = $w->cget( -bg );
+    my $data_changed =
+      $original_colour eq $data_change_colour && $inout eq 'focusOut';
 
     # get the widget
-    $w->selectionClear();
     my ( $row, $col ) = $self->get_row_col($w);
 
     # set colours for rows (data)
@@ -640,7 +665,7 @@ foreach my $frame (qw(header data row totals totals_header)) {
 # Subroutine names are "header_widgets",  etc.
 
 foreach
-  my $widget (qw(header sub_header row_header totals_header totals_sub_header))
+  my $widget (qw(header balloon sub_header row_header totals_header totals_sub_header))
 {
     no strict 'refs';
     *{ $widget . "_widgets" } = sub {
@@ -667,7 +692,7 @@ sub update_data {
     my $self = shift;
     my $row  = shift;
     my $col  = shift;
-    $self->process_data_change( $row, $col );
+    $self->process_data_change->( $row, $col );
 }
 
 sub column_colours {

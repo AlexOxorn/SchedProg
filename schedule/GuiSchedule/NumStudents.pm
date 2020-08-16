@@ -127,10 +127,12 @@ sub refresh {
                     -anchor => 'e',
                 )->grid( -column => 0, -row => $row, -sticky => 'nsew' );
 
+                my $student_number = $section->num_students;
                 my $e = $pane->Entry(
+                    -textvariable => \$student_number,
                     -justify  => 'right',
                     -validate => 'key',
-                    -validatecommand => [ \&validate, $section ],
+                    -validatecommand => [ \&validate, $section],
                     -invalidcommand => sub { $pane->bell },
                     -width          => 8,
                   )->grid(
@@ -154,11 +156,13 @@ sub refresh {
 # (positive real number)
 # =================================================================
 sub validate {
-    print "@_\n";
+    no warnings;
+    print "\n\n@_\n";
     my $section = shift;
     my $n       = shift;
+    print "$n\n";
     $n = 0 unless $n;
-    if ( $n =~ /^(\s*\d*\.?\d*\s*)$/ ) {
+    if ( $n =~ /^(\s*\d*\s*)$/ ) {
         $section->num_students($n);
         $$Dirty_ptr = 1;
         return 1;

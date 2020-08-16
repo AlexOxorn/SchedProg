@@ -89,7 +89,7 @@ my $Dirty_symbol = "";
 # ==================================================================
 $mw = MainWindow->new();
 $mw->Frame( -height => $Main_frame_height )->pack( -side => 'left' );
-$mw->geometry("600x600");
+$mw->geometry("1200x600");
 $mw->protocol( 'WM_DELETE_WINDOW', \&exit_schedule );
 ( $Colours, $Fonts ) = InitGui->set($mw);
 $Colours = {

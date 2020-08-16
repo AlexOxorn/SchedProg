@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-package CIConstants;
+package CICalculator::CIConstants;
 require Exporter;
 our @ISA    = qw(Exporter);
 our @EXPORT = (
@@ -32,9 +32,9 @@ our $PREP_BONUS_LIMIT        = 3.0;
 our $PREP_BONUS_FACTOR       = 0.2;    # (1.1 - 0.9)
 our $PREP_CRAZY_BONUS_FACTOR = 1.0;    # (1.9 - 0.9)
 
-our $PES_FACTOR       = 0.4;
+our $PES_FACTOR       = 0.04;
 our $PES_BONUS_LIMIT  = 415;
-our $PES_BONUS_FACTOR = 0.3;           # (0.7-0.4)
+our $PES_BONUS_FACTOR = 0.03;           # (0.07-0.04)
 
 our $STUDENT_BONUS_LIMIT        = 75;
 our $STUDENT_BONUS_FACTOR       = 0.01;

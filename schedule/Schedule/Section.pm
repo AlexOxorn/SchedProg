@@ -275,6 +275,7 @@ Gets and sets the number of students for this section
 sub num_students {
     my $self = shift;
     $self->{-num_students} = shift if @_;
+    $self->{-num_students} = 30 unless $self->{-num_students};    
     return $self->{-num_students};
 }
 
@@ -433,9 +434,71 @@ sub assign_teacher {
             $block->assign_teacher($teacher);
         }
         $self->{-teachers}->{$teacher->id} = $teacher;
+        $self->{-allocation}->{$teacher->id} = $self->hours;
     }
 
     return $self;
+}
+
+# =================================================================
+# set teacher_allocation 
+# =================================================================
+
+=head2 set_teacher_allocation ( teacher object, hours )
+
+Assign number of hours to teacher for this section
+
+Returns section object
+
+=cut
+
+sub set_teacher_allocation {
+    my $self = shift;
+    my $teacher = shift;
+    my $hours = shift;
+    
+    # add allocation
+    if ($hours) {
+        if (!$self->has_teacher($teacher)) {
+            $self->assign_teacher($teacher);
+        }
+        $self->{-allocation}{$teacher->id} = $hours;
+    }
+    
+    # if no hours, remove teacher from section
+    else {
+        $self->remove_teacher($teacher);
+    }
+
+    return $self;
+}
+
+# =================================================================
+# get teacher_allocation 
+# =================================================================
+
+=head2 get_teacher_allocation ( teacher object)
+
+Returns number of hours assigned to this teacher for this section
+
+=cut
+
+sub get_teacher_allocation {
+    my $self = shift;
+    my $teacher = shift;
+    
+    # teacher is not teaching this section
+    return 0 unless $self->has_teacher($teacher);
+        
+    # allocation has been defined
+    if (exists $self->{-allocation}{$teacher->id}) {
+        return  $self->{-allocation}{$teacher->id} ;
+    }
+    
+    # hours have not been defined, assume total number of section hours
+    else {
+        return $self->hours;
+    }
 }
 
 # =================================================================
@@ -461,6 +524,9 @@ sub remove_teacher {
     $self->{-teachers} = {} unless $self->{-teachers};
     if ( exists $self->{-teachers}{ $teacher->id } ) {
         delete $self->{-teachers}{ $teacher->id };
+    }
+    if (exists $self->{-allocation}{ $teacher->id }) {
+        delete $self->{-allocation}{$teacher->id};
     }
     
     return $self;
