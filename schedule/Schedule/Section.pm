@@ -142,6 +142,19 @@ sub hours {
 
         $self->{-hours} = $hours;
     }
+    
+    # most often this number is not entered correctly, so
+    # lets use the number of hours in the blocks,
+    # assuming it has blocks
+    my @bs = $self->blocks;
+    
+    if (@bs) {
+        $self->{-hours} = 0;
+        foreach my $b (@bs) {
+            $self->{-hours} += $b->duration;
+        }
+    }
+         
     return $self->{-hours};
 }
 
