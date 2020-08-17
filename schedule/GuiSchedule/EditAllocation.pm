@@ -91,7 +91,6 @@ sub reset_data {
     my $semester = shift;
     undef $self->{-data}{$semester};
     $self->{-data}{$semester} = [];
-    print "RESETTING DATA!!!! \n";
 }
 
 sub reset_totals {
@@ -131,10 +130,32 @@ sub has_grid_size_changed {
 # refresh -> create a new pane for each semester if not already done
 #            and then create the allocation grid for each semester
 # ============================================================================
-
 sub refresh {
     my $self  = shift;
     my $panes = $self->panes;
+
+    my $yscroll;
+    unless ( $self->{-scrolledframe} ) {
+        
+        $yscroll = $self->{-frame}->Scrollbar( -orient => 'vertical' )
+          ->pack( -side => 'right', -fill => 'y' );
+        $self->{-scrolledframe} = $self->{-frame}->Pane( -sticky => 'nsew' )
+          ->pack( -side => 'top', -expand => 1, -fill => 'both' );
+
+        # manage the scrollbar?
+        $yscroll->configure(
+            -command => sub {
+                $self->{-scrolledframe}->yview(@_);
+            }
+        );
+        $self->{-scrolledframe}->configure(
+            -yscrollcommand => sub {
+                my (@args) = @_;
+                $yscroll->set(@args);
+            },
+        );
+
+    }
 
     foreach my $semester ( $self->semesters ) {
 
@@ -143,7 +164,7 @@ sub refresh {
 
             # make new frame
             $panes->{$semester} =
-              $self->{-frame}->Frame( -bg => 'black' );
+              $self->{-scrolledframe}->Pane( -sticky => "nsew" );
         }
 
         # create an allocation grid for this semester
@@ -162,13 +183,13 @@ sub refresh {
     my $row = 0;
     foreach my $semester ( $self->semesters ) {
         if ( $panes->{$semester} ) {
-            $panes->{$semester}->grid( -row => $row, -sticky => 'nwe' );
-            $self->{-frame}->gridRowconfigure( $row, -weight => 0 );
+            $panes->{$semester}
+              ->grid( -row => $row, -sticky => 'nswe', -column => 0 );
+            $self->{-scrolledframe}->gridRowconfigure( $row, -weight => 0 );
             $row++;
         }
     }
-    $self->{-frame}->gridRowconfigure( $row, -weight => 1 );
-    $self->{-frame}->gridColumnconfigure( 0, -weight => 1 );
+    $self->{-scrolledframe}->gridColumnconfigure( 0, -weight => 1 );
 
 }
 
@@ -251,14 +272,14 @@ sub create_allocation_grid {
     my @bound_totals;
     foreach my $teacher (@teachers) {
         my $release = "";
-        $release = sprintf( "%6.2f", $teacher->release ) if $teacher->release;
+        $release = sprintf( "%6.3f", $teacher->release ) if $teacher->release;
         my $CI = CICalc->new($teacher)->calculate( $Schedules{$semester} );
 
         my $info = {
-            -teacher           => $teacher,
-            -CI_calc           => $CI,
-            -CI_total          => "",
-            -release           => $release,
+            -teacher  => $teacher,
+            -CI_calc  => $CI,
+            -CI_total => "",
+            -release  => $release,
         };
         $self->totals($semester)->[$row] = $info;
         $bound_totals[$row][1] = \$self->totals($semester)->[$row]->{-CI_calc};
@@ -302,7 +323,7 @@ sub create_allocation_grid {
         \@courses_text,  \@courses_balloon,
         \@sections_text, \@teachers_text,
         \@bound_vars, [""],
-        [qw(RT CI ALL)], \@bound_totals
+        [qw(RT CI YEAR)], \@bound_totals
     );
 
     $self->update_all_CI($semester);
@@ -344,7 +365,6 @@ sub update_all_CI {
           $total->{-CI_calc};
         $row++;
     }
-    use Data::Dumper;print "Semester:$semester\n", Dumper \%all_semesters;
 
     # get totals for all semesters
     foreach my $sem ( $self->semesters ) {
@@ -356,7 +376,6 @@ sub update_all_CI {
               $tot->{-CI_calc};
         }
     }
-    use Data::Dumper;print Dumper \%all_semesters;
 
     # update the total CI on the grid
     foreach my $sem ( $self->semesters ) {
@@ -364,8 +383,7 @@ sub update_all_CI {
         foreach my $tot (@$tots) {
             my $teacher = $tot->{-teacher};
             $tot->{-CI_total} =
-              $all_semesters{ $teacher->firstname . " " . $teacher->lastname }
-              ;
+              $all_semesters{ $teacher->firstname . " " . $teacher->lastname };
         }
     }
 
@@ -377,6 +395,11 @@ sub process_data_entry {
     my $semester = shift;
     my $row      = shift;
     my $col      = shift;
+    my $data = $self->data($semester)->[$row][$col];
+    my $teacher = $data->{-teacher};
+    my $section = $data->{-section};
+    my $hours = $data->{-value};
+    $section->set_teacher_allocation($teacher,$hours);
     $self->update_all_CI($semester);
     $$Dirty_ptr = 1;
 }

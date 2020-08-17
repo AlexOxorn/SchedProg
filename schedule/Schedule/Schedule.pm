@@ -417,13 +417,7 @@ sub courses_for_teacher {
     my %courses;
 
     foreach my $course ( $self->courses->list ) {
-        foreach my $section ( $course->sections ) {
-            foreach my $teacher_id ( $section->teachers ) {
-                if ( $teacher->id eq $teacher_id->id ) {
-                    $courses{$course} = $course;
-                }
-            }
-        }
+        $courses{$course} = $course if $course->has_teacher($teacher);
     }
 
     if (wantarray) {

@@ -157,10 +157,8 @@ sub refresh {
 # =================================================================
 sub validate {
     no warnings;
-    print "\n\n@_\n";
     my $section = shift;
     my $n       = shift;
-    print "$n\n";
     $n = 0 unless $n;
     if ( $n =~ /^(\s*\d*\s*)$/ ) {
         $section->num_students($n);
