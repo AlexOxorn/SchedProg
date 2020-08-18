@@ -184,6 +184,25 @@ sub list {
 }
 
 # =================================================================
+# courses list for allocation
+# =================================================================
+
+=head2 allocation_list ()
+
+Returns a list of courses, sorted, that need allocation 
+
+=cut
+
+sub allocation_list {
+    my $self = shift;
+
+    my @courses = grep { $_->needs_allocation }
+      sort { $a->number cmp $b->number } $self->list;
+      
+      return @courses;
+}
+
+# =================================================================
 # footer    Scheduler->Courses->list()
 # =================================================================
 

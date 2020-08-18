@@ -1291,7 +1291,7 @@ sub _edit_course_dialog {
         refresh_schedule($tree);
         return 2;
     }
-    elsif ( $startDesc ne $desc || $startNum ne $cNum ) {
+    elsif ( $startDesc ne $desc || $startNum ne $cNum  ) {
         $obj->name($desc);
         $obj->number($cNum);
         refresh_schedule($tree);
@@ -1318,7 +1318,7 @@ sub _edit_section_dialog {
     #--------------------------------------------------------
     my $objPar = $obj->course;
     my $parent = $tree->info( 'parent', $path );
-
+    
     my $cNum = $obj->number;
 
     my $cName = $obj->name;
@@ -1342,6 +1342,9 @@ sub _edit_section_dialog {
 
     my @teachersO = $obj->teachers;
     my $curTeachO = "";
+    
+    my $hoursO = $obj->hours; 
+    my $hoursN = $hoursO;  
 
     my %teacherNameO;
     foreach my $i (@teachersO) {
@@ -1382,6 +1385,7 @@ sub _edit_section_dialog {
     #my $frame4A = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
     #my $frame4B = $edit_dialog->Frame( -height => 30, )->pack( -fill => 'x' );
 
+    my $hoursEntry;
     my $blockDrop;
     my $blockText;
     my $blockAdd;
@@ -1412,6 +1416,10 @@ sub _edit_section_dialog {
     $top->Label( -text => "Section Name", -anchor => 'w' )
       ->grid( $top->Entry( -textvariable => \$cName ),
               '-', '-', -sticky => "nsew" );
+
+    $top->Label(-text=>"Hours",-anchor=>'w')
+    ->grid($top->Entry(-textvariable => \$hoursN),
+    $top->Label(-text=>"only used if there are no blocks"),"-",-sticky=>'nsew');
 
     $top->Label( -text => "" )->grid( -columnspan => 4 );
 
@@ -1715,11 +1723,11 @@ sub _edit_section_dialog {
         return 2;
     }
     else {
-        if ( $oldName ne $cName ) {
+        if ( $oldName ne $cName || $hoursN != $hoursO) {
             $obj->name($cName);
+            $obj->hours($hoursN);
             refresh_schedule($tree);
             set_dirty();
-            return 1;
         }
         else {
             set_dirty() if $change;
@@ -2082,7 +2090,8 @@ sub _add_block {
             push( @hrs, "" );
         }
 
-# stop the dialog box from executing the default button press when hitting return
+        # stop the dialog box from executing the default button 
+        # press when hitting return
         $db2->bind( "<Return>", sub { } );
 
         my $hoursEntry;

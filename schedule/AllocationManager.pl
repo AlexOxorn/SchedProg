@@ -818,7 +818,7 @@ sub draw_edit_courses {
             $Colours, $Fonts,     undef
         ) }
         else {
-            $de->refresh();
+            $de->draw();
         }
     }
 

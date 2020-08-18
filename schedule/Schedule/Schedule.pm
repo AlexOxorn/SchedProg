@@ -429,6 +429,23 @@ sub courses_for_teacher {
 }
 
 # =================================================================
+# get course info for teacher, but only if it needs allocation
+# =================================================================
+
+=head2 allocated_courses_for_teacher (teacher object) 
+
+Returns a list of courses that this teacher teaches, which is an
+allocated type course
+
+=cut
+
+sub allocated_courses_for_teacher {
+    my $self    = shift;
+    my $teacher = shift;
+    return grep {$_->needs_allocation} $self->courses_for_teacher($teacher);
+}
+
+# =================================================================
 # get block info for teacher
 # =================================================================
 

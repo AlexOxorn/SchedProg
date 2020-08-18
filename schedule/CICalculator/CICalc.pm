@@ -6,8 +6,14 @@ package CICalc;
 use FindBin;
 use Carp;
 use lib "$FindBin::Bin/..";
-
 use CICalculator::CIConstants;
+
+# for debugging purposes
+my $printflag = 0;
+sub debug {
+    return unless $printflag;
+    print (@_);
+}
 
 =head1 NAME
 
@@ -110,23 +116,23 @@ sub calculate {
     my $schedule = shift;
     my @CI       = ();
     my $teacher  = $self->teacher;
-    my @courses  = grep {$_->needs_allocation} $schedule->courses_for_teacher($teacher);
+    my @courses  = $schedule->allocated_courses_for_teacher($teacher);
 
     $self->_reset();
     $self->_set_release( $teacher->release );
 
-    print "\n\n--------- ",$teacher->firstname," ---------\n";
-    print "\nstart list\n";
+    debug( "\n\n--------- ",$teacher->firstname," ---------\n" );
+    debug( "\nstart list\n" );
     foreach my $course (@courses) {
-        print $course->number," ",$course->name,"\n";
+        debug( $course->number," ",$course->name,"\n"  );
     }
-    print "end list\n\n";
+    debug( "end list\n\n" );
 
     # per course
     foreach my $course (@courses) {
         my $max_prep_hours = 0;
 
-            print "*********** ",$course->name,"\n";
+            debug( "*********** ",$course->name,"\n" );
 
         # per section
         foreach my $section ( $course->sections_for_teacher($teacher) ) {
@@ -134,7 +140,7 @@ sub calculate {
             my $hours    = $section->get_teacher_allocation($teacher);
             my $students = $section->num_students;
             
-            print $course->name," ",$section->name," ",$hours,"\n";
+            debug( $course->name," ",$section->name," ",$hours,"\n" );
 
             $max_prep_hours =
               $max_prep_hours > $hours ? $max_prep_hours : $hours;
@@ -151,7 +157,7 @@ sub calculate {
 
     # return
     my $total = $self->_total;
-    print "CI $teacher: ",$total,"\n";
+    debug( "CI $teacher: ",$total,"\n" );
     return sprintf("%7.1f",$total);
 }
 
@@ -240,23 +246,23 @@ sub _total {
     # ------------------------------------------------------------------------
 
     my $CI_student = $self->pes * $PES_FACTOR;
-    print "PES: ",$self->pes,"\n";
-    print "Student factor: ",$CI_student,"\n";
+    debug( "PES: ",$self->pes,"\n" );
+    debug( "Student factor: ",$CI_student,"\n" );
 
     # bonus if pes is over 415
     my $surplus = $self->pes - $PES_BONUS_LIMIT;
     my $bonus = $surplus > 0 ? $surplus * $PES_BONUS_FACTOR : 0;
-    print "bonus PES > 415: $bonus\n";
+    debug( "bonus PES > 415: $bonus\n" );
     $CI_student += $bonus;
 
     # another bonus if total number of students is over student_bonus_limit
     # (only for courses over 3 hours)
-    print "students ",$self->students,"\n";
+    debug( "students ",$self->students,"\n" );
     $bonus =
         $self->ntu_students >= $STUDENT_BONUS_LIMIT
       ? $self->ntu_students * $STUDENT_BONUS_FACTOR
       : 0;
-     print "bonus students over 75: $bonus\n";
+     debug( "bonus students over 75: $bonus\n" );
     $CI_student += $bonus;
 
     # and yet another bonus if number of students is over Crazy student limit
@@ -270,32 +276,32 @@ sub _total {
     # Preps (based on # of prep hours PER course)
     # ------------------------------------------------------------------------
     my $CI_preps = $self->prep_hours * $PREP_FACTOR;
-    print "prep hours ",$self->prep_hours,"\n";
-    print "CI prep: $CI_preps\n";
+    debug( "prep hours ",$self->prep_hours,"\n" );
+    debug( "CI prep: $CI_preps\n" );
 
     # bonus if number of preps is the PREP_BONUS_LIMIT
     if ( $self->num_preps == $PREP_BONUS_LIMIT ) {
         $CI_preps += $self->prep_hours * $PREP_BONUS_FACTOR;
-        print "CI bonus prep: ",$self->prep_hours * $PREP_BONUS_FACTOR,"\n";
+        debug( "CI bonus prep: ",$self->prep_hours * $PREP_BONUS_FACTOR,"\n" );
     }
 
     # more bonus if over the limit
     elsif ( $self->num_preps > $PREP_BONUS_LIMIT ) {
         $CI_preps += $self->prep_hours * $PREP_CRAZY_BONUS_FACTOR;
-        print "CI bonus bonsu prep: ",$self->prep_hours * $PREP_CRAZY_BONUS_FACTOR,"\n";
+        debug( "CI bonus bonsu prep: ",$self->prep_hours * $PREP_CRAZY_BONUS_FACTOR,"\n" );
     }
 
     # ------------------------------------------------------------------------
     # Hours (based on contact hours per week)
     # ------------------------------------------------------------------------
     my $CI_hours = $self->hours * $HOURS_FACTOR;
-    print "CI hours: $CI_hours\n";
+    debug( "CI hours: $CI_hours\n" );
 
     # ------------------------------------------------------------------------
     # Release
     # ------------------------------------------------------------------------
     my $CI_release = $self->release * $CI_FTE_PER_SEMESTER;
-    print "CI release: $CI_release\n";
+    debug( "CI release: $CI_release\n" );
 
     # ------------------------------------------------------------------------
     # all done

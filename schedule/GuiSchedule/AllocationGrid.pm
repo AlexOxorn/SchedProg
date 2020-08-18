@@ -129,6 +129,8 @@ sub new {
     my $data_frame   = $pane->Pane( -sticky => 'nsew' );
     my $totals_frame = $pane->Frame();
     my $totals_header_frame = $pane->Frame();
+    my $bottom_header_frame = $pane->Pane( -sticky => 'nsew' );
+    my $bottom_frame        = $pane->Pane( -sticky => 'nsew' );
 
     # save them
     $self->header_frame($header_frame);
@@ -136,6 +138,8 @@ sub new {
     $self->row_frame($row_frame);
     $self->totals_frame($totals_frame);
     $self->totals_header_frame($totals_header_frame);
+    $self->bottom_header_frame($bottom_header_frame);
+    $self->bottom_frame($bottom_frame);
 
     # configure the layout
     $header_frame->grid(
@@ -156,7 +160,21 @@ sub new {
         -row    => 1,
         -column => 2,
         -sticky => 'nsew',
-        , -padx => 3,
+         -padx => 3,
+        
+    );
+    $bottom_header_frame->grid(
+        -row    => 2,
+        -column => 0,
+        -sticky => 'nsew',
+        -padx   => 3,
+        -pady => 2,
+    );
+    $bottom_frame->grid(
+        -row    => 2,
+        -column => 1,
+        -sticky => 'nsew',
+        -pady   => 2,
     );
     $pane->gridColumnconfigure( 0, -weight => 0 );
     $pane->gridColumnconfigure( 1, -weight => 5 );
@@ -176,7 +194,7 @@ sub new {
         -relief       => 'flat'
     );
 
-    my $scroll_horz_widgets = [ $header_frame, $data_frame ];
+    my $scroll_horz_widgets = [ $header_frame, $data_frame, $bottom_frame ];
     $horiz_scroll->pack( -side => 'bottom', -expand => 1, -fill => 'x' );
 
     # configure widgets so scroll bar works properly
@@ -204,6 +222,8 @@ sub new {
     $self->make_row_titles($rows);
     $self->make_data_grid( $rows, $col_merge, $data_entry_callback );
     $self->make_total_grid( $rows, $totals_merge );
+    $self->make_bottom_header();
+    $self->make_bottom($col_merge);
 
     return $self;
 
@@ -228,10 +248,10 @@ sub make_header_columns {
             -disabledbackground => $header_colour1,
             -state              => 'disabled',
         )->pack( -side => 'top', -expand => 0, -fill => 'both' );
-        
+
         # balloon
         my $balloon = $mini_frame->Balloon();
-        push @{$self->balloon_widgets}, $balloon;
+        push @{ $self->balloon_widgets }, $balloon;
 
         # change colour every second merged header
         if ( $header % 2 ) {
@@ -266,6 +286,52 @@ sub make_header_columns {
         }
     }
 
+    return;
+}
+
+# ============================================================================
+# bottom row
+# ============================================================================
+sub make_bottom {
+    my $self      = shift;
+    my $col_merge = shift;
+
+    # merged header
+    foreach my $header ( 0 .. @$col_merge - 1 ) {
+
+        foreach my $sub_section ( 1 .. $col_merge->[$header] ) {
+
+            # widget
+            my $se = $self->bottom_frame->Entry(
+                %entry_props,
+                -disabledbackground => $totals_colour,
+                -state              => 'disabled',
+            )->pack( -side => 'left' );
+
+
+            # keep these widgets so that they can be configured later
+            push @{ $self->bottom_widgets }, $se;
+        }
+    }
+
+    return;
+}
+
+# ============================================================================
+# bottom row header
+# ============================================================================
+sub make_bottom_header {
+    my $self = shift;
+
+    # widget
+    my $se = $self->bottom_header_frame->Entry(
+        %entry_props,
+        -state              => 'disabled',
+        -width => 12,
+    )->pack( -side => 'top' );
+
+    # keep these widgets so that they can be configured later
+    push @{ $self->bottom_header_widgets }, $se;
     return;
 }
 
@@ -399,7 +465,7 @@ sub make_data_grid {
                     -validate        => 'key',
                     -validatecommand => sub {
                         $de->configure( -bg => $data_change_colour );
-                        return $data_entry_callback->($row,$sub_section,@_);
+                        return $data_entry_callback->( $row, $sub_section, @_ );
                     },
                     -invalidcommand => sub { $df1->bell },
                 )->pack( -side => 'left' );
@@ -414,11 +480,11 @@ sub make_data_grid {
                 $self->column_colours->[$col] = $colour;
                 $de->configure( -bg => $colour );
 
-                # set bindings for navigation
-                #$de->bind( "<Key-Left>",       [ \&_move, $self, 'prevCell' ] );
-                #$de->bind( "<Key-leftarrow>",  [ \&_move, $self, 'prevCell' ] );
-                #$de->bind( "<Key-Right>",      [ \&_move, $self, 'nextCell' ] );
-                #$de->bind( "<Key-rightarrow>", [ \&_move, $self, 'nextCell' ] );
+               # set bindings for navigation
+               #$de->bind( "<Key-Left>",       [ \&_move, $self, 'prevCell' ] );
+               #$de->bind( "<Key-leftarrow>",  [ \&_move, $self, 'prevCell' ] );
+               #$de->bind( "<Key-Right>",      [ \&_move, $self, 'nextCell' ] );
+               #$de->bind( "<Key-rightarrow>", [ \&_move, $self, 'nextCell' ] );
                 $de->bind( "<Tab>",           [ \&_move, $self, 'nextCell' ] );
                 $de->bind( "<Key-Return>",    [ \&_move, $self, 'nextRow' ] );
                 $de->bind( "<Shift-Tab>",     [ \&_move, $self, 'prevCell' ] );
@@ -459,6 +525,20 @@ sub populate {
     my $total_header_texts = shift;
     my $total_sub_texts    = shift;
     my $total_vars         = shift;
+    my $bottom_header_text = shift;
+    my $bottom_row_vars    = shift;
+    use Data::Dumper;print Dumper $bottom_row_vars;
+   # use Data::Dumper;print Dumper $total_vars;
+    
+    # bottom row
+    my $bottom_header_widget = $self->bottom_header_widgets->[0];
+    $bottom_header_widget->configure(-textvariable=>$bottom_header_text);
+    
+    my $bottom_widgets = $self->bottom_widgets;
+    foreach my $col ( 0 .. scalar(@$bottom_widgets) - 1 ) {
+        print "$col: ",$bottom_row_vars->[$col],"\n";
+        $bottom_widgets->[$col]->configure(-textvariable => $bottom_row_vars->[$col]);
+    }
 
     # the totals header
     my $totals_widgets = $self->totals_header_widgets;
@@ -498,12 +578,13 @@ sub populate {
     }
 
     # the header data
-    my $i              = 0;
-    my $header_widgets = $self->header_widgets;
+    my $i               = 0;
+    my $header_widgets  = $self->header_widgets;
     my $balloon_widgets = $self->balloon_widgets;
     while ( my $var = shift @$header_text ) {
         $header_widgets->[$i]->configure( -textvariable => \$var );
-        $balloon_widgets->[$i]->attach($header_widgets->[$i],-msg=>$balloon_text->[$i]);
+        $balloon_widgets->[$i]
+          ->attach( $header_widgets->[$i], -msg => $balloon_text->[$i] );
         $i++;
     }
 
@@ -574,9 +655,9 @@ sub focus_changed {
     my $self   = shift;
     my $inout  = shift;
     my $colour = shift;
-    
+
     # update selection
-    if ($inout eq 'focusIn') {
+    if ( $inout eq 'focusIn' ) {
         $w->selectionRange( 0, 'end' );
     }
     else {
@@ -650,7 +731,9 @@ sub int_clamp {
 # ----------------------------------------------------------------------------
 # Subroutine names are "header_frame", "data_frame", etc.
 
-foreach my $frame (qw(header data row totals totals_header)) {
+foreach
+  my $frame (qw(header data row totals totals_header bottom bottom_header))
+{
     no strict 'refs';
     *{ $frame . "_frame" } = sub {
         my $self = shift;
@@ -664,8 +747,9 @@ foreach my $frame (qw(header data row totals totals_header)) {
 # ----------------------------------------------------------------------------
 # Subroutine names are "header_widgets",  etc.
 
-foreach
-  my $widget (qw(header balloon sub_header row_header totals_header totals_sub_header))
+foreach my $widget (
+    qw(header balloon sub_header row_header totals_header totals_sub_header bottom_header bottom)
+  )
 {
     no strict 'refs';
     *{ $widget . "_widgets" } = sub {

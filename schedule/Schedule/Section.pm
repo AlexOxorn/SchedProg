@@ -502,6 +502,30 @@ sub get_teacher_allocation {
 }
 
 # =================================================================
+# allocated_hours
+# =================================================================
+
+=head2 allocated_hours
+
+Returns number of hours that have been allocated to teacheres
+
+=cut
+
+sub allocated_hours {
+    my $self = shift;
+    my $hours = 0;
+    
+    foreach my $teacher ($self->teachers) {
+        $hours += $self->get_teacher_allocation ($teacher);
+    }
+    return $hours;
+        
+    my $teacher = shift;
+}
+
+
+
+# =================================================================
 # remove_teacher
 # =================================================================
 

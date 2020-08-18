@@ -161,6 +161,8 @@ sub semester {
 		my $semester = lc(shift);
 		if ( $semester !~ /^(summer|winter|fall)/ ) {
 			warn("invalid semester for course; ($semester) \n");
+			my @caller = caller();
+			print "Called from: ",join(", ",@caller),"\n";
 			$semester = "";
 		}
 		$self->{-semester} = $semester;
@@ -381,6 +383,23 @@ sub sections {
 	else {
 		return [ values %{ $self->{-sections} } ];
 	}
+}
+
+# =================================================================
+# number of sections
+# =================================================================
+
+=head2 number of sections ( )
+
+returns number sections assigned to this course
+
+=cut
+
+sub number_of_sections {
+	my $self = shift;
+
+	my @sections = $self->sections;
+	return scalar(@sections);
 }
 
 # =================================================================
