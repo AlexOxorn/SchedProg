@@ -570,10 +570,8 @@ sub teachers {
 	my %teachers;
 
 	foreach my $section ( $self->sections ) {
-		foreach my $block ( $section->blocks ) {
-			foreach my $teacher ( $block->teachers ) {
-				$teachers{$teacher} = $teacher;
-			}
+		foreach my $teacher ( $section->teachers ) {
+			$teachers{$teacher} = $teacher;
 		}
 	}
 

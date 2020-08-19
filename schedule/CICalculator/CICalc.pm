@@ -140,7 +140,7 @@ sub calculate {
             my $hours    = $section->get_teacher_allocation($teacher);
             my $students = $section->num_students;
             
-            debug( $course->name," ",$section->name," ",$hours,"\n" );
+            debug( $course->name,", Section: ",$section->number,", hours: ",$hours,"\n" );
 
             $max_prep_hours =
               $max_prep_hours > $hours ? $max_prep_hours : $hours;

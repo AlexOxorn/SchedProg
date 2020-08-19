@@ -27,7 +27,8 @@ my $totals_header_colour     = Colour->new("lemonchiffon")->string;
 my $totals_colour            = Colour->lighten( 5, $totals_header_colour );
 my $fg_colour                = "black";
 my $bg_colour                = "white";
-my $data_change_colour       = Colour->new("mistyrose")->string;
+my $needs_update_colour      = Colour->new("mistyrose")->string;
+my $not_ok_colour            = $needs_update_colour;
 
 # width of the data entry (fixed for now... maybe make it configurable
 # at a later date)
@@ -86,12 +87,14 @@ sub new {
     my $Colours      = shift;
     $Fonts = shift;
 
-    my @col_merge           = @$col_merge;
-    my $data_entry_callback = shift || sub { return 1; };
-    my $process_data_entry  = shift;
+    my @col_merge              = @$col_merge;
+    my $data_entry_callback    = shift || sub { return 1; };
+    my $process_data_entry  = shift || sub{return 1};
+    my $bottom_row_ok_callback = shift || sub { return 1; };
 
     my $self = bless {}, $class;
     $self->process_data_change($process_data_entry);
+
 
     # ------------------------------------------------------------------------
     # entry widget properties
@@ -160,15 +163,15 @@ sub new {
         -row    => 1,
         -column => 2,
         -sticky => 'nsew',
-         -padx => 3,
-        
+        -padx   => 3,
+
     );
     $bottom_header_frame->grid(
         -row    => 2,
         -column => 0,
         -sticky => 'nsew',
         -padx   => 3,
-        -pady => 2,
+        -pady   => 2,
     );
     $bottom_frame->grid(
         -row    => 2,
@@ -223,7 +226,7 @@ sub new {
     $self->make_data_grid( $rows, $col_merge, $data_entry_callback );
     $self->make_total_grid( $rows, $totals_merge );
     $self->make_bottom_header();
-    $self->make_bottom($col_merge);
+    $self->make_bottom( $col_merge, $bottom_row_ok_callback );
 
     return $self;
 
@@ -295,6 +298,7 @@ sub make_header_columns {
 sub make_bottom {
     my $self      = shift;
     my $col_merge = shift;
+    my $is_ok     = shift;
 
     # merged header
     foreach my $header ( 0 .. @$col_merge - 1 ) {
@@ -302,12 +306,23 @@ sub make_bottom {
         foreach my $sub_section ( 1 .. $col_merge->[$header] ) {
 
             # widget
-            my $se = $self->bottom_frame->Entry(
+            my $se;
+            $se = $self->bottom_frame->Entry(
                 %entry_props,
                 -disabledbackground => $totals_colour,
                 -state              => 'disabled',
+                -validate           => 'key',
+                -validatecommand    => sub {
+                    my $n = shift;
+                    if ( $is_ok->($n) ) {
+                       $se->configure( -disabledbackground => $totals_colour );
+                    }
+                    else {
+                        $se->configure( -disabledbackground => $not_ok_colour );
+                    }
+                    return 1;
+                },
             )->pack( -side => 'left' );
-
 
             # keep these widgets so that they can be configured later
             push @{ $self->bottom_widgets }, $se;
@@ -326,7 +341,7 @@ sub make_bottom_header {
     # widget
     my $se = $self->bottom_header_frame->Entry(
         %entry_props,
-        -state              => 'disabled',
+        -state => 'disabled',
         -width => 12,
     )->pack( -side => 'top' );
 
@@ -447,12 +462,13 @@ sub make_data_grid {
     my $data_entry_callback = shift;
 
     my %data;
+    my $col = 0;
     foreach my $row ( 0 .. $rows - 1 ) {
         my $df1 = $self->data_frame->Frame()
           ->pack( -side => 'top', -expand => 1, -fill => 'x' );
 
         # foreach header
-        my $col = 0;
+        $col = 0;
         foreach my $header ( 0 .. @$col_merge - 1 ) {
 
             # subsections
@@ -463,10 +479,10 @@ sub make_data_grid {
                 $de = $df1->Entry(
                     %entry_props,
                     -validate        => 'key',
-                    -validatecommand => sub {
-                        $de->configure( -bg => $data_change_colour );
-                        return $data_entry_callback->( $row, $sub_section, @_ );
-                    },
+                    -validatecommand => [sub {
+                        $de->configure( -bg => $needs_update_colour );
+                        return $data_entry_callback->(  @_ );
+                    },$row,$col],
                     -invalidcommand => sub { $df1->bell },
                 )->pack( -side => 'left' );
 
@@ -527,17 +543,15 @@ sub populate {
     my $total_vars         = shift;
     my $bottom_header_text = shift;
     my $bottom_row_vars    = shift;
-    use Data::Dumper;print Dumper $bottom_row_vars;
-   # use Data::Dumper;print Dumper $total_vars;
-    
+
     # bottom row
     my $bottom_header_widget = $self->bottom_header_widgets->[0];
-    $bottom_header_widget->configure(-textvariable=>$bottom_header_text);
-    
+    $bottom_header_widget->configure( -textvariable => $bottom_header_text );
+
     my $bottom_widgets = $self->bottom_widgets;
     foreach my $col ( 0 .. scalar(@$bottom_widgets) - 1 ) {
-        print "$col: ",$bottom_row_vars->[$col],"\n";
-        $bottom_widgets->[$col]->configure(-textvariable => $bottom_row_vars->[$col]);
+        $bottom_widgets->[$col]
+          ->configure( -textvariable => $bottom_row_vars->[$col] );
     }
 
     # the totals header
@@ -641,8 +655,10 @@ sub set_focus {
     my $self = shift;
     my $e    = shift;
     if ($e) {
+        my ($r,$c) = $self->get_row_col($e);
         $self->header_frame->see($e);
         $self->data_frame->see($e);
+        $self->bottom_frame->see($self->bottom_widgets->[$c]);
         $e->focus();
     }
 }
@@ -671,7 +687,7 @@ sub focus_changed {
     # are we processing a 'data change?'
     my $original_colour = $w->cget( -bg );
     my $data_changed =
-      $original_colour eq $data_change_colour && $inout eq 'focusOut';
+      $original_colour eq $needs_update_colour && $inout eq 'focusOut';
 
     # get the widget
     my ( $row, $col ) = $self->get_row_col($w);

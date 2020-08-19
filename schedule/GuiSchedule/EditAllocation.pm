@@ -15,6 +15,10 @@ use Tk::Menu;
 use Tk::LabEntry;
 use Tk::Pane;
 
+#### DEBUG
+my $bound_bottom;
+
+
 =head1 NAME
 
 NumStudents - provides methods/objects for entering number of students per section 
@@ -228,7 +232,8 @@ sub define_allocation_grid {
             $Colours,
             $Fonts,
             sub { validate_number( $self, $semester, @_ ) },
-            sub { process_data_entry( $self, $semester, @_ ) }
+            sub { process_data_entry($self, $semester, @_)},                
+            sub { my $remaining_number = shift || 0;return ! $remaining_number }
         );
         $self->gui_grid( $semester, $grid );
     }
@@ -240,7 +245,7 @@ sub define_allocation_grid {
     # ------------------------------------------------------------------------
     # bind data to AllocationGrid
     # ------------------------------------------------------------------------
-    $self->define_data_binding ($semester);    
+    $self->define_data_binding ($semester);  
     
     # ------------------------------------------------------------------------
     # update the CI
@@ -248,6 +253,9 @@ sub define_allocation_grid {
     $self->update_all_CI($semester);
 
 }
+    my @bound_data_vars;
+    my @bound_remaining_hours;
+
 
 # ============================================================================
 # define all the data and bind to Allocation Grid
@@ -276,7 +284,6 @@ sub define_data_binding {
     # based on ROW/COL,
     # and create arrays for binding this information to the allocationGrid
 
-    my @bound_data_vars;
     my $col = 0;
 
     # foreach course/section/teacher, holds the number of hours
@@ -342,11 +349,10 @@ sub define_data_binding {
     }
 
     # ------------------------------------------------------------------------
-    # bottom row, arrays and binding
+    # remaining hours to be allocated, arrays and binding
     # ------------------------------------------------------------------------
 
     # foreach section, number of hours not yet allocated
-    my @bound_remaining_hours;
 
     # foreach course/section/teacher, holds the number of hours
     $col = 0;
@@ -357,7 +363,7 @@ sub define_data_binding {
         {
             $self->remaining($semester)->[$col] = {
                 $SectionKey => $section,
-                $ValueKey   => $section->hours - $section->allocated_hours,
+                $ValueKey   => "",#$section->hours - $section->allocated_hours,
             };
 
             $bound_remaining_hours[$col] =
@@ -376,33 +382,9 @@ sub define_data_binding {
         [qw(RT CI YEAR)], \@bound_totals,
         $remaining_text, \@bound_remaining_hours,
     );
-
-
+    $bound_bottom = \@bound_remaining_hours;
 }
 
-# ============================================================================
-# validate number callback routine
-# - make sure it is a number
-# - invalidate the CI calculations
-# ============================================================================
-sub validate_number {
-    my $self     = shift;
-    my $semester = shift;
-    my $row      = shift;
-    my $col      = shift;
-    my $totals   = $self->totals($semester)->[$row];
-
-    my $maybe_number = shift;
-
-    if (   $maybe_number =~ /^\s*$/
-        || $maybe_number =~ /^(\s*\d*)(\.?)(\d*\s*)$/ )
-    {
-        $totals->{$CIKey}      = "";
-        $totals->{$CITotalKey} = "";
-        return 1;
-    }
-    return 0;
-}
 
 # ============================================================================
 # Update all the CI
@@ -449,9 +431,34 @@ sub update_all_CI {
             $tot->{$CITotalKey} =
               $all_semesters{ $teacher->firstname . " " . $teacher->lastname };
         }
-    }
-    
+    }    
 
+}
+
+# ============================================================================
+# validate number callback routine
+# - make sure it is a number
+# - invalidate the CI calculations
+# ============================================================================
+sub validate_number {
+    my $self     = shift;
+    my $semester = shift;
+    my $row      = shift;
+    my $col      = shift;
+    my $totals   = $self->totals($semester)->[$row];
+    my $remainders = $self->remaining($semester)->[$col];
+ 
+    my $maybe_number = shift;
+
+    if (   $maybe_number =~ /^\s*$/
+        || $maybe_number =~ /^(\s*\d*)(\.?)(\d*\s*)$/ )
+    {
+        $totals->{$CIKey}      = "";
+        $totals->{$CITotalKey} = "";
+        $remainders->{$ValueKey} = "";
+        return 1;
+    }
+    return 0;
 }
 
 # ============================================================================
@@ -463,12 +470,17 @@ sub process_data_entry {
     my $semester = shift;
     my $row      = shift;
     my $col      = shift;
+ 
+    my $remainders = $self->remaining($semester)->[$col];
     my $data     = $self->data($semester)->[$row][$col];
     my $teacher  = $data->{$TeacherKey};
     my $section  = $data->{$SectionKey};
     my $hours    = $data->{$ValueKey};
+    
     $section->set_teacher_allocation( $teacher, $hours );
     $self->update_all_CI($semester);
+    $self->remaining($semester)->[$col]{$ValueKey} = $section->hours - $section->allocated_hours;    
+    
     $$Dirty_ptr = 1;
 }
 
@@ -485,44 +497,44 @@ sub calculate_CI {
 # ============================================================================
 # storing data
 # ============================================================================
-my $data = {};
+my $data_semester_hash = {};
 
 sub data {
     my $self     = shift;
     my $semester = shift;
-    return $data->{$semester};
+    return $data_semester_hash->{$semester};
 }
 
-my $totals = {};
+my $totals_semester_hash = {};
 sub totals {
     my $self     = shift;
     my $semester = shift;
-    return $totals->{$semester};
+    return $totals_semester_hash->{$semester};
 }
 
-my $remaining = {};
+my $remaining_semester_hash = {};
 sub remaining {
     my $self     = shift;
     my $semester = shift;
-    return $remaining->{$semester};
+    return $remaining_semester_hash->{$semester};
 }
 
 sub reset_data {
     my $self     = shift;
     my $semester = shift;
-    $data->{$semester} = [];
+    $data_semester_hash->{$semester} = [];
 }
 
 sub reset_totals {
     my $self     = shift;
     my $semester = shift;
-    $totals->{$semester} = [];
+    $totals_semester_hash->{$semester} = [];
 }
 
 sub reset_remaining {
     my $self     = shift;
     my $semester = shift;
-    $remaining->{$semester} = [];
+    $remaining_semester_hash->{$semester} = [];
 }
 
 # ============================================================================

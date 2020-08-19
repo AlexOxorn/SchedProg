@@ -585,6 +585,7 @@ sub _save_schedule {
         if ( $save_as || !$Current_schedule_file{$semester} ) {
             $files{$semester} = $mw->getSaveFile(
                 -initialdir => $Current_directory,
+                -title => "Save file for $semester",
                 -filetypes =>
                   [ [ "Schedule Files", ".yaml" ], [ "All Files", "*" ] ]
             );
