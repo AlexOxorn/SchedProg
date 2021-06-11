@@ -417,13 +417,7 @@ sub courses_for_teacher {
     my %courses;
 
     foreach my $course ( $self->courses->list ) {
-        foreach my $section ( $course->sections ) {
-            foreach my $teacher_id ( $section->teachers ) {
-                if ( $teacher->id eq $teacher_id->id ) {
-                    $courses{$course} = $course;
-                }
-            }
-        }
+        $courses{$course} = $course if $course->has_teacher($teacher);
     }
 
     if (wantarray) {
@@ -432,6 +426,23 @@ sub courses_for_teacher {
     else {
         return [ values %courses ];
     }
+}
+
+# =================================================================
+# get course info for teacher, but only if it needs allocation
+# =================================================================
+
+=head2 allocated_courses_for_teacher (teacher object) 
+
+Returns a list of courses that this teacher teaches, which is an
+allocated type course
+
+=cut
+
+sub allocated_courses_for_teacher {
+    my $self    = shift;
+    my $teacher = shift;
+    return grep {$_->needs_allocation} $self->courses_for_teacher($teacher);
 }
 
 # =================================================================

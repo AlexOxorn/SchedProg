@@ -11,10 +11,20 @@ our $image_dir;
 our $logo_file;
 
 sub get_image_dir {
-	#return "$Scheduler::BinDir/Tk/Images";
-	
+    
     return $image_dir if $image_dir;
 
+    if ($Scheduler::BinDir) {
+        return "$Scheduler::BinDir/Tk/Images";
+    }
+    if ($Allocation::BinDir) {
+        return "$Allocation::BinDir/Tk/Images";
+    }
+	#return "$Scheduler::BinDir/Tk/Images";
+	
+    ######## THIS CODE IS BAD, AND TAKES A LOT OF TIME
+    ######## WAS ORIGINALLY USED IF TRYING TO MAKE A 'PAR' PACKAGE
+    ######## WHICH MOVES THE FILES AROUND.
     my $pwd = cwd;
 
     # search for images in default directory, depending on OS
@@ -47,6 +57,10 @@ sub get_image_dir {
     
     chdir($pwd);
     return $image_dir;
+}
+
+sub get_allocation_logo {
+	return "$Allocation::BinDir/AllocationLogo.gif";    
 }
 
 sub get_logo {

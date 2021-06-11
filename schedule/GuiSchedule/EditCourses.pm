@@ -7,7 +7,7 @@ use FindBin;
 use Carp;
 use Tk;
 use lib "$FindBin::Bin/..";
-use GuiSchedule::EditCoursesMenus;
+use GuiSchedule::EditCoursesDialogs;
 use Tk::DynamicTree;
 use Tk::DragDrop;
 use Tk::DropSite;
@@ -52,6 +52,11 @@ Version 1.00
 =head1 DESCRIPTION
 
 Create / Delete courses, assign teacheres, labs, etc.
+
+=head1 TODO
+
+Assigning a teacher to a section that has no blocks appears not to
+work, because they are not shown in the tree.  However, they are there.
 
 =head1 METHODS
 
@@ -113,10 +118,10 @@ sub new {
 		$sl->destroy;
 	}
 	my $right_panel =
-	  $frame->Frame( -bg => 'pink' )
+	  $frame->Frame(  )
 	  ->grid( -row => 0, -column => 1, -sticky => 'nsew' );
 	my $left_panel =
-	  $frame->Frame( -bg => 'blue' )
+	  $frame->Frame(  )
 	  ->grid( -row => 0, -column => 0, -sticky => 'nsew' );
 
 	# calculate min_width of left panel based on screen size
@@ -176,7 +181,6 @@ sub new {
 
 	refresh_schedule($tree);
 	$tree->autosetmode();
-
 }
 
 # ===================================================================
@@ -452,7 +456,7 @@ sub _teacher_sort {
 # =================================================================
 sub set_dirty {
 	$$Dirty_ptr = 1;
-	$GuiSchedule->redraw_all_views;
+	$GuiSchedule->redraw_all_views if $GuiSchedule;
 }
 
 #==================================================================
@@ -813,13 +817,13 @@ sub _double_click {
 	my $path  = shift;
 	my $obj   = _what_to_edit( $tree, $path );
 	if ( $obj->isa('Course') ) {
-		_edit_course2( $frame, $tree, $obj, $path );
+		_edit_course_dialog( $frame, $tree, $obj, $path );
 	}
 	elsif ( $obj->isa('Section') ) {
-		_edit_section2( $frame, $tree, $obj, $path );
+		_edit_section_dialog( $frame, $tree, $obj, $path );
 	}
 	elsif ( $obj->isa('Block') ) {
-		_edit_block2( $frame, $tree, $obj, $path );
+		_edit_block_dialog( $frame, $tree, $obj, $path );
 	}
 	elsif ( $obj->isa('Teacher') ) {
 		_teacher_stat( $frame, $obj );
@@ -846,13 +850,13 @@ sub edit_course {
 	my $obj   = _what_to_edit( $tree, $input );
 	if ($obj) {
 		if ( $obj->isa('Course') ) {
-			_edit_course2( $frame, $tree, $obj, $input->[0] );
+			_edit_course_dialog( $frame, $tree, $obj, $input->[0] );
 		}
 		elsif ( $obj->isa('Section') ) {
-			_edit_section2( $frame, $tree, $obj, $input->[0] );
+			_edit_section_dialog( $frame, $tree, $obj, $input->[0] );
 		}
 		elsif ( $obj->isa('Block') ) {
-			_edit_block2( $frame, $tree, $obj, $input->[0] );
+			_edit_block_dialog( $frame, $tree, $obj, $input->[0] );
 		}
 		else {
 			$frame->bell;
@@ -1078,7 +1082,7 @@ sub new_course_dialog {
 		-width   => 12,
 		-command => sub {
 			my $obj = save_course_modified( $self, 1, $tl );
-			_edit_course2( $tree, $tree, $obj, "Schedule/Course" . $obj->id );
+			_edit_course_dialog( $tree, $tree, $obj, "Schedule/Course" . $obj->id );
 		}
 	)->pack( -side => 'left', -pady => 3 );
 

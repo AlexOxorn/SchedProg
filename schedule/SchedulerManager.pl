@@ -98,18 +98,18 @@ $mw->geometry("600x600");
 $mw->protocol( 'WM_DELETE_WINDOW', \&exit_schedule );
 ( $Colours, $Fonts ) = InitGui->set($mw);
 $Colours = {
-             WorkspaceColour           => "#eeeeee",
-             WindowForeground          => "black",
-             SelectedBackground        => "#cdefff",
-             SelectedForeground        => "#0000ff",
-             DarkBackground            => "#cccccc",
-             ButtonBackground          => "#abcdef",
-             ButtonForeground          => "black",
-             ActiveBackground          => "#89abcd",
-             highlightbackground       => "#0000ff",
-             ButtonHighlightBackground => "#ff0000",
-             DataBackground            => "white",
-             DataForeground            => "black",
+    WorkspaceColour           => "#eeeeee",
+    WindowForeground          => "black",
+    SelectedBackground        => "#cdefff",
+    SelectedForeground        => "#0000ff",
+    DarkBackground            => "#cccccc",
+    ButtonBackground          => "#abcdef",
+    ButtonForeground          => "black",
+    ActiveBackground          => "#89abcd",
+    highlightbackground       => "#0000ff",
+    ButtonHighlightBackground => "#ff0000",
+    DataBackground            => "white",
+    DataForeground            => "black",
 };
 
 SetSystemColours( $mw, $Colours );
@@ -146,8 +146,10 @@ sub create_menu {
     $mw->configure( -menu => my $menubar = $mw->Menu( -menuitems => $menu ) );
 
     # create toolbar
-    my $toolbar = $mw->ToolBar( -buttonbg => $Colours->{WorkspaceColour},
-                                -hoverbg  => $Colours->{ActiveBackground}, );
+    my $toolbar = $mw->ToolBar(
+        -buttonbg => $Colours->{WorkspaceColour},
+        -hoverbg  => $Colours->{ActiveBackground},
+    );
 
     # create all the buttons
     foreach my $button (@$buttons) {
@@ -160,11 +162,11 @@ sub create_menu {
 
         # add button
         $toolbar->add(
-                       -name     => $button,
-                       -image    => "$image_dir/$button.gif",
-                       -command  => $b_props->{$button}{cb},
-                       -hint     => $b_props->{$button}{hn},
-                       -shortcut => $b_props->{$button}{sc},
+            -name     => $button,
+            -image    => "$image_dir/$button.gif",
+            -command  => $b_props->{$button}{cb},
+            -hint     => $b_props->{$button}{hn},
+            -shortcut => $b_props->{$button}{sc},
         );
 
     }
@@ -190,62 +192,62 @@ sub menu_info {
     # toolbar structure
     # ----------------------------------------------------------
     my %b_props = (
-                    new => {
-                             cb => \&new_schedule,
-                             hn => 'Create new Schedule File',
-                    },
-                    open => {
-                              cb => \&open_schedule,
-                              hn => 'Open Schedule File',
-                    },
-                    CSVimport => {
-                                   cb => \&import_schedule,
-                                   hn => 'Import Schedule from CSV'
-                    },
-                    CSVexport => {
-                                   cb => \&generate_csv,
-                                   hn => 'Save entire schedule as a CSV'
-                    },
-                    pdf_teachers => {
-                        cb => [ \&print_views, 'PDF', 'teacher' ],
-                        hn => 'Print to pdf of Teacher Schedules',
-                    },
-                    pdf_streams => {
-                        cb => [ \&print_views, 'PDF', 'stream' ],
-                        hn => 'Print to pdf of Stream Schedules',
-                    },
-                    pdf_labs => {
-                                  cb => [ \&print_views, 'PDF', 'lab' ],
-                                  hn => 'Print to pdf of Lab Schedules',
-                    },
-                    pdf_text => {
-                        cb => [ \&print_views, 'PDF', 'text' ],
-                        hn => 'Text output of schedules (good for registrar)',
-                    },
-                    latex_teachers => {
-                        cb => [ \&print_views, 'Latex', 'teacher' ],
-                        hn => 'Print to pdf of Teacher Schedules',
-                    },
-                    latex_streams => {
-                        cb => [ \&print_views, 'Latex', 'stream' ],
-                        hn => 'Print to pdf of Stream Schedules',
-                    },
-                    latex_labs => {
-                                    cb => [ \&print_views, 'Latex', 'lab' ],
-                                    hn => 'Print to pdf of Lab Schedules',
-                    },
-                    latex_text => {
-                        cb => [ \&print_views, 'Latex', 'text' ],
-                        hn => 'Text output of schedules (good for registrar)',
-                    },
-                    save => {
-                              cb => \&save_schedule,
-                              hn => "Save Schedule File",
-                    },
-                    junk => {
-                              cb => \&junkA,
-                              hn => "JUNK",
-                    },
+        new => {
+            cb => \&new_schedule,
+            hn => 'Create new Schedule File',
+        },
+        open => {
+            cb => \&open_schedule,
+            hn => 'Open Schedule File',
+        },
+        CSVimport => {
+            cb => \&import_schedule,
+            hn => 'Import Schedule from CSV'
+        },
+        CSVexport => {
+            cb => \&generate_csv,
+            hn => 'Save entire schedule as a CSV'
+        },
+        pdf_teachers => {
+            cb => [ \&print_views, 'PDF', 'teacher' ],
+            hn => 'Print to pdf of Teacher Schedules',
+        },
+        pdf_streams => {
+            cb => [ \&print_views, 'PDF', 'stream' ],
+            hn => 'Print to pdf of Stream Schedules',
+        },
+        pdf_labs => {
+            cb => [ \&print_views, 'PDF', 'lab' ],
+            hn => 'Print to pdf of Lab Schedules',
+        },
+        pdf_text => {
+            cb => [ \&print_views, 'PDF', 'text' ],
+            hn => 'Text output of schedules (good for registrar)',
+        },
+        latex_teachers => {
+            cb => [ \&print_views, 'Latex', 'teacher' ],
+            hn => 'Print to pdf of Teacher Schedules',
+        },
+        latex_streams => {
+            cb => [ \&print_views, 'Latex', 'stream' ],
+            hn => 'Print to pdf of Stream Schedules',
+        },
+        latex_labs => {
+            cb => [ \&print_views, 'Latex', 'lab' ],
+            hn => 'Print to pdf of Lab Schedules',
+        },
+        latex_text => {
+            cb => [ \&print_views, 'Latex', 'text' ],
+            hn => 'Text output of schedules (good for registrar)',
+        },
+        save => {
+            cb => \&save_schedule,
+            hn => "Save Schedule File",
+        },
+        junk => {
+            cb => \&junkA,
+            hn => "JUNK",
+        },
     );
 
     # ----------------------------------------------------------
@@ -253,100 +255,103 @@ sub menu_info {
     # ----------------------------------------------------------
     my $menu = [
         [
-           qw/cascade File -tearoff 0 -menuitems/,
-           [
-              [
-                 "command", "~New",
-                 -accelerator => "Ctrl-n",
-                 -command     => $b_props{new}{cb},
-              ],
-              [
-                 "command", "~Open",
-                 -accelerator => "Ctrl-o",
-                 -command     => $b_props{open}{cb}
-              ],
-              [ "command", "~Import CSV", -command => $b_props{import}{cb} ],
-              'separator',
-              [
-                 "command", "~Save",
-                 -accelerator => "Ctrl-s",
-                 -command     => $b_props{save}{cb}
-              ],
-              [ "command", "Save As",     -command => \&save_as_schedule ],
-              [ "command", "Save As CSV", -command => $b_props{CSVexport}{cb} ],
-              'separator',
-              [
-                 "command", "~Exit",
-                 -accelerator => "Ctrl-e",
-                 -command     => \&exit_schedule
-              ],
+            qw/cascade File -tearoff 0 -menuitems/,
+            [
+                [
+                    "command", "~New",
+                    -accelerator => "Ctrl-n",
+                    -command     => $b_props{new}{cb},
+                ],
+                [
+                    "command", "~Open",
+                    -accelerator => "Ctrl-o",
+                    -command     => $b_props{open}{cb}
+                ],
+                [ "command", "~Import CSV", -command => $b_props{import}{cb} ],
+                'separator',
+                [
+                    "command", "~Save",
+                    -accelerator => "Ctrl-s",
+                    -command     => $b_props{save}{cb}
+                ],
+                [ "command", "Save As", -command => \&save_as_schedule ],
+                [
+                    "command", "Save As CSV",
+                    -command => $b_props{CSVexport}{cb}
+                ],
+                'separator',
+                [
+                    "command", "~Exit",
+                    -accelerator => "Ctrl-e",
+                    -command     => \&exit_schedule
+                ],
 
-           ],
+            ],
         ],
         [
-           qw/cascade Print -tearoff 0 /,
-           -menuitems => [
-                           [
-                             qw/cascade PDF -tearoff 0/,
-                             -menuitems => [
-                                      [
-                                        "command",
-                                        "Teacher Schedules",
-                                        -command => $b_props{pdf_teachers}{cb},
-                                      ],
-                                      [
-                                        "command",
-                                        "Lab Schedules",
-                                        -command => $b_props{pdf_labs}{cb},
-                                      ],
-                                      [
-                                        "command",
-                                        "Stream Schedules",
-                                        -command => $b_props{pdf_streams}{cb},
-                                      ],
-                                      'separator',
-                                      [
-                                        "command", "Text Output",
-                                        -command => $b_props{pdf_text}{cb},
-                                      ],
-                             ],
-                           ],
-                           [
-                             qw/cascade Latex -tearoff 0/,
-                             -menuitems => [
-                                    [
-                                      "command",
-                                      "Teacher Schedules",
-                                      -command => $b_props{latex_teachers}{cb},
-                                    ],
-                                    [
-                                      "command",
-                                      "Lab Schedules",
-                                      -command => $b_props{latex_labs}{cb},
-                                    ],
-                                    [
-                                      "command",
-                                      "Stream Schedules",
-                                      -command => $b_props{latex_streams}{cb},
-                                    ],
-                                    'separator',
-                                    [
-                                      "command", "Text Output",
-                                      -command => $b_props{latex_text}{cb},
-                                    ],
-                             ],
-                           ],
-                           [
-                             qw/cascade CSV -tearoff 0/,
-                             -menuitems => [
-                                         [
-                                           "command",
-                                           "Save schedule as CSV",
-                                           -command => $b_props{CSVexport}{cb},
-                                         ],
-                             ],
-                           ],
-           ],
+            qw/cascade Print -tearoff 0 /,
+            -menuitems => [
+                [
+                    qw/cascade PDF -tearoff 0/,
+                    -menuitems => [
+                        [
+                            "command",
+                            "Teacher Schedules",
+                            -command => $b_props{pdf_teachers}{cb},
+                        ],
+                        [
+                            "command",
+                            "Lab Schedules",
+                            -command => $b_props{pdf_labs}{cb},
+                        ],
+                        [
+                            "command",
+                            "Stream Schedules",
+                            -command => $b_props{pdf_streams}{cb},
+                        ],
+                        'separator',
+                        [
+                            "command", "Text Output",
+                            -command => $b_props{pdf_text}{cb},
+                        ],
+                    ],
+                ],
+                [
+                    qw/cascade Latex -tearoff 0/,
+                    -menuitems => [
+                        [
+                            "command",
+                            "Teacher Schedules",
+                            -command => $b_props{latex_teachers}{cb},
+                        ],
+                        [
+                            "command",
+                            "Lab Schedules",
+                            -command => $b_props{latex_labs}{cb},
+                        ],
+                        [
+                            "command",
+                            "Stream Schedules",
+                            -command => $b_props{latex_streams}{cb},
+                        ],
+                        'separator',
+                        [
+                            "command", "Text Output",
+                            -command => $b_props{latex_text}{cb},
+                        ],
+                    ],
+                ],
+                [
+                    qw/cascade CSV -tearoff 0/,
+                    -menuitems => [
+                        [
+                            "command",
+                            "Save schedule as CSV",
+                            -command => $b_props{CSVexport}{cb},
+                        ],
+                    ],
+                ],
+            ],
         ],
     ];
 
@@ -371,7 +376,7 @@ sub menu_info {
 
 sub junkA {    ## WTF !!!
     EditLabs->new( $mw, $Schedule, \$Dirtyflag, $Colours, $Fonts, $image_dir,
-                   $guiSchedule );
+        $guiSchedule );
 
 }
 
@@ -384,9 +389,9 @@ sub create_front_page {
     my $short_file_name = 40;
 
     $Front_page_frame = $mw->Frame(
-                                    -borderwidth => 10,
-                                    -relief      => 'flat',
-                                    -bg          => $Colours->{DataBackground},
+        -borderwidth => 10,
+        -relief      => 'flat',
+        -bg          => $Colours->{DataBackground},
     )->pack( -side => 'top', -expand => 1, -fill => 'both' );
 
     # --------------------------------------------------------------
@@ -397,22 +402,20 @@ sub create_front_page {
     my $image = $mw->Photo( -file => $logo_file );
 
     # frame and label
-    my $labelImage =
-      $Front_page_frame->Label(
-                                '-image'     => $image,
-                                -borderwidth => 5,
-                                -relief      => 'flat'
-      )->pack( -side => 'left', -expand => 0 );
+    my $labelImage = $Front_page_frame->Label(
+        '-image'     => $image,
+        -borderwidth => 5,
+        -relief      => 'flat'
+    )->pack( -side => 'left', -expand => 0 );
 
     # --------------------------------------------------------------
     # frame for holding buttons for starting the scheduling tasks
     # --------------------------------------------------------------
-    my $option_frame =
-      $Front_page_frame->Frame(
-                                -bg          => $Colours->{DataBackground},
-                                -borderwidth => 10,
-                                -relief      => 'flat'
-      )->pack( -side => 'left', -expand => 1, -fill => 'both' );
+    my $option_frame = $Front_page_frame->Frame(
+        -bg          => $Colours->{DataBackground},
+        -borderwidth => 10,
+        -relief      => 'flat'
+    )->pack( -side => 'left', -expand => 1, -fill => 'both' );
 
     $option_frame->Frame( -background => $Colours->{DataBackground}, )
       ->pack( -expand => 1, -fill => 'both' );
@@ -462,18 +465,18 @@ sub create_front_page {
     # open schedule file
     # --------------------------------------------------------------
     $option_frame->Button(
-                           -text        => "Browse for Schedule File",
-                           -font        => $Fonts->{big},
-                           -borderwidth => 0,
-                           -bg          => $Colours->{DataBackground},
-                           -command     => \&open_schedule,
-                           -width       => $button_width,
-                           -height      => 3,
+        -text        => "Browse for Schedule File",
+        -font        => $Fonts->{big},
+        -borderwidth => 0,
+        -bg          => $Colours->{DataBackground},
+        -command     => \&open_schedule,
+        -width       => $button_width,
+        -height      => 3,
     )->pack( -side => 'top', -fill => 'y', -expand => 0 );
 
     $option_frame->Frame( -bg => $Colours->{DataBackground} )->pack(
-                                                                -expand => 1,
-                                                                -fill => 'both',
+        -expand => 1,
+        -fill   => 'both',
     );
 }
 
@@ -484,8 +487,8 @@ sub create_standard_page {
 
     # frame and label
     $Main_page_frame = $mw->Frame(
-                                   -borderwidth => 1,
-                                   -relief      => 'ridge',
+        -borderwidth => 1,
+        -relief      => 'ridge',
     )->pack( -side => 'top', -expand => 1, -fill => 'both' );
 
     # create notebook
@@ -494,39 +497,39 @@ sub create_standard_page {
 
     # View page
     $Pages{'views'} = $Notebook->add(
-                                      'views',
-                                      -label    => 'Schedules',
-                                      -raisecmd => \&draw_view_choices
+        'views',
+        -label    => 'Schedules',
+        -raisecmd => \&draw_view_choices
     );
     $Pages{'overview'} = $Notebook->add(
-                                         'overview',
-                                         -label    => 'Overview',
-                                         -raisecmd => \&draw_overview
+        'overview',
+        -label    => 'Overview',
+        -raisecmd => \&draw_overview
     );
     $Pages{'courses'} = $Notebook->add(
-                                        'courses',
-                                        -label    => 'Courses',
-                                        -raisecmd => \&draw_edit_courses
+        'courses',
+        -label    => 'Courses',
+        -raisecmd => \&draw_edit_courses
     );
     $Pages{'teachers'} = $Notebook->add(
-                                         'teachers',
-                                         -label    => 'Teachers',
-                                         -raisecmd => \&draw_edit_teachers
+        'teachers',
+        -label    => 'Teachers',
+        -raisecmd => \&draw_edit_teachers
     );
     $Pages{'labs'} = $Notebook->add(
-                                     'labs',
-                                     -label    => 'Resources',
-                                     -raisecmd => \&draw_edit_labs
+        'labs',
+        -label    => 'Resources',
+        -raisecmd => \&draw_edit_labs
     );
     $Pages{'streams'} = $Notebook->add(
-                                        'streams',
-                                        -label    => 'Streams',
-                                        -raisecmd => \&draw_edit_streams
+        'streams',
+        -label    => 'Streams',
+        -raisecmd => \&draw_edit_streams
     );
     $Pages{'export'} = $Notebook->add(
-                                       'export',
-                                       -label    => 'Excel',
-                                       -raisecmd => \&draw_export_schedule
+        'export',
+        -label    => 'Excel',
+        -raisecmd => \&draw_export_schedule
     );
 
 }
@@ -545,22 +548,22 @@ sub create_status_bar {
 
     # frame and label
     my $status_frame = $mw->Frame(
-                                   -borderwidth => 0,
-                                   -relief      => 'flat',
+        -borderwidth => 0,
+        -relief      => 'flat',
     )->pack( -side => 'bottom', -expand => 0, -fill => 'x' );
 
     $status_frame->Label(
-                          -textvariable => \$Current_schedule_file,
-                          -borderwidth  => 1,
-                          -relief       => 'ridge',
+        -textvariable => \$Current_schedule_file,
+        -borderwidth  => 1,
+        -relief       => 'ridge',
     )->pack( -side => 'left', -expand => 1, -fill => 'x' );
 
     $status_frame->Label(
-                          -textvariable => \$Dirty_symbol,
-                          -borderwidth  => 1,
-                          -relief       => 'ridge',
-                          -width        => 15,
-                          -fg           => $red,
+        -textvariable => \$Dirty_symbol,
+        -borderwidth  => 1,
+        -relief       => 'ridge',
+        -width        => 15,
+        -fg           => $red,
     )->pack( -side => 'right', -fill => 'x' );
 
     return $status_frame;
@@ -625,10 +628,10 @@ sub _save_schedule {
     # There is no schedule to save!
     unless ($Schedule) {
         $mw->messageBox(
-                         -title   => 'Save Schedule',
-                         -message => 'There is no schedule to save!',
-                         -type    => 'OK',
-                         -icon    => 'error'
+            -title   => 'Save Schedule',
+            -message => 'There is no schedule to save!',
+            -type    => 'OK',
+            -icon    => 'error'
         );
         return;
     }
@@ -637,9 +640,9 @@ sub _save_schedule {
     my $file;
     if ( $save_as || !$Current_schedule_file ) {
         $file = $mw->getSaveFile(
-                       -initialdir => $Current_directory,
-                       -filetypes =>
-                         [ [ "Schedule Files", ".yaml" ], [ "All Files", "*" ] ]
+            -initialdir => $Current_directory,
+            -filetypes =>
+              [ [ "Schedule Files", ".yaml" ], [ "All Files", "*" ] ]
         );
         return unless $file;
     }
@@ -651,10 +654,10 @@ sub _save_schedule {
     eval { $Schedule->write_YAML($file) };
     if ($@) {
         $mw->messageBox(
-                         -title   => "Save Schedule",
-                         -message => "Cannot save schedule\nERROR:$@",
-                         -type    => "OK",
-                         -icon    => "error"
+            -title   => "Save Schedule",
+            -message => "Cannot save schedule\nERROR:$@",
+            -type    => "OK",
+            -icon    => "error"
         );
         return;
     }
@@ -682,8 +685,8 @@ sub open_schedule {
     unless ( $file && -e $file ) {
         $file = "";
         $file = $mw->getOpenFile(
-                -initialdir => $Current_directory,
-                -filetypes => [ [ "Schedules", ".yaml" ], [ "All Files", "*" ] ]
+            -initialdir => $Current_directory,
+            -filetypes  => [ [ "Schedules", ".yaml" ], [ "All Files", "*" ] ]
         );
     }
 
@@ -694,10 +697,10 @@ sub open_schedule {
         eval { $Schedule = Schedule->read_YAML($file) };
         if ( $@ || !$Schedule ) {
             $mw->messageBox(
-                             -title   => 'Read Schedule',
-                             -message => "Cannot read schedule\nERROR:$@",
-                             -type    => 'OK',
-                             -icon    => 'error'
+                -title   => 'Read Schedule',
+                -message => "Cannot read schedule\nERROR:$@",
+                -type    => 'OK',
+                -icon    => 'error'
             );
             undef $file;
         }
@@ -739,10 +742,10 @@ sub open_schedule {
         # --------------------------------------------------------------
         unless ($Schedule) {
             $mw->messageBox(
-                             -message => 'Cannot export - There is no schedule',
-                             -title   => "Export",
-                             -type    => 'OK',
-                             -icon    => 'error'
+                -message => 'Cannot export - There is no schedule',
+                -title   => "Export",
+                -type    => 'OK',
+                -icon    => 'error'
             );
             return;
         }
@@ -752,11 +755,11 @@ sub open_schedule {
         # --------------------------------------------------------------
         if ($Dirtyflag) {
             my $ans = $mw->messageBox(
-                                       -title   => 'Unsaved Changes',
-                                       -message => "There are unsaved changes\n"
-                                         . "Do you want to save them?",
-                                       -type => 'YesNoCancel',
-                                       -icon => 'question'
+                -title   => 'Unsaved Changes',
+                -message => "There are unsaved changes\n"
+                  . "Do you want to save them?",
+                -type => 'YesNoCancel',
+                -icon => 'question'
             );
             if ( $ans eq 'Yes' ) {
                 save_schedule();
@@ -803,16 +806,16 @@ sub open_schedule {
 
             foreach my $obj (@objs) {
                 $print_type->newView( $Schedule, $obj,
-                                      $file . "_$type" . " $obj" );
+                    $file . "_$type" . " $obj" );
             }
         }
 
         $wait->withdraw();
         $mw->messageBox(
-                      -message => "$type $print_type views created\n$file*.pdf",
-                      -title   => "Export",
-                      -type    => 'OK',
-                      -icon    => 'info'
+            -message => "$type $print_type views created\n$file*.pdf",
+            -title   => "Export",
+            -type    => 'OK',
+            -icon    => 'info'
         );
         return;
     }
@@ -825,11 +828,11 @@ sub exit_schedule {
 
     if ($Dirtyflag) {
         my $ans = $mw->messageBox(
-                                   -title   => 'Unsaved Changes',
-                                   -message => "There are unsaved changes\n"
-                                     . "Do you want to save them?",
-                                   -type => 'YesNoCancel',
-                                   -icon => 'question'
+            -title   => 'Unsaved Changes',
+            -message => "There are unsaved changes\n"
+              . "Do you want to save them?",
+            -type => 'YesNoCancel',
+            -icon => 'question'
         );
         if ( $ans eq 'Yes' ) {
             save_schedule();
@@ -859,9 +862,9 @@ sub import_schedule {
     unless ( $file && -e $file ) {
         $file = "";
         $file = $mw->getOpenFile(
-                       -initialdir => $Current_directory,
-                       -filetypes =>
-                         [ [ 'Comma Separated Value', '.csv' ], [ 'All', '*' ] ]
+            -initialdir => $Current_directory,
+            -filetypes =>
+              [ [ 'Comma Separated Value', '.csv' ], [ 'All', '*' ] ]
         );
     }
 
@@ -872,10 +875,10 @@ sub import_schedule {
         eval { $Schedule = CSV->import_csv($file) };
         if ( $@ || !$Schedule ) {
             $mw->messageBox(
-                             -title   => 'Read Schedule',
-                             -message => "Cannot read CSV\nERROR:$@",
-                             -type    => 'OK',
-                             -icon    => 'error'
+                -title   => 'Read Schedule',
+                -message => "Cannot read CSV\nERROR:$@",
+                -type    => 'OK',
+                -icon    => 'error'
             );
             undef $file;
         }
@@ -1026,11 +1029,11 @@ sub write_ini {
 
         unless ($tbox) {
             $tbox = $f->Scrolled(
-                                  'ROText',
-                                  -height     => 20,
-                                  -width      => 50,
-                                  -scrollbars => 'osoe',
-                                  -wrap       => 'none'
+                'ROText',
+                -height     => 20,
+                -width      => 50,
+                -scrollbars => 'osoe',
+                -wrap       => 'none'
             )->pack( -expand => 1, -fill => 'both' );
         }
 
@@ -1043,7 +1046,7 @@ sub write_ini {
             }
             else {
                 foreach my $c ( sort { $a->number cmp $b->number }
-                                $Schedule->all_courses )
+                    $Schedule->all_courses )
                 {
                     $tbox->insert( 'end', "$c" );
                 }
@@ -1070,11 +1073,11 @@ sub write_ini {
 
         unless ($tbox2) {
             $tbox2 = $f->Scrolled(
-                                   'ROText',
-                                   -height     => 20,
-                                   -width      => 50,
-                                   -scrollbars => 'osoe',
-                                   -wrap       => 'none'
+                'ROText',
+                -height     => 20,
+                -width      => 50,
+                -scrollbars => 'osoe',
+                -wrap       => 'none'
             )->pack( -expand => 1, -fill => 'both' );
         }
         $tbox2->delete( "1.0", 'end' );
@@ -1085,11 +1088,9 @@ sub write_ini {
                 $tbox2->insert( 'end', 'No teachers defined in this schedule' );
             }
             else {
-                foreach my $t (
-                    sort {
-                        lc( $a->lastname ) cmp lc( $b->lastname )
-                    } $Schedule->all_teachers
-                  )
+                foreach
+                  my $t ( sort { lc( $a->lastname ) cmp lc( $b->lastname ) }
+                    $Schedule->all_teachers )
                 {
                     $tbox2->insert( 'end', $Schedule->teacher_details($t) );
                 }
@@ -1119,7 +1120,7 @@ sub write_ini {
             }
             else {
                 $de = DataEntry->new( $f, $Schedule->teachers, $Schedule,
-                                      \$Dirtyflag, $guiSchedule );
+                    \$Dirtyflag, $guiSchedule );
             }
         }
     }
@@ -1140,7 +1141,7 @@ sub write_ini {
             }
             else {
                 $de = DataEntry->new( $f, $Schedule->streams, $Schedule,
-                                      \$Dirtyflag, $guiSchedule );
+                    \$Dirtyflag, $guiSchedule );
             }
         }
     }
@@ -1162,7 +1163,7 @@ sub write_ini {
             else {
                 $de = $de =
                   DataEntry->new( $f, $Schedule->labs, $Schedule, \$Dirtyflag,
-                                  $guiSchedule );
+                    $guiSchedule );
             }
 
         }
@@ -1172,24 +1173,16 @@ sub write_ini {
 # ==================================================================
 # draw_edit_courses
 # ==================================================================
-{
-    my $de;
-    {
-
-        sub draw_edit_courses {
-            my $f = $Pages{courses};
-            $de =
-              EditCourses->new( $f, $Schedule, \$Dirtyflag, $Colours, $Fonts,
-                                $guiSchedule )
-              unless $de;
-
-        }
-    }
+sub draw_edit_courses {
+    my $f = $Pages{courses};
+    EditCourses->new( $f, $Schedule, \$Dirtyflag, $Colours, $Fonts,
+        $guiSchedule );
 }
 
 # ==================================================================
 # draw_export_schedule
 # ==================================================================
+# ************* THE FOLLOWING CODE SHOULD BE IN ITS OWN FILE *******
 {
     my $frame;
     my $exportFrame;
@@ -1261,11 +1254,10 @@ sub write_ini {
         $exportFrame = $frame->Frame->pack( -expand => 1, -fill => 'both' );
         $exportFrameDirty = 1;
 
-        my $exportButton =
-          $exportFrame->Button(
-                                -text    => "Export",
-                                -command => [ \&generate_csv ]
-          )->pack( -side => 'bottom', -fill => 'x' );
+        my $exportButton = $exportFrame->Button(
+            -text    => "Export",
+            -command => [ \&generate_csv ]
+        )->pack( -side => 'bottom', -fill => 'x' );
 
     }
 
@@ -1301,11 +1293,10 @@ sub write_ini {
           $sview->Scrolled( 'Frame', -scrollbars => "osoe" )
           ->pack( -expand => 1, -fill => 'both' );
 
-        my $exportButton =
-          $exportFrame->Button(
-                                -text    => "Export",
-                                -command => [ \&generate_excel ]
-          )->pack( -side => 'bottom', -fill => 'x' );
+        my $exportButton = $exportFrame->Button(
+            -text    => "Export",
+            -command => [ \&generate_excel ]
+        )->pack( -side => 'bottom', -fill => 'x' );
 
         $exportSchedule->create_frame( $tview2, 'teacher',  \&toggle );
         $exportSchedule->create_frame( $lview2, 'resource', \&toggle );
@@ -1316,12 +1307,16 @@ sub write_ini {
             foreach my $obj ( keys %{ $exportSchedule->_button_refs } ) {
                 my $btn = ${ $exportSchedule->_button_refs->{$obj} };
                 if ( $selected{$obj} ) {
-                    $btn->configure( -bg => "yellow",
-                                     -fg => "black" );
+                    $btn->configure(
+                        -bg => "yellow",
+                        -fg => "black"
+                    );
                 }
                 else {
-                    $btn->configure( -bg => $Colours->{ButtonBackground},
-                                     -fg => $Colours->{ButtonForeground} );
+                    $btn->configure(
+                        -bg => $Colours->{ButtonBackground},
+                        -fg => $Colours->{ButtonForeground}
+                    );
                 }
             }
         }
@@ -1334,8 +1329,10 @@ sub write_ini {
         my $btn  = shift;
         if ( $selected{$obj} ) {
             undef( $selected{$obj} );
-            $$btn->configure( -bg => $Colours->{ButtonBackground},
-                              -fg => $Colours->{ButtonForeground} );
+            $$btn->configure(
+                -bg => $Colours->{ButtonBackground},
+                -fg => $Colours->{ButtonForeground}
+            );
         }
         else {
             $selected{$obj} = $obj;
@@ -1380,8 +1377,8 @@ sub write_ini {
         @streams  = sort { $a->number cmp $b->number } @streams;
 
         my $file = $mw->getSaveFile(
-                          -initialdir => $Current_directory,
-                          -filetypes => [ [ 'Excel', '.xlsx' ], [ 'All', '*' ] ]
+            -initialdir => $Current_directory,
+            -filetypes  => [ [ 'Excel', '.xlsx' ], [ 'All', '*' ] ]
         );
         return unless $file;
 
@@ -1411,10 +1408,10 @@ sub write_ini {
         $excel->export();
 
         $mw->messageBox(
-                         -message => "File $file was created",
-                         -title   => "Export",
-                         -type    => 'OK',
-                         -icon    => 'info'
+            -message => "File $file was created",
+            -title   => "Export",
+            -type    => 'OK',
+            -icon    => 'info'
         );
     }
 
@@ -1422,17 +1419,17 @@ sub write_ini {
 
         unless ($Schedule) {
             $mw->messageBox(
-                             -title   => 'Save Schedule',
-                             -message => 'There is no schedule to save!',
-                             -type    => 'OK',
-                             -icon    => 'error'
+                -title   => 'Save Schedule',
+                -message => 'There is no schedule to save!',
+                -type    => 'OK',
+                -icon    => 'error'
             );
             return;
         }
         my $file = $mw->getSaveFile(
-                       -initialdir => $Current_directory,
-                       -filetypes =>
-                         [ [ 'Comma Separated Value', '.csv' ], [ 'All', '*' ] ]
+            -initialdir => $Current_directory,
+            -filetypes =>
+              [ [ 'Comma Separated Value', '.csv' ], [ 'All', '*' ] ]
         );
         return unless $file;
 
@@ -1442,10 +1439,10 @@ sub write_ini {
         my $csv = CSV->new( -output_file => $file, -schedule => $Schedule );
         $csv->export();
         $mw->messageBox(
-                         -message => "File $file was created",
-                         -title   => "Export",
-                         -type    => 'OK',
-                         -icon    => 'info'
+            -message => "File $file was created",
+            -title   => "Export",
+            -type    => 'OK',
+            -icon    => 'info'
         );
     }
 }

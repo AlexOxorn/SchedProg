@@ -375,7 +375,8 @@ sub add_empty_row {
         my $w = $t->pane->Entry(
                                  -width              => $colwidths->[ $c - 1 ],
                                  -bg                 => $t->cget('-bg_entry'),
-                                 -disabledforeground => 'black'
+                                 -disabledforeground => 'black',
+                                 -relief =>'flat',
                                );
         if ( $disabled->[ $c - 1 ] ) {
             $w->configure( -state => 'disabled' );

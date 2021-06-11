@@ -13,6 +13,12 @@ use overload
 	fallback=> 1,
 	'""' => \&print_description;
 
+# CHANGE LOG ... changes made so that we can use this for allocation
+# 1) Added property "num_students"
+# 2) Can add a teacher directly to the section, even if this section
+#    does not have any blocks (consider 'stage')
+
+
 =head1 NAME
 
 Section - describes a distinct course/section 
@@ -136,6 +142,19 @@ sub hours {
 
         $self->{-hours} = $hours;
     }
+    
+    # most often this number is not entered correctly, so
+    # lets use the number of hours in the blocks,
+    # assuming it has blocks
+    my @bs = $self->blocks;
+    
+    if (@bs) {
+        $self->{-hours} = 0;
+        foreach my $b (@bs) {
+            $self->{-hours} += $b->duration;
+        }
+    }
+         
     return $self->{-hours};
 }
 
@@ -241,6 +260,23 @@ sub course {
         $self->{-course} = $course;
     }
     return $self->{-course};
+}
+
+# =================================================================
+# num_students
+# =================================================================
+
+=head2 num_students ( [number of students] )
+
+Gets and sets the number of students for this section
+
+=cut
+
+sub num_students {
+    my $self = shift;
+    $self->{-num_students} = shift if @_;
+    $self->{-num_students} = 30 unless $self->{-num_students};    
+    return $self->{-num_students};
 }
 
 # =================================================================
@@ -380,22 +416,114 @@ sub labs {
 
 Assign a teacher to all blocks in this section
 
+Update: even if the section does not have blocks, we still need
+to assign a teacher (example... stage is not scheduled, but
+we still need to assign a teacher for allocation purposes)
+
 Returns section object
 
 =cut
 
 sub assign_teacher {
     my $self = shift;
+    $self->{-teachers} = {} unless $self->{-teachers};
 
     if (@_) {
         my $teacher = shift;
         foreach my $block ( $self->blocks ) {
             $block->assign_teacher($teacher);
         }
+        $self->{-teachers}->{$teacher->id} = $teacher;
+        $self->{-allocation}->{$teacher->id} = $self->hours;
     }
 
     return $self;
 }
+
+# =================================================================
+# set teacher_allocation 
+# =================================================================
+
+=head2 set_teacher_allocation ( teacher object, hours )
+
+Assign number of hours to teacher for this section
+
+Returns section object
+
+=cut
+
+sub set_teacher_allocation {
+    my $self = shift;
+    my $teacher = shift;
+    my $hours = shift;
+    
+    # add allocation
+    if ($hours) {
+        if (!$self->has_teacher($teacher)) {
+            $self->assign_teacher($teacher);
+        }
+        $self->{-allocation}{$teacher->id} = $hours;
+    }
+    
+    # if no hours, remove teacher from section
+    else {
+        $self->remove_teacher($teacher);
+    }
+
+    return $self;
+}
+
+# =================================================================
+# get teacher_allocation 
+# =================================================================
+
+=head2 get_teacher_allocation ( teacher object)
+
+Returns number of hours assigned to this teacher for this section
+
+=cut
+
+sub get_teacher_allocation {
+    my $self = shift;
+    my $teacher = shift;
+    
+    # teacher is not teaching this section
+    return 0 unless $self->has_teacher($teacher);
+        
+    # allocation has been defined
+    if (exists $self->{-allocation}{$teacher->id}) {
+        return  $self->{-allocation}{$teacher->id} ;
+    }
+    
+    # hours have not been defined, assume total number of section hours
+    else {
+        return $self->hours;
+    }
+}
+
+# =================================================================
+# allocated_hours
+# =================================================================
+
+=head2 allocated_hours
+
+Returns number of hours that have been allocated to teacheres
+
+=cut
+
+sub allocated_hours {
+    my $self = shift;
+    my $hours = 0;
+    
+    foreach my $teacher ($self->teachers) {
+        $hours += $self->get_teacher_allocation ($teacher);
+    }
+    return $hours;
+        
+    my $teacher = shift;
+}
+
+
 
 # =================================================================
 # remove_teacher
@@ -416,7 +544,15 @@ sub remove_teacher {
     foreach my $block ( $self->blocks ) {
         $block->remove_teacher($teacher);
     }
-
+    
+    $self->{-teachers} = {} unless $self->{-teachers};
+    if ( exists $self->{-teachers}{ $teacher->id } ) {
+        delete $self->{-teachers}{ $teacher->id };
+    }
+    if (exists $self->{-allocation}{ $teacher->id }) {
+        delete $self->{-allocation}{$teacher->id};
+    }
+    
     return $self;
 
 }
@@ -461,6 +597,10 @@ sub teachers {
         foreach my $teacher ( $block->teachers ) {
             $teachers{$teacher} = $teacher;
         }
+    }
+    
+    foreach my $teacher (values %{$self->{-teachers}}) {
+        $teachers{$teacher} = $teacher;
     }
 
     if (wantarray) {
